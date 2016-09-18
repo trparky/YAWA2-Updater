@@ -1,4 +1,5 @@
 ﻿Imports System.Runtime.CompilerServices
+Imports System.Runtime.InteropServices
 Imports System.Security.AccessControl
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
@@ -20,61 +21,117 @@ Module Module1
         End Try
     End Function
 
-    Private Function doesPIDExist(PID As Integer) As Boolean
-        Try
-            Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
+    <Extension()>
+    Public Function stringCompare(str1 As String, str2 As String, Optional boolCaseInsensitive As Boolean = True)
+        If boolCaseInsensitive = True Then
+            Return str1.Trim.Equals(str2.Trim, StringComparison.OrdinalIgnoreCase)
+        Else
+            Return str1.Trim.Equals(str2.Trim, StringComparison.Ordinal)
+        End If
+    End Function
 
-            If searcher.Get.Count = 0 Then
-                searcher.Dispose()
-                Return False
-            Else
-                searcher.Dispose()
-                Return True
-            End If
-        Catch ex3 As Runtime.InteropServices.COMException
-            Return False
+    ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
+    ''' <param name="PID">The PID of the process you are checking the existance of.</param>
+    ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
+    ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
+    Private Function doesPIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
+        Try
+            processObject = Process.GetProcessById(PID)
+            Return True
         Catch ex As Exception
             Return False
         End Try
     End Function
 
     Private Sub killProcess(PID As Integer)
-        Debug.Write(String.Format("Killing PID {0}...", PID))
-
-        If doesPIDExist(PID) Then
-            Process.GetProcessById(PID).Kill()
-        End If
-
-        If doesPIDExist(PID) Then
-            killProcess(PID)
-            'Else
-            'debug.writeline(" Process Killed.")
+        Dim processObject As Process = Nothing
+        If doesPIDExist(PID, processObject) Then
+            Try
+                processObject.Kill() ' Yes, it does so let's kill it.
+            Catch ex As Exception
+                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
+                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
+            End Try
         End If
     End Sub
 
-    Public Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-        Dim fullFileName As String
+    Private Function getProcessExecutablePath(processID As Integer) As String
+        Dim memoryBuffer = New Text.StringBuilder(1024)
+        Dim processHandle As IntPtr = OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
 
-        If boolFullFilePathPassed = True Then
-            fullFileName = strFileName
-        Else
-            fullFileName = New IO.FileInfo(strFileName).FullName
+        If processHandle <> IntPtr.Zero Then
+            Try
+                Dim memoryBufferSize As Integer = memoryBuffer.Capacity
+
+                If QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
+                    Return memoryBuffer.ToString()
+                End If
+            Finally
+                CloseHandle(processHandle)
+            End Try
         End If
 
-        Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.addSlashes())
-        Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
+        Return Nothing
+    End Function
 
-        Try
-            For Each queryObj As Management.ManagementObject In searcher.Get()
-                killProcess(Integer.Parse(queryObj("ProcessId").ToString))
-            Next
+    Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
+        Dim processExecutablePath As String
+        Dim processExecutablePathFileInfo As IO.FileInfo
 
-            'debug.writeline("All processes killed... Update process can continue.")
-        Catch ex3 As Runtime.InteropServices.COMException
-        Catch err As Management.ManagementException
-            ' Does nothing
-        End Try
+        For Each process As Process In Process.GetProcesses()
+            processExecutablePath = getProcessExecutablePath(process.Id)
+
+            If processExecutablePath IsNot Nothing Then
+                processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
+
+                If boolFullFilePathPassed = True Then
+                    If stringCompare(strFileName, processExecutablePathFileInfo.FullName) = True Then
+                        killProcess(process.Id)
+                    End If
+                ElseIf boolFullFilePathPassed = False Then
+                    If stringCompare(strFileName, processExecutablePathFileInfo.Name) = True Then
+                        killProcess(process.Id)
+                    End If
+                End If
+
+                processExecutablePathFileInfo = Nothing
+            End If
+        Next
     End Sub
+
+    <Flags>
+    Public Enum ProcessAccessFlags As UInteger
+        PROCESS_QUERY_LIMITED_INFORMATION = &H1000
+        All = &H1F0FFF
+        Terminate = &H1
+        CreateThread = &H2
+        VirtualMemoryOperation = &H8
+        VirtualMemoryRead = &H10
+        VirtualMemoryWrite = &H20
+        DuplicateHandle = &H40
+        CreateProcess = &H80
+        SetQuota = &H100
+        SetInformation = &H200
+        QueryInformation = &H400
+        QueryLimitedInformation = &H1000
+        Synchronize = &H100000
+    End Enum
+
+    <DllImport("kernel32.dll")>
+    Private Function QueryFullProcessImageName(hprocess As IntPtr, dwFlags As Integer, lpExeName As Text.StringBuilder, ByRef size As Integer) As Boolean
+    End Function
+
+    <DllImport("kernel32.dll")>
+    Private Function OpenProcess(dwDesiredAccess As ProcessAccessFlags, bInheritHandle As Boolean, dwProcessId As Integer) As IntPtr
+    End Function
+
+    <DllImport("kernel32.dll", SetLastError:=True)>
+    Private Function CloseHandle(hHandle As IntPtr) As Boolean
+    End Function
+
+    <DllImport("kernel32.dll")>
+    Private Function MoveFileEx(ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal dwFlags As Int32) As Boolean
+    End Function
 
     Public Function areWeAnAdministrator() As Boolean
         Try
