@@ -2,30 +2,30 @@
     Module Internet_Functions
         Public Function createNewHTTPHelperObject() As httpHelper
             Dim httpHelper As New httpHelper
-            httpHelper.setUserAgent(createHTTPUserAgentHeaderString())
+            httpHelper.setUserAgent = createHTTPUserAgentHeaderString()
             httpHelper.addHTTPHeader("OPERATING_SYSTEM", getFullOSVersionString())
-            httpHelper.useHTTPCompression(True)
-            httpHelper.setProxyMode(True)
+            httpHelper.useHTTPCompression = True
+            httpHelper.setProxyMode = True
 
-            httpHelper.setURLPreProcessor(Function(ByVal strURLInput As String) As String
-                                              Try
-                                                  If strURLInput.Trim.ToLower.StartsWith("http") = False Then
-                                                      If boolUseSSL = True Then
-                                                          Debug.WriteLine("setURLPreProcessor code -- https://" & strURLInput)
-                                                          Return "https://" & strURLInput
-                                                      Else
-                                                          Debug.WriteLine("setURLPreProcessor code -- http://" & strURLInput)
-                                                          Return "http://" & strURLInput
-                                                      End If
-                                                  Else
-                                                      Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
-                                                      Return strURLInput
-                                                  End If
-                                              Catch ex As Exception
-                                                  Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
-                                                  Return strURLInput
-                                              End Try
-                                          End Function)
+            httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
+                                                Try
+                                                    If strURLInput.Trim.ToLower.StartsWith("http") = False Then
+                                                        If boolUseSSL = True Then
+                                                            Debug.WriteLine("setURLPreProcessor code -- https://" & strURLInput)
+                                                            Return "https://" & strURLInput
+                                                        Else
+                                                            Debug.WriteLine("setURLPreProcessor code -- http://" & strURLInput)
+                                                            Return "http://" & strURLInput
+                                                        End If
+                                                    Else
+                                                        Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
+                                                        Return strURLInput
+                                                    End If
+                                                Catch ex As Exception
+                                                    Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
+                                                    Return strURLInput
+                                                End Try
+                                            End Function
 
             Return httpHelper
         End Function
