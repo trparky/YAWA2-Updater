@@ -135,6 +135,21 @@ Public Class sslErrorException
     End Sub
 End Class
 
+Public Class credentialsAlreadySet
+    Inherits Exception
+
+    Public Sub New()
+    End Sub
+
+    Public Sub New(message As String)
+        MyBase.New(message)
+    End Sub
+
+    Public Sub New(message As String, inner As Exception)
+        MyBase.New(message, inner)
+    End Sub
+End Class
+
 Public Class httpProtocolException
     Inherits Exception
 
@@ -174,9 +189,13 @@ Public Class downloadStatusDetails
     Public remoteFileSize As Long, localFileSize As Long, percentageDownloaded As Short
 End Class
 
+Class credentials
+    Public strUser, strPassword As String
+End Class
+
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class httpHelper
-    Private Const classVersion As String = "1.180"
+    Private Const classVersion As String = "1.215"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -193,20 +212,23 @@ Public Class httpHelper
     Private postData As New Dictionary(Of String, Object)
     Private getData As New Dictionary(Of String, String)
     Private downloadStatusDetails As downloadStatusDetails
+    Private credentials As credentials
 
     Private sslCertificate As X509Certificates.X509Certificate2
     Private urlPreProcessor As Func(Of String, String)
-    Private customErrorHandler As Func(Of Exception, httpHelper, String)
-    Private downloadStatusUpdater As Func(Of downloadStatusDetails, Boolean)
+    Private customErrorHandler As [Delegate]
+    Private downloadStatusUpdater As [Delegate]
 
     ''' <summary>Retrieves the downloadStatusDetails data from within the Class instance.</summary>
     ''' <returns>A downloadStatusDetails Object.</returns>
-    Public Function getDownloadStatusDetails() As downloadStatusDetails
-        Return downloadStatusDetails
-    End Function
+    Public ReadOnly Property getDownloadStatusDetails As downloadStatusDetails
+        Get
+            Return downloadStatusDetails
+        End Get
+    End Property
 
     ''' <summary>This allows you to inject your own error handler for HTTP exceptions into the Class instance.</summary>
-    ''' <param name="functionIN">A Lambda</param>
+    ''' <value>A Lambda</value>
     ''' <example>
     ''' A VB.NET Example...
     ''' httpHelper.setCustomErrorHandler(Function(ByVal ex As Exception, classInstance As httpHelper)
@@ -214,18 +236,34 @@ Public Class httpHelper
     ''' OR A C# Example...
     ''' httpHelper.setCustomErrorHandler((Exception ex, httpHelper classInstance) => { }
     ''' </example>
-    Public Sub setCustomErrorHandler(functionIN As Func(Of Exception, httpHelper, String))
-        customErrorHandler = functionIN
+    Public WriteOnly Property setCustomErrorHandler As [Delegate]
+        Set
+            customErrorHandler = Value
+        End Set
+    End Property
+
+    ''' <summary>Adds HTTP Authentication headers to your HTTP Request in this HTTPHelper instance.</summary>
+    ''' <param name="strUsername">The username you want to pass to the server.</param>
+    ''' <param name="strPassword">The password you want to pass to the server.</param>
+    ''' <param name="throwExceptionIfAlreadySet">A Boolean value. This tells the function if it should throw an exception if HTTP Authentication settings have already been set.</param>
+    Public Sub setHTTPCredentials(strUsername As String, strPassword As String, Optional throwExceptionIfAlreadySet As Boolean = True)
+        If credentials Is Nothing Then
+            credentials = New credentials() With {.strUser = strUsername, .strPassword = strPassword}
+        Else
+            If throwExceptionIfAlreadySet Then Throw New credentialsAlreadySet("HTTP Authentication Credentials have already been set for this HTTPHelper Class Instance.")
+        End If
     End Sub
 
     ''' <summary>Returns the last Exception that occurred within this Class instance.</summary>
     ''' <returns>An Exception Object.</returns>
-    Public Function getLastException() As Exception
-        Return lastException
-    End Function
+    Public ReadOnly Property getLastException As Exception
+        Get
+            Return lastException
+        End Get
+    End Property
 
     ''' <summary>This allows you to set up a function to be run while your HTTP download is being processed. This function can be used to update things on the GUI during a download.</summary>
-    ''' <param name="functionIN">A Lambda</param>
+    ''' <value>A Lambda</value>
     ''' <example>
     ''' A VB.NET Example...
     ''' httpHelper.setDownloadStatusUpdateRoutine(Function(ByVal downloadStatusDetails As downloadStatusDetails)
@@ -233,12 +271,14 @@ Public Class httpHelper
     ''' OR A C# Example...
     ''' httpHelper.setDownloadStatusUpdateRoutine((downloadStatusDetails downloadStatusDetails) => { })
     ''' </example>
-    Public Sub setDownloadStatusUpdateRoutine(functionIN As Func(Of downloadStatusDetails, Boolean))
-        downloadStatusUpdater = functionIN
-    End Sub
+    Public WriteOnly Property setDownloadStatusUpdateRoutine As [Delegate]
+        Set
+            downloadStatusUpdater = Value
+        End Set
+    End Property
 
     ''' <summary>This allows you to set up a Pre-Processor of sorts for URLs in case you need to add things to the beginning or end of URLs.</summary>
-    ''' <param name="functionIN">A Lambda</param>
+    ''' <value>A Lambda</value>
     ''' <example>
     ''' httpHelper.setURLPreProcessor(Function(ByVal strURLInput As String) As String
     '''   If strURLInput.ToLower.StartsWith("http://") = False Then
@@ -247,9 +287,11 @@ Public Class httpHelper
     '''   Return strURLInput
     ''' End Function)
     ''' </example>
-    Public Sub setURLPreProcessor(functionIN As Func(Of String, String))
-        urlPreProcessor = functionIN
-    End Sub
+    Public WriteOnly Property setURLPreProcessor As Func(Of String, String)
+        Set
+            urlPreProcessor = Value
+        End Set
+    End Property
 
     ''' <summary>This wipes out most of the data in this Class instance. Once you have called this function it's recommended to set the name of your class instance to Nothing. For example... httpHelper = Nothing</summary>
     Public Sub dispose()
@@ -271,9 +313,11 @@ Public Class httpHelper
 
     ''' <summary>Returns the last accessed URL by this Class instance.</summary>
     ''' <returns>A String.</returns>
-    Public Function getLastAccessedURL() As String
-        Return lastAccessedURL
-    End Function
+    Public ReadOnly Property getLastAccessedURL As String
+        Get
+            Return lastAccessedURL
+        End Get
+    End Property
 
     ''' <summary>This function allows you to get a peek inside the Class object instance. It returns many of the things that make up the Class instance like POST and GET data, cookies, additional HTTP headers, if proxy mode and HTTP compression mode is enabled, the user agent string, etc.</summary>
     ''' <returns>A String.</returns>
@@ -315,6 +359,13 @@ Public Class httpHelper
         stringBuilder.AppendLine("Use HTTP Compression: " & boolUseHTTPCompression.ToString)
         stringBuilder.AppendLine("HTTP Time Out: " & httpTimeOut)
         stringBuilder.AppendLine("Use Proxy: " & boolUseProxy.ToString)
+
+        If credentials Is Nothing Then
+            stringBuilder.AppendLine("HTTP Authentication Enabled: False")
+        Else
+            stringBuilder.AppendLine("HTTP Authentication Enabled: True")
+            stringBuilder.AppendLine("HTTP Authentication Details: " & credentials.strUser & "|" & credentials.strPassword)
+        End If
 
         If lastException IsNot Nothing Then
             stringBuilder.AppendLine()
@@ -388,29 +439,36 @@ Public Class httpHelper
         boolUseProxy = boolUseProxyIN
     End Sub
 
-    ''' <summary>Tells the HTTPPost Class if you want to use a Proxy or not. </summary>
-    ''' <param name="useProxy">True will use a Proxy, False will not.</param>
-    Public Sub setProxyMode(useProxy As Boolean)
-        boolUseProxy = useProxy
-    End Sub
+    ''' <summary>Tells the HTTPPost Class if you want to use a Proxy or not.</summary>
+    Public WriteOnly Property setProxyMode As Boolean
+        Set
+            boolUseProxy = Value
+        End Set
+    End Property
 
-    ''' <summary>Sets a timeout for any HTTP requests in this Class. Normally it's set for 5 seconds.</summary>
-    ''' <param name="timeOutIN">The amount of time in seconds (NOT miliseconds) that you want your HTTP requests to timeout in. This function will translate the seconds to miliseconds for you.</param>
-    Public Sub setHTTPTimeout(timeOutIN As Short)
-        httpTimeOut = timeOutIN * 1000
-    End Sub
+    ''' <summary>Sets a timeout for any HTTP requests in this Class. Normally it's set for 5 seconds. The input is the amount of time in seconds (NOT milliseconds) that you want your HTTP requests to timeout in. The class will translate the seconds to milliseconds for you.</summary>
+    ''' <value>The amount of time in seconds (NOT milliseconds) that you want your HTTP requests to timeout in. This function will translate the seconds to milliseconds for you.</value>
+    Public WriteOnly Property setHTTPTimeout As Short
+        Set
+            httpTimeOut = Value * 1000
+        End Set
+    End Property
 
     ''' <summary>Tells this Class instance if it should use HTTP compression for transport. Using HTTP Compression can save bandwidth. Normally the Class is setup to use HTTP Compression by default.</summary>
-    ''' <param name="boolUseHTTPCompressionIN">Boolean value.</param>
-    Public Sub useHTTPCompression(boolUseHTTPCompressionIN As Boolean)
-        boolUseHTTPCompression = boolUseHTTPCompressionIN
-    End Sub
+    ''' <value>Boolean value.</value>
+    Public WriteOnly Property useHTTPCompression As Boolean
+        Set
+            boolUseHTTPCompression = Value
+        End Set
+    End Property
 
     ''' <summary>Sets the User Agent String to be used by the HTTPPost Class.</summary>
-    ''' <param name="userAgentString">Your User Agent String.</param>
-    Public Sub setUserAgent(userAgentString As String)
-        strUserAgentString = userAgentString
-    End Sub
+    ''' <value>Your User Agent String.</value>
+    Public WriteOnly Property setUserAgent As String
+        Set
+            strUserAgentString = Value
+        End Set
+    End Property
 
     ''' <summary>This adds a String variable to your POST data.</summary>
     ''' <param name="strName">The form name of the data to post.</param>
@@ -479,16 +537,13 @@ Public Class httpHelper
     ''' <exception cref="dataAlreadyExistsException">If this function throws a dataAlreadyExistsException, it means that the cookie already exists in this Class instance.</exception>
     Public Sub addHTTPCookie(strCookieName As String, strCookieValue As String, strDomainDomain As String, strCookiePath As String, Optional urlEncodeHeaderContent As Boolean = False)
         If doesCookieExist(strCookieName) = False Then
-            Dim cookieDetails As New cookieDetails
+            Dim cookieDetails As New cookieDetails() With {.cookieDomain = strDomainDomain, .cookiePath = strCookiePath}
 
             If urlEncodeHeaderContent = True Then
                 cookieDetails.cookieData = Web.HttpUtility.UrlEncode(strCookieValue)
             Else
                 cookieDetails.cookieData = strCookieValue
             End If
-
-            cookieDetails.cookieDomain = strDomainDomain
-            cookieDetails.cookiePath = strCookiePath
 
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
@@ -505,16 +560,13 @@ Public Class httpHelper
     ''' <exception cref="dataAlreadyExistsException">If this function throws a dataAlreadyExistsException, it means that the cookie already exists in this Class instance.</exception>
     Public Sub addHTTPCookie(strCookieName As String, strCookieValue As String, strCookieDomain As String, Optional urlEncodeHeaderContent As Boolean = False)
         If doesCookieExist(strCookieName) = False Then
-            Dim cookieDetails As New cookieDetails
+            Dim cookieDetails As New cookieDetails() With {.cookieDomain = strCookieDomain, .cookiePath = "/"}
 
             If urlEncodeHeaderContent = True Then
                 cookieDetails.cookieData = Web.HttpUtility.UrlEncode(strCookieValue)
             Else
                 cookieDetails.cookieData = strCookieValue
             End If
-
-            cookieDetails.cookieDomain = strCookieDomain
-            cookieDetails.cookiePath = "/"
 
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
@@ -526,14 +578,14 @@ Public Class httpHelper
     ''' <summary>Checks to see if the GET data key exists in this GET data.</summary>
     ''' <param name="strName">The name of the GET data variable you are checking the existance of.</param>
     ''' <returns></returns>
-    Public Function doesGETDataExist(strName As String)
+    Public Function doesGETDataExist(strName As String) As Boolean
         Return getData.ContainsKey(strName)
     End Function
 
     ''' <summary>Checks to see if the POST data key exists in this POST data.</summary>
     ''' <param name="strName">The name of the POST data variable you are checking the existance of.</param>
     ''' <returns></returns>
-    Public Function doesPOSTDataExist(strName As String)
+    Public Function doesPOSTDataExist(strName As String) As Boolean
         Return postData.ContainsKey(strName)
     End Function
 
@@ -625,9 +677,11 @@ Public Class httpHelper
 
     ''' <summary>Gets the percentage of the file that's being downloaded from the HTTP Server.</summary>
     ''' <returns>Returns a Short Integer value.</returns>
-    Public Function getHTTPDownloadProgressPercentage() As Short
-        Return httpDownloadProgressPercentage
-    End Function
+    Public ReadOnly Property getHTTPDownloadProgressPercentage As Short
+        Get
+            Return httpDownloadProgressPercentage
+        End Get
+    End Property
 
     ''' <summary>Downloads a file from a web server while feeding back the status of the download. You can find the percentage of the download in the httpDownloadProgressPercentage variable. This function gives you the programmer more control over how HTTP downloads are done. For instance, if you don't want to write the data directly out to disk until the download is complete, this function gives you that ability whereas the downloadFile() function writes the downloaded data directly to disk bypassing system RAM. This is good for those cases you may be writing the data to an SSD in which you only want to write the data to the SSD until the download is known to be successful.</summary>
     ''' <param name="fileDownloadURL">The HTTP Path to a file on a remote server to download.</param>
@@ -654,13 +708,18 @@ Public Class httpHelper
             httpWebRequest.Timeout = httpTimeOut
             httpWebRequest.KeepAlive = True
 
+            If credentials IsNot Nothing Then
+                httpWebRequest.PreAuthenticate = True
+                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
+            End If
+
             If boolUseHTTPCompression = True Then
                 ' We tell the web server that we can accept a GZIP and Deflate compressed data stream.
                 httpWebRequest.Accept = "gzip, deflate"
                 httpWebRequest.Headers.Add(Net.HttpRequestHeader.AcceptEncoding, "gzip, deflate")
             End If
 
-            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebProxy.GetDefaultProxy
+            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebRequest.DefaultWebProxy
 
             If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
             If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
@@ -668,7 +727,7 @@ Public Class httpHelper
 
             Dim webResponse As Net.WebResponse = httpWebRequest.GetResponse() ' We now get the web response.
 
-            If fileDownloadURL.ToLower.StartsWith("https://") = True Then
+            If fileDownloadURL.StartsWith("https://", StringComparison.OrdinalIgnoreCase) = True Then
                 sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
             Else
                 sslCertificate = Nothing
@@ -688,9 +747,10 @@ Public Class httpHelper
                 currentFileSize = memStream.Length
                 httpDownloadProgressPercentage = Math.Round((memStream.Length / remoteFileSize) * 100, 0)
 
+                downloadStatusDetails = New downloadStatusDetails With {.remoteFileSize = remoteFileSize, .percentageDownloaded = httpDownloadProgressPercentage, .localFileSize = memStream.Length}
+
                 If downloadStatusUpdater IsNot Nothing Then
-                    downloadStatusDetails = New downloadStatusDetails With {.remoteFileSize = remoteFileSize, .percentageDownloaded = httpDownloadProgressPercentage, .localFileSize = memStream.Length}
-                    downloadStatusUpdater(downloadStatusDetails)
+                    downloadStatusUpdater.DynamicInvoke(downloadStatusDetails)
                 End If
 
                 count = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
@@ -722,7 +782,7 @@ Public Class httpHelper
             If throwExceptionIfError = False Then Return False
 
             If customErrorHandler IsNot Nothing Then
-                customErrorHandler(ex, Me)
+                customErrorHandler.DynamicInvoke(ex, Me)
                 ' Since we handled the exception with an injected custom error handler, we can now exit the function with the return of a False value.
                 Return False
             End If
@@ -791,13 +851,18 @@ Public Class httpHelper
             httpWebRequest.Timeout = httpTimeOut
             httpWebRequest.KeepAlive = True
 
+            If credentials IsNot Nothing Then
+                httpWebRequest.PreAuthenticate = True
+                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
+            End If
+
             If boolUseHTTPCompression = True Then
                 ' We tell the web server that we can accept a GZIP and Deflate compressed data stream.
                 httpWebRequest.Accept = "gzip, deflate"
                 httpWebRequest.Headers.Add(Net.HttpRequestHeader.AcceptEncoding, "gzip, deflate")
             End If
 
-            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebProxy.GetDefaultProxy
+            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebRequest.DefaultWebProxy
 
             If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
             If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
@@ -805,7 +870,7 @@ Public Class httpHelper
 
             Dim webResponse As Net.WebResponse = httpWebRequest.GetResponse() ' We now get the web response.
 
-            If fileDownloadURL.ToLower.StartsWith("https://") = True Then
+            If fileDownloadURL.StartsWith("https://", StringComparison.OrdinalIgnoreCase) = True Then
                 sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
             Else
                 sslCertificate = Nothing
@@ -826,9 +891,10 @@ Public Class httpHelper
                 currentFileSize = fileWriteStream.Length
                 httpDownloadProgressPercentage = Math.Round((fileWriteStream.Length / remoteFileSize) * 100, 0)
 
+                downloadStatusDetails = New downloadStatusDetails With {.remoteFileSize = remoteFileSize, .percentageDownloaded = httpDownloadProgressPercentage, .localFileSize = fileWriteStream.Length}
+
                 If downloadStatusUpdater IsNot Nothing Then
-                    downloadStatusDetails = New downloadStatusDetails With {.remoteFileSize = remoteFileSize, .percentageDownloaded = httpDownloadProgressPercentage, .localFileSize = fileWriteStream.Length}
-                    downloadStatusUpdater(downloadStatusDetails)
+                    downloadStatusUpdater.DynamicInvoke(downloadStatusDetails)
                 End If
 
                 count = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
@@ -857,7 +923,7 @@ Public Class httpHelper
             If throwExceptionIfError = False Then Return False
 
             If customErrorHandler IsNot Nothing Then
-                customErrorHandler(ex, Me)
+                customErrorHandler.DynamicInvoke(ex, Me)
                 ' Since we handled the exception with an injected custom error handler, we can now exit the function with the return of a False value.
                 Return False
             End If
@@ -909,14 +975,19 @@ Public Class httpHelper
             End If
             lastAccessedURL = url
 
-            If getData.Count <> 0 Then url &= "?" & getGETDataString()
+            If getData.Count <> 0 Then url &= "?" & Me.getGETDataString
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
             httpWebRequest.Timeout = httpTimeOut
             httpWebRequest.KeepAlive = True
 
+            If credentials IsNot Nothing Then
+                httpWebRequest.PreAuthenticate = True
+                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
+            End If
+
             If boolUseHTTPCompression = True Then httpWebRequest.Accept = "gzip, deflate"
-            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebProxy.GetDefaultProxy
+            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebRequest.DefaultWebProxy
 
             If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
             If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
@@ -926,7 +997,7 @@ Public Class httpHelper
                 httpWebRequest.Method = "GET"
             Else
                 httpWebRequest.Method = "POST"
-                Dim postDataString As String = getPOSTDataString()
+                Dim postDataString As String = Me.getPOSTDataString
                 httpWebRequest.ContentType = "application/x-www-form-urlencoded"
                 httpWebRequest.ContentLength = postDataString.Length
 
@@ -939,7 +1010,7 @@ Public Class httpHelper
 
             Dim httpWebResponse As Net.WebResponse = httpWebRequest.GetResponse()
 
-            If url.ToLower.StartsWith("https://") = True Then
+            If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) = True Then
                 sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
             Else
                 sslCertificate = Nothing
@@ -968,7 +1039,7 @@ Public Class httpHelper
             If throwExceptionIfError = False Then Return False
 
             If customErrorHandler IsNot Nothing Then
-                customErrorHandler(ex, Me)
+                customErrorHandler.DynamicInvoke(ex, Me)
                 ' Since we handled the exception with an injected custom error handler, we can now exit the function with the return of a False value.
                 Return False
             End If
@@ -1027,7 +1098,7 @@ Public Class httpHelper
                 lastException = New dataMissingException("Your HTTP Request contains no POST data. Please add some data to POST before calling this function.")
                 Throw lastException
             End If
-            If getData.Count <> 0 Then url &= "?" & getGETDataString()
+            If getData.Count <> 0 Then url &= "?" & Me.getGETDataString()
 
             Dim boundary As String = "---------------------------" & Now.Ticks.ToString("x")
             Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes((Convert.ToString(vbCr & vbLf & "--") & boundary) & vbCr & vbLf)
@@ -1036,8 +1107,13 @@ Public Class httpHelper
             httpWebRequest.Timeout = httpTimeOut
             httpWebRequest.KeepAlive = True
 
+            If credentials IsNot Nothing Then
+                httpWebRequest.PreAuthenticate = True
+                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
+            End If
+
             If boolUseHTTPCompression = True Then httpWebRequest.Accept = "gzip, deflate"
-            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebProxy.GetDefaultProxy
+            If boolUseProxy = True Then httpWebRequest.Proxy = Net.WebRequest.DefaultWebProxy
 
             httpWebRequest.KeepAlive = True
             httpWebRequest.ContentType = "multipart/form-data; boundary=" & boundary
@@ -1095,7 +1171,7 @@ Public Class httpHelper
 
             Dim httpWebResponse As Net.WebResponse = httpWebRequest.GetResponse()
 
-            If url.ToLower.StartsWith("https://") = True Then
+            If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) = True Then
                 sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
             Else
                 sslCertificate = Nothing
@@ -1124,7 +1200,7 @@ Public Class httpHelper
             If throwExceptionIfError = False Then Return False
 
             If customErrorHandler IsNot Nothing Then
-                customErrorHandler(ex, Me)
+                customErrorHandler.DynamicInvoke(ex, Me)
                 ' Since we handled the exception with an injected custom error handler, we can now exit the function with the return of a False value.
                 Return False
             End If
