@@ -7,7 +7,7 @@ Namespace programConstants
         Public Const customEntriesFile As String = "YAWA2 Updater Custom Entries.txt"
         Public Const configINIFile As String = "YAWA2 Updater Config.ini"
 
-        Public Const WinApp2INIFileURL As String = "http://www.winapp2.com/Winapp2.ini"
+        Public Const WinApp2INIFileURL As String = "https://raw.githubusercontent.com/MoscaDotTo/Winapp2/master/Winapp2.ini"
 
         Public Const configINISettingSection As String = "Configuration"
         Public Const configINICustomEntriesKey As String = "customEntries"
