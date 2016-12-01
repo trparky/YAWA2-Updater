@@ -177,16 +177,10 @@ Public Class Form1
             End If
 
             If IO.File.Exists(Application.ExecutablePath & ".new.exe") = True Then
-                Dim newFileDeleterThread As New Threading.Thread(Sub()
-                                                                     searchForProcessAndKillIt(Application.ExecutablePath & ".new.exe")
-                                                                     IO.File.Delete(Application.ExecutablePath & ".new.exe")
-                                                                 End Sub)
-                newFileDeleterThread.Start()
-
-                'Dim updaterExecutableRemoverThread As New Threading.Thread(AddressOf updaterExecutableRemover)
-                'updaterExecutableRemoverThread.Name = "updater.exe Remover Thread"
-                'updaterExecutableRemoverThread.Priority = Threading.ThreadPriority.Lowest
-                'updaterExecutableRemoverThread.Start()
+                Threading.ThreadPool.QueueUserWorkItem(Sub()
+                                                           searchForProcessAndKillIt(Application.ExecutablePath & ".new.exe")
+                                                           IO.File.Delete(Application.ExecutablePath & ".new.exe")
+                                                       End Sub)
             End If
 
             If IO.File.Exists("winapp.ini updater custom entries.txt") Then
@@ -295,10 +289,7 @@ Public Class Form1
                 chkUseSSL.Visible = False
             End If
 
-            Dim downloadThread As New Threading.Thread(AddressOf getVersionFromWebSite)
-            downloadThread.Name = "INI File Downloading Thread"
-            downloadThread.Priority = Threading.ThreadPriority.Lowest
-            downloadThread.Start()
+            Threading.ThreadPool.QueueUserWorkItem(AddressOf getVersionFromWebSite)
         Catch ex As Exception
             MsgBox(ex.Message)
         End Try
@@ -410,90 +401,84 @@ Public Class Form1
     End Sub
 
     Private Sub btnApplyNewINIFile_Click(sender As Object, e As EventArgs) Handles btnApplyNewINIFile.Click
-        Dim workingThread As New Threading.Thread(Sub()
-                                                      Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+        Threading.ThreadPool.QueueUserWorkItem(Sub()
+                                                   Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
 
-                                                      Dim remoteINIFileData As String = Nothing
-                                                      If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) = True Then
-                                                          Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                                                          streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-                                                          streamWriter.Close()
-                                                          streamWriter.Dispose()
-                                                          streamWriter = Nothing
+                                                   Dim remoteINIFileData As String = Nothing
+                                                   If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) = True Then
+                                                       Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                                                       streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
+                                                       streamWriter.Close()
+                                                       streamWriter.Dispose()
+                                                       streamWriter = Nothing
 
-                                                          lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
-                                                          lblUpdateNeededOrNot.Text = updateNotNeeded
-                                                          lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
+                                                       lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
+                                                       lblUpdateNeededOrNot.Text = updateNotNeeded
+                                                       lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
 
-                                                          If chkTrim.Checked Then
-                                                              MsgBox("New CCleaner INI File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
-                                                              programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
-                                                          Else
-                                                              If programVariables.boolMobileMode Then
-                                                                  MsgBox("New CCleaner INI File Saved.", MsgBoxStyle.Information, Me.Text)
-                                                              Else
-                                                                  Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner INI File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
+                                                       If chkTrim.Checked Then
+                                                           MsgBox("New CCleaner INI File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
+                                                           programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
+                                                       Else
+                                                           If programVariables.boolMobileMode Then
+                                                               MsgBox("New CCleaner INI File Saved.", MsgBoxStyle.Information, Me.Text)
+                                                           Else
+                                                               Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner INI File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
-                                                                  If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                                                      If Environment.Is64BitOperatingSystem = True Then
-                                                                          Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
-                                                                      Else
-                                                                          Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
-                                                                      End If
-                                                                  End If
-                                                              End If
-                                                          End If
-                                                      Else
-                                                          MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
-                                                          Exit Sub
-                                                      End If
-                                                  End Sub)
-
-        workingThread.Start()
+                                                               If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
+                                                                   If Environment.Is64BitOperatingSystem = True Then
+                                                                       Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
+                                                                   Else
+                                                                       Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
+                                                                   End If
+                                                               End If
+                                                           End If
+                                                       End If
+                                                   Else
+                                                       MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
+                                                       Exit Sub
+                                                   End If
+                                               End Sub)
     End Sub
 
     Private Sub btnTrim_Click(sender As Object, e As EventArgs) Handles btnTrim.Click
-        Dim trimThread As New Threading.Thread(Sub()
+        Threading.ThreadPool.QueueUserWorkItem(Sub()
                                                    programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
                                                End Sub)
-        trimThread.Name = "INI File Trimming Operation"
-        trimThread.Start()
     End Sub
 
     Private Sub btnReDownload_Click(sender As Object, e As EventArgs) Handles btnReDownload.Click
-        Dim workingThread As New Threading.Thread(Sub()
-                                                      Dim remoteINIFileData As String = Nothing
-                                                      Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
-                                                      If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) = True Then
-                                                          Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                                                          streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-                                                          streamWriter.Close()
-                                                          streamWriter.Dispose()
-                                                          streamWriter = Nothing
+        Threading.ThreadPool.QueueUserWorkItem(Sub()
+                                                   Dim remoteINIFileData As String = Nothing
+                                                   Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+                                                   If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) = True Then
+                                                       Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                                                       streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
+                                                       streamWriter.Close()
+                                                       streamWriter.Dispose()
+                                                       streamWriter = Nothing
 
-                                                          lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
+                                                       lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
 
-                                                          If chkTrim.Checked Then
-                                                              MsgBox("New CCleaner WinApp2.ini File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
-                                                              programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
-                                                          Else
-                                                              Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
+                                                       If chkTrim.Checked Then
+                                                           MsgBox("New CCleaner WinApp2.ini File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
+                                                           programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
+                                                       Else
+                                                           Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
 
-                                                              If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                                                  If Environment.Is64BitOperatingSystem = True Then
-                                                                      Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
-                                                                  Else
-                                                                      Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
-                                                                  End If
-                                                              End If
-                                                          End If
-                                                      Else
-                                                          MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
-                                                          Exit Sub
-                                                      End If
-                                                  End Sub)
-
-        workingThread.Start()
+                                                           If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
+                                                               If Environment.Is64BitOperatingSystem = True Then
+                                                                   Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
+                                                               Else
+                                                                   Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
+                                                               End If
+                                                           End If
+                                                       End If
+                                                   Else
+                                                       MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
+                                                       Exit Sub
+                                                   End If
+                                               End Sub)
     End Sub
 
     Private Sub chkLoadAtUserStartup_Click(sender As Object, e As EventArgs) Handles chkLoadAtUserStartup.Click
@@ -512,10 +497,7 @@ Public Class Form1
     ' ============================
 
     Private Sub btnCheckForUpdates_Click(sender As Object, e As EventArgs) Handles btnCheckForUpdates.Click
-        Dim userInitiatedCheckForUpdatesThread As New Threading.Thread(AddressOf userInitiatedCheckForUpdates)
-        userInitiatedCheckForUpdatesThread.Name = "User Initiated Check For Updates Thread"
-        userInitiatedCheckForUpdatesThread.Priority = Threading.ThreadPriority.Lowest
-        userInitiatedCheckForUpdatesThread.Start()
+        Threading.ThreadPool.QueueUserWorkItem(AddressOf userInitiatedCheckForUpdates)
         btnCheckForUpdates.Enabled = False
     End Sub
 
