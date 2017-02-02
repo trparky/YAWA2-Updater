@@ -2,6 +2,7 @@
 Imports System.Text.RegularExpressions
 Imports Microsoft.Win32.TaskScheduler
 Imports System.Management
+Imports System.Xml
 
 Public Class Form1
     Private strLocationOfCCleaner, remoteINIFileVersion, localINIFileVersion As String
@@ -512,9 +513,57 @@ Public Class Form1
     Private Const webSiteURL As String = "www.toms-world.org/blog/yawa2updater"
 
     Private Const programCodeName As String = "yawa2updater"
-    Private Const programUpdateCheckerURLPOST As String = "www.toms-world.org/programupdatechecker"
+    Private Const programUpdateCheckerXMLFile As String = "www.toms-world.org/updates/yawa2_update.xml"
     'Private Const programUpdateCheckerURL As String = "www.toms-world.org/programupdatechecker/yawa2updater/version/"
     Private Const programName As String = "YAWA2 Updater"
+
+    Private versionInfo As String() = Application.ProductVersion.Split(".")
+    Private shortMajor As Short = Short.Parse(versionInfo(versionPieces.major).Trim)
+    Private shortMinor As Short = Short.Parse(versionInfo(versionPieces.minor).Trim)
+    Private shortBuild As Short = Short.Parse(versionInfo(versionPieces.build).Trim)
+
+    Private versionStringWithoutBuild As String = String.Format("{0}.{1}", versionInfo(versionPieces.major), versionInfo(versionPieces.minor))
+
+    ''' <summary>This parses the XML updata data and determines if an update is needed.</summary>
+    ''' <param name="xmlData">The XML data from the web site.</param>
+    ''' <returns>A Boolean value indicating if the program has been updated or not.</returns>
+    Private Function processUpdateXMLData(ByVal xmlData As String) As Boolean
+        Try
+            Dim xmlDocument As New XmlDocument() ' First we create an XML Document Object.
+            xmlDocument.Load(New IO.StringReader(xmlData)) ' Now we try and parse the XML data.
+
+            Dim xmlNode As XmlNode = xmlDocument.SelectSingleNode("/xmlroot")
+
+            Dim remoteVersion As String = xmlNode.SelectSingleNode("version").InnerText.Trim
+            Dim remoteBuild As String = xmlNode.SelectSingleNode("build").InnerText.Trim
+            Dim shortRemoteBuild As Short
+
+            ' This checks to see if current version and the current build matches that of the remote values in the XML document.
+            If remoteVersion.Equals(versionStringWithoutBuild) And remoteBuild.Equals(shortBuild.ToString) Then
+                If Short.TryParse(remoteBuild, shortRemoteBuild) And remoteVersion.Equals(versionStringWithoutBuild) Then
+                    If shortRemoteBuild < shortBuild Then
+                        ' This is weird, the remote build is less than the current build. Something went wrong. So to be safe we're going to return a False value indicating that there is no update to download. Better to be safe.
+                        Return False
+                    End If
+                End If
+
+                ' OK, they match so there's no update to download and update to therefore we return a False value.
+                Return False
+            Else
+                ' We return a True value indicating that there is a new version to download and install.
+                Return True
+            End If
+        Catch ex As XPath.XPathException
+            ' Something went wrong so we return a False value.
+            Return False
+        Catch ex As XmlException
+            ' Something went wrong so we return a False value.
+            Return False
+        Catch ex As Exception
+            ' Something went wrong so we return a False value.
+            Return False
+        End Try
+    End Function
 
     Sub userInitiatedCheckForUpdates()
         Dim internetConnectionCheckResult As Boolean = checkForInternetConnection()
@@ -524,81 +573,14 @@ Public Class Form1
             MsgBox("No Internet connection detected.", MsgBoxStyle.Information, Me.Text)
         ElseIf internetConnectionCheckResult = True Then
             Try
-                Dim version() As String = Application.ProductVersion.Split(".".ToCharArray) ' Gets the program version
-
-                Dim majorVersion As Short = Short.Parse(version(0))
-                Dim minorVersion As Short = Short.Parse(version(1))
-                Dim buildVersion As Short = Short.Parse(version(2))
-
+                Dim xmlData As String = Nothing
                 Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
 
-                httpHelper.addPOSTData("program", "yawa2updater")
-                httpHelper.addPOSTData("version", majorVersion & "." & minorVersion)
-
-                Dim strRemoteBuild As String = Nothing, shortRemoteBuild As Short
-
-                If httpHelper.getWebData(programUpdateCheckerURLPOST, strRemoteBuild, False) = True Then
-                    Debug.WriteLine("strRemoteBuild = " & strRemoteBuild)
-
-                    ' This handles entirely new versions, not just new builds.
-                    If strRemoteBuild.Contains("newversion") = True Then
-                        ' Example: newversion-1.2
-                        Dim strRemoteBuildParts As String() = strRemoteBuild.Split("-")
-                        MsgBox(String.Format("{3} version {0}.{1} is no longer supported and has been replaced by version {2}.", majorVersion, minorVersion, strRemoteBuildParts(1), programName), MsgBoxStyle.Information, Me.Text)
+                If httpHelper.getWebData(programUpdateCheckerXMLFile, xmlData, False) = True Then
+                    If processUpdateXMLData(xmlData) Then
                         downloadAndDoUpdate()
-                        Exit Sub
-                    ElseIf strRemoteBuild.Contains("beta") = True Then
-                        Dim strRemoteBuildParts As String() = strRemoteBuild.Split("-")
-                        If strRemoteBuildParts(1) > buildVersion Then
-                            Dim updateQuestion As MsgBoxResult = MsgBox("There is an update available but it's classified as a beta/test version." & vbCrLf & vbCrLf & "Do you want to download the update?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
-                            If updateQuestion = MsgBoxResult.Yes Then
-                                downloadAndDoUpdate()
-                                Exit Sub
-                            End If
-                        ElseIf Short.Parse(strRemoteBuildParts(1)) = buildVersion Then
-                            MsgBox("You already have the latest version.", MsgBoxStyle.Information, Me.Text)
-                        End If
-                    ElseIf strRemoteBuild.Contains("minor") = True Then
-                        Dim strRemoteBuildParts As String() = strRemoteBuild.Split("-")
-                        Debug.WriteLine(strRemoteBuildParts.ToString)
-
-                        Dim strRemoteBuildParts2Split As New Specialized.StringCollection
-                        If strRemoteBuildParts(2).Contains(",") Then
-                            strRemoteBuildParts2Split.AddRange(strRemoteBuildParts(2).ToString.Trim.Split(","))
-                            'For Each item As String In strRemoteBuildParts(2).ToString.Trim.Split(",")
-                            '    strRemoteBuildParts2Split.Add(item.Trim)
-                            'Next
-                        Else
-                            strRemoteBuildParts2Split.Add(strRemoteBuildParts(2).ToString.Trim)
-                        End If
-
-                        Debug.WriteLine("strRemoteBuildParts2Split = " & strRemoteBuildParts2Split.ToString)
-
-                        If strRemoteBuildParts(1) > buildVersion And strRemoteBuildParts2Split.Contains(buildVersion.ToString) = True Then
-                            Dim updateQuestion As MsgBoxResult = MsgBox("There is an update available but it's classified as a minor update.  It's not a required update so if you do not want to update the program at this time, it is OK to keep using the version you have." & vbCrLf & vbCrLf & "Do you want to download the update?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
-                            If updateQuestion = MsgBoxResult.Yes Then
-                                downloadAndDoUpdate()
-                                Exit Sub
-                            End If
-                        ElseIf strRemoteBuildParts(1) > buildVersion And strRemoteBuildParts2Split.Contains(buildVersion.ToString) = False Then
-                            downloadAndDoUpdate()
-                            Exit Sub
-                        ElseIf Short.Parse(strRemoteBuildParts(1)) = buildVersion Then
-                            Debug.WriteLine(strRemoteBuildParts(1))
-                            MsgBox("You already have the latest version.", MsgBoxStyle.Information, Me.Text)
-                        End If
-
-                        strRemoteBuildParts2Split.Clear()
-                        strRemoteBuildParts2Split = Nothing
-                    ElseIf Short.TryParse(strRemoteBuild, shortRemoteBuild) = True Then
-                        If shortRemoteBuild < buildVersion Then
-                            MsgBox("Somehow you have a version that is newer than is listed on the product web site, wierd.", MsgBoxStyle.Information, Me.Text)
-                        ElseIf shortRemoteBuild = buildVersion Then
-                            MsgBox("You already have the latest version.", MsgBoxStyle.Information, Me.Text)
-                        ElseIf shortRemoteBuild > buildVersion Then
-                            MsgBox(String.Format("There is an updated version of {0}.  The update will now download.", programName), MsgBoxStyle.Information, Me.Text & " Version Checker")
-                            downloadAndDoUpdate(True)
-                        End If
+                    Else
+                        MsgBox("You already have the latest version.", MsgBoxStyle.Information, Me.Text)
                     End If
                 Else
                     btnCheckForUpdates.Enabled = True
@@ -769,3 +751,10 @@ Public Class Form1
         End If
     End Sub
 End Class
+
+Public Enum versionPieces As Short
+    major = 0
+    minor = 1
+    build = 2
+    revision = 3
+End Enum
