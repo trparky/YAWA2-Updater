@@ -20,7 +20,6 @@ End Namespace
 Module globalVariables
     Public boolWinXP As Boolean = False
     Public boolUseSSL As Boolean = True
-    Public Const programName As String = "YAWA2 Updater"
 End Module
 
 Namespace programVariables
@@ -138,24 +137,14 @@ Namespace programFunctions
 
         Public Function getRemoteINIFileVersion() As String
             Try
-                Dim myHttpWebRequest As Net.HttpWebRequest = Net.WebRequest.Create(programConstants.WinApp2INIFileURL)
-                myHttpWebRequest.Proxy = Net.WebProxy.GetDefaultProxy
-                myHttpWebRequest.AddRange(0, 140) ' Only load the first 140 bytes of the data.
+                Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+                Dim strINIFileData As String = Nothing
 
-                Dim myHttpWebResponse As Net.HttpWebResponse = myHttpWebRequest.GetResponse()
-                Dim streamResponse As IO.Stream = myHttpWebResponse.GetResponseStream()
-                Dim streamRead As New IO.StreamReader(streamResponse)
-                Dim remoteData As String = streamRead.ReadToEnd()
-
-                Debug.WriteLine(getINIVersionFromString(remoteData))
-
-                streamRead.Close()
-                streamRead.Dispose()
-                streamResponse.Close()
-                streamResponse.Dispose()
-                myHttpWebResponse.Close()
-
-                Return getINIVersionFromString(remoteData)
+                If httpHelper.getWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 140, False) Then
+                    Return getINIVersionFromString(strINIFileData)
+                Else
+                    Return programConstants.errorRetrievingRemoteINIFileVersion
+                End If
             Catch ex As Exception
                 Return programConstants.errorRetrievingRemoteINIFileVersion
             End Try
@@ -164,14 +153,14 @@ Namespace programFunctions
         Public Sub trimINIFile(strLocationOfCCleaner As String, remoteINIFileVersion As String, boolSilentMode As Boolean)
             Dim tempString As String, streamReader As IO.StreamReader
             Dim oldINIFileContents As String
-            Dim sectionsToRemove As New System.Collections.Specialized.StringCollection
+            Dim sectionsToRemove As New Specialized.StringCollection
 
             streamReader = New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
             oldINIFileContents = streamReader.ReadToEnd
             streamReader.Close()
             streamReader.Dispose()
 
-            Dim matchData As Text.RegularExpressions.Match = System.Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; Application Cleaning file" & vbCrLf & ";" & vbCrLf & "; Notes" & vbCrLf & "; # of entries: ([0-9,]*)" & vbCrLf & ".*" & vbCrLf & "; Please do not host this file anywhere without permission\. This is to facilitate proper distribution of the latest version\. Thanks\.)", System.Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
+            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; Application Cleaning file" & vbCrLf & ";" & vbCrLf & "; Notes" & vbCrLf & "; # of entries: ([0-9,]*)" & vbCrLf & ".*" & vbCrLf & "; Please do not host this file anywhere without permission\. This is to facilitate proper distribution of the latest version\. Thanks\.)", System.Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
             matchData = Nothing
@@ -184,8 +173,8 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectOS")
                 If tempString <> "" Then
-                    If tempString.Contains(Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor) = False Then
-                        If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Not tempString.Contains(Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor) Then
+                        If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Continue For
                         End If
@@ -195,7 +184,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "Detect")
                 If tempString <> "" Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -203,7 +192,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectFile")
                 If tempString <> "" Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -211,7 +200,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "Detect1")
                 If tempString <> "" Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -219,7 +208,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectFile1")
                 If tempString <> "" Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -227,7 +216,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "FileKey1")
                 If tempString <> "" Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -235,7 +224,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "RegKey1")
                 If tempString <> "" Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) = True Then
+                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -266,14 +255,14 @@ Namespace programFunctions
             newINIFileContents = Nothing
             rawINIFileContents = Nothing
 
-            If boolSilentMode = False Then
-                If programVariables.boolMobileMode = True Then
+            If Not boolSilentMode Then
+                If programVariables.boolMobileMode Then
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")
                 Else
                     Dim msgBoxResult As MsgBoxResult = MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
                     If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                        If Environment.Is64BitOperatingSystem = True Then
+                        If Environment.Is64BitOperatingSystem Then
                             Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
                         Else
                             Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
@@ -298,13 +287,14 @@ Namespace programFunctions
             Return System.Text.RegularExpressions.Regex.Match(input, "; Version: v([0-9.A-Za-z]+)").Groups(1).Value
         End Function
 
-        Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As System.Collections.Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Dim directory As String = tempString.Split("|")(0)
+            directory = directory.Replace("*", "")
 
             If directory.Contains("%ProgramFiles%") Then
-                If Environment.Is64BitOperatingSystem = True Then
-                    If IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) = False And IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) = False Then
-                        If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                If Environment.Is64BitOperatingSystem Then
+                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
+                        If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
                         Else
@@ -314,8 +304,8 @@ Namespace programFunctions
                         Return True
                     End If
                 Else
-                    If IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) = False Then
-                        If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
+                        If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
                         Else
@@ -326,9 +316,9 @@ Namespace programFunctions
                     End If
                 End If
             ElseIf directory.Contains("%CommonProgramFiles%") Then
-                If Environment.Is64BitOperatingSystem = True Then
-                    If IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) = False And IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) = False Then
-                        If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                If Environment.Is64BitOperatingSystem Then
+                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
+                        If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
                         Else
@@ -338,8 +328,8 @@ Namespace programFunctions
                         Return True
                     End If
                 Else
-                    If IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) = False Then
-                        If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
+                        If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
                         Else
@@ -351,9 +341,10 @@ Namespace programFunctions
                 End If
             Else
                 directory = translateVarsInPath(directory)
+                directory = directory.Replace("*", "")
 
-                If IO.Directory.Exists(directory) = False Then
-                    If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                If Not IO.Directory.Exists(directory) Then
+                    If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                         sectionsToRemove.Add(iniFileSection.Name)
                         Return True
                     Else
@@ -367,7 +358,7 @@ Namespace programFunctions
             Return False
         End Function
 
-        Public Function processRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As System.Collections.Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function processRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Try
                 If tempString.Contains(".NETFramework") Then
                     Return True
@@ -376,9 +367,9 @@ Namespace programFunctions
                 If tempString.StartsWith("HKCU") Then
                     tempString = tempString.Replace("HKCU\", "")
 
-                    If Environment.Is64BitOperatingSystem = True Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) = True And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Environment.Is64BitOperatingSystem Then
+                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -388,8 +379,8 @@ Namespace programFunctions
                             Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.CurrentUser.OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                        If Boolean.Parse(Registry.CurrentUser.OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -402,9 +393,9 @@ Namespace programFunctions
                 ElseIf tempString.StartsWith("HKLM") Then
                     tempString = tempString.Replace("HKLM\", "")
 
-                    If Environment.Is64BitOperatingSystem = True Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) = True And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Environment.Is64BitOperatingSystem Then
+                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -414,8 +405,8 @@ Namespace programFunctions
                             Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.LocalMachine.OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                        If Boolean.Parse(Registry.LocalMachine.OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -428,9 +419,9 @@ Namespace programFunctions
                 ElseIf tempString.StartsWith("HKCR") Then
                     tempString = tempString.Replace("HKCR\", "")
 
-                    If Environment.Is64BitOperatingSystem = True Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) = True And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Environment.Is64BitOperatingSystem Then
+                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -440,8 +431,8 @@ Namespace programFunctions
                             Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.ClassesRoot.OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                        If Boolean.Parse(Registry.ClassesRoot.OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -454,9 +445,9 @@ Namespace programFunctions
                 ElseIf tempString.StartsWith("HKU") Then
                     tempString = tempString.Replace("HKU\", "")
 
-                    If Environment.Is64BitOperatingSystem = True Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) = True And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                    If Environment.Is64BitOperatingSystem Then
+                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
@@ -466,8 +457,8 @@ Namespace programFunctions
                             Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.Users.OpenSubKey(tempString) Is Nothing) = True Then
-                            If sectionsToRemove.Contains(iniFileSection.Name) = False Then
+                        If Boolean.Parse(Registry.Users.OpenSubKey(tempString) Is Nothing) Then
+                            If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
                                 Return True
                             Else
