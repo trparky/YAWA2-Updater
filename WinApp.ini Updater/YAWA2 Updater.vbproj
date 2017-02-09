@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationEvents.vb" />
+    <Compile Include="Check for Update Code.vb" />
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>
     </Compile>
