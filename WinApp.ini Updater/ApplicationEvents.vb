@@ -48,7 +48,7 @@ Namespace My
         Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
             Dim fullFileName As String
 
-            If boolFullFilePathPassed = True Then
+            If boolFullFilePathPassed Then
                 fullFileName = strFileName
             Else
                 fullFileName = New IO.FileInfo(strFileName).FullName
@@ -94,7 +94,7 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.loadINIFileFromFile(programConstants.configINIFile)
 
-                If Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey), programVariables.boolMobileMode) = False Then
+                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey), programVariables.boolMobileMode) Then
                     programVariables.boolMobileMode = False
                 End If
 
@@ -102,7 +102,7 @@ Namespace My
                     programVariables.boolTrim = False
                 End If
 
-                If Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey), programVariables.boolNotifyAfterUpdateAtLogon) = False Then
+                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey), programVariables.boolNotifyAfterUpdateAtLogon) Then
                     programVariables.boolNotifyAfterUpdateAtLogon = False
                 End If
 
@@ -124,16 +124,16 @@ Namespace My
             End If
 
             If My.Application.CommandLineArgs.Count = 1 Then
-                Dim commandLineArgument As String = My.Application.CommandLineArgs(0).ToLower.Trim
+                Dim commandLineArgument As String = My.Application.CommandLineArgs(0).Trim
 
-                If commandLineArgument = "-silent" Or commandLineArgument = "/silent" Then
+                If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
                     Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
 
-                    If programVariables.boolMobileMode = True Then
+                    If programVariables.boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName
                     Else
                         Try
-                            If Environment.Is64BitOperatingSystem = True Then
+                            If Environment.Is64BitOperatingSystem Then
                                 If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
                                     MsgBox("CCleaner doesn't appear to be installed on your machine.", MsgBoxStyle.Information, messageBoxTitle)
                                     e.Cancel = True
@@ -174,7 +174,7 @@ Namespace My
                             Exit Sub
                         End If
 
-                        If IO.File.Exists(programConstants.customEntriesFile) = True Then
+                        If IO.File.Exists(programConstants.customEntriesFile) Then
                             Dim customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
                             stringCustomEntries = customEntriesFileReader.ReadToEnd.Trim
                             customEntriesFileReader.Close()
@@ -203,7 +203,7 @@ Namespace My
                             Dim remoteINIFileData As String = Nothing
                             Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
 
-                            If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) = True Then
+                            If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
 
                                 If stringCustomEntries = Nothing Then
@@ -230,7 +230,7 @@ Namespace My
                             Dim msgBoxResult As MsgBoxResult = MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp2.ini File Updated")
 
                             If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                If Environment.Is64BitOperatingSystem = True Then
+                                If Environment.Is64BitOperatingSystem Then
                                     Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "CCleaner64.exe"))
                                 Else
                                     Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "CCleaner.exe"))

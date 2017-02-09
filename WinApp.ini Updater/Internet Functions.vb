@@ -9,8 +9,8 @@
 
             httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try
-                                                    If strURLInput.Trim.ToLower.StartsWith("http") = False Then
-                                                        If boolUseSSL = True Then
+                                                    If Not strURLInput.Trim.ToLower.StartsWith("http") Then
+                                                        If boolUseSSL Then
                                                             Debug.WriteLine("setURLPreProcessor code -- https://" & strURLInput)
                                                             Return "https://" & strURLInput
                                                         Else

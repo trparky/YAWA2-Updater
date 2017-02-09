@@ -14,7 +14,7 @@ Module Module1
     <Extension()>
     Public Function caseInsensitiveContains(haystack As String, needle As String, Optional boolDoEscaping As Boolean = False) As Boolean
         Try
-            If boolDoEscaping = True Then needle = Regex.Escape(needle)
+            If boolDoEscaping Then needle = Regex.Escape(needle)
             Return Regex.IsMatch(haystack, needle, RegexOptions.IgnoreCase)
         Catch ex As Exception
             Return False
@@ -23,7 +23,7 @@ Module Module1
 
     <Extension()>
     Public Function stringCompare(str1 As String, str2 As String, Optional boolCaseInsensitive As Boolean = True)
-        If boolCaseInsensitive = True Then
+        If boolCaseInsensitive Then
             Return str1.Trim.Equals(str2.Trim, StringComparison.OrdinalIgnoreCase)
         Else
             Return str1.Trim.Equals(str2.Trim, StringComparison.Ordinal)
@@ -84,12 +84,12 @@ Module Module1
             If processExecutablePath IsNot Nothing Then
                 processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
 
-                If boolFullFilePathPassed = True Then
-                    If stringCompare(strFileName, processExecutablePathFileInfo.FullName) = True Then
+                If boolFullFilePathPassed Then
+                    If stringCompare(strFileName, processExecutablePathFileInfo.FullName) Then
                         killProcess(process.Id)
                     End If
-                ElseIf boolFullFilePathPassed = False Then
-                    If stringCompare(strFileName, processExecutablePathFileInfo.Name) = True Then
+                ElseIf Not boolFullFilePathPassed Then
+                    If stringCompare(strFileName, processExecutablePathFileInfo.Name) Then
                         killProcess(process.Id)
                     End If
                 End If
@@ -137,7 +137,7 @@ Module Module1
         Try
             Dim principal As WindowsPrincipal = New WindowsPrincipal(WindowsIdentity.GetCurrent())
 
-            If principal.IsInRole(WindowsBuiltInRole.Administrator) = True Then
+            If principal.IsInRole(WindowsBuiltInRole.Administrator) Then
                 Return True
             Else
                 Return False
@@ -157,11 +157,11 @@ Module Module1
             folderPath = folderPath.Substring(0, folderPath.Length - 1)
         End If
 
-        If String.IsNullOrEmpty(folderPath) = True Or IO.Directory.Exists(folderPath) = False Then
+        If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then
             Return False
         End If
 
-        If checkByFolderACLs(folderPath) = True Then
+        If checkByFolderACLs(folderPath) Then
             Try
                 IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
                 If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
