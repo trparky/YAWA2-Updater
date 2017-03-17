@@ -5,6 +5,7 @@
 ' a specific target and scoped to a namespace, type, member, etc.
 
 <Assembly: CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles")>
+<Assembly: CodeAnalysis.SuppressMessage("Style", "IDE0017:Simplify object initialization")>
 <Assembly: CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable", Scope:="type", Target:="YAWA2_Updater.dnsLookupError")>
 <Assembly: CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable", Scope:="type", Target:="YAWA2_Updater.credentialsAlreadySet")>
 <Assembly: CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable", Scope:="type", Target:="YAWA2_Updater.httpProtocolException")>
