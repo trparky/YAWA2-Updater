@@ -99,9 +99,10 @@ Module Check_for_Update_Code
         If boolWinXP Then
             Process.Start(newExecutableFilePath, "-update")
         Else
-            Dim startInfo As New ProcessStartInfo
-            startInfo.FileName = newExecutableFilePath
-            startInfo.Arguments = "-update"
+            Dim startInfo As New ProcessStartInfo With {
+                .FileName = newExecutableFilePath,
+                .Arguments = "-update"
+            }
             If Not canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
             Process.Start(startInfo)
 

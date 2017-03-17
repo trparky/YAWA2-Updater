@@ -181,9 +181,10 @@ Public Class Form1
             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
         Else
             If Not programFunctions.areWeAnAdministrator() And Short.Parse(Environment.OSVersion.Version.Major) >= 6 Then
-                Dim startInfo As New ProcessStartInfo
-                startInfo.FileName = Process.GetCurrentProcess.MainModule.FileName
-                startInfo.Verb = "runas"
+                Dim startInfo As New ProcessStartInfo With {
+                    .FileName = Process.GetCurrentProcess.MainModule.FileName,
+                    .Verb = "runas"
+                }
                 Process.Start(startInfo)
                 Process.GetCurrentProcess.Kill()
                 Return Nothing

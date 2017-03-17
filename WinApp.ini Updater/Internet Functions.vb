@@ -1,11 +1,12 @@
 ﻿Namespace internetFunctions
     Module Internet_Functions
         Public Function createNewHTTPHelperObject() As httpHelper
-            Dim httpHelper As New httpHelper
-            httpHelper.setUserAgent = createHTTPUserAgentHeaderString()
+            Dim httpHelper As New httpHelper With {
+                .setUserAgent = createHTTPUserAgentHeaderString(),
+                .useHTTPCompression = True,
+                .setProxyMode = True
+            }
             httpHelper.addHTTPHeader("OPERATING_SYSTEM", getFullOSVersionString())
-            httpHelper.useHTTPCompression = True
-            httpHelper.setProxyMode = True
 
             httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try
