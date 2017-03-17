@@ -57,17 +57,17 @@ Module Module1
 
     Private Function getProcessExecutablePath(processID As Integer) As String
         Dim memoryBuffer = New Text.StringBuilder(1024)
-        Dim processHandle As IntPtr = OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
+        Dim processHandle As IntPtr = NativeMethods.OpenProcess(NativeMethods.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
 
         If processHandle <> IntPtr.Zero Then
             Try
                 Dim memoryBufferSize As Integer = memoryBuffer.Capacity
 
-                If QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
+                If NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
                     Return memoryBuffer.ToString()
                 End If
             Finally
-                CloseHandle(processHandle)
+                NativeMethods.CloseHandle(processHandle)
             End Try
         End If
 
@@ -98,40 +98,6 @@ Module Module1
             End If
         Next
     End Sub
-
-    <Flags>
-    Public Enum ProcessAccessFlags As UInteger
-        PROCESS_QUERY_LIMITED_INFORMATION = &H1000
-        All = &H1F0FFF
-        Terminate = &H1
-        CreateThread = &H2
-        VirtualMemoryOperation = &H8
-        VirtualMemoryRead = &H10
-        VirtualMemoryWrite = &H20
-        DuplicateHandle = &H40
-        CreateProcess = &H80
-        SetQuota = &H100
-        SetInformation = &H200
-        QueryInformation = &H400
-        QueryLimitedInformation = &H1000
-        Synchronize = &H100000
-    End Enum
-
-    <DllImport("kernel32.dll")>
-    Private Function QueryFullProcessImageName(hprocess As IntPtr, dwFlags As Integer, lpExeName As Text.StringBuilder, ByRef size As Integer) As Boolean
-    End Function
-
-    <DllImport("kernel32.dll")>
-    Private Function OpenProcess(dwDesiredAccess As ProcessAccessFlags, bInheritHandle As Boolean, dwProcessId As Integer) As IntPtr
-    End Function
-
-    <DllImport("kernel32.dll", SetLastError:=True)>
-    Private Function CloseHandle(hHandle As IntPtr) As Boolean
-    End Function
-
-    <DllImport("kernel32.dll")>
-    Private Function MoveFileEx(ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal dwFlags As Int32) As Boolean
-    End Function
 
     Public Function areWeAnAdministrator() As Boolean
         Try
@@ -201,3 +167,42 @@ Module Module1
         End Try
     End Function
 End Module
+
+Friend NotInheritable Class NativeMethods
+    Private Sub New()
+    End Sub
+
+    <Flags>
+    Public Enum ProcessAccessFlags As UInteger
+        PROCESS_QUERY_LIMITED_INFORMATION = &H1000
+        All = &H1F0FFF
+        Terminate = &H1
+        CreateThread = &H2
+        VirtualMemoryOperation = &H8
+        VirtualMemoryRead = &H10
+        VirtualMemoryWrite = &H20
+        DuplicateHandle = &H40
+        CreateProcess = &H80
+        SetQuota = &H100
+        SetInformation = &H200
+        QueryInformation = &H400
+        QueryLimitedInformation = &H1000
+        Synchronize = &H100000
+    End Enum
+
+    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
+    Friend Shared Function QueryFullProcessImageName(hprocess As IntPtr, dwFlags As Integer, lpExeName As Text.StringBuilder, ByRef size As Integer) As Boolean
+    End Function
+
+    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
+    Friend Shared Function OpenProcess(dwDesiredAccess As ProcessAccessFlags, bInheritHandle As Boolean, dwProcessId As Integer) As IntPtr
+    End Function
+
+    <DllImport("kernel32.dll", SetLastError:=True, CharSet:=CharSet.Unicode)>
+    Friend Shared Function CloseHandle(hHandle As IntPtr) As Boolean
+    End Function
+
+    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
+    Friend Shared Function MoveFileEx(ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal dwFlags As Int32) As Boolean
+    End Function
+End Class
