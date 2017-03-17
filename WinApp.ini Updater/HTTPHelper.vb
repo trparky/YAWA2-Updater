@@ -120,6 +120,21 @@ Public Class proxyConfigurationErrorException
     End Sub
 End Class
 
+Public Class dnsLookupError
+    Inherits Exception
+
+    Public Sub New()
+    End Sub
+
+    Public Sub New(message As String)
+        MyBase.New(message)
+    End Sub
+
+    Public Sub New(message As String, inner As Exception)
+        MyBase.New(message, inner)
+    End Sub
+End Class
+
 Public Class noHTTPServerResponseHeadersFoundException
     Inherits Exception
 
@@ -211,7 +226,7 @@ Class cookieDetails
 End Class
 
 Public Class downloadStatusDetails
-    Public remoteFileSize As Long, localFileSize As Long, percentageDownloaded As Short
+    Public remoteFileSize As ULong, localFileSize As ULong, percentageDownloaded As Short
 End Class
 
 Class credentials
@@ -220,7 +235,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class httpHelper
-    Private Const classVersion As String = "1.260"
+    Private Const classVersion As String = "1.280"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -237,6 +252,7 @@ Public Class httpHelper
     Private downloadStatusUpdaterThread As Threading.Thread = Nothing
     Private _intDownloadThreadSleepTime As Integer = 1000
     Private intDownloadBufferSize As Integer = 8191 ' The default is 8192 bytes or 8 KBs.
+    Private strLastHTTPServerResponse As String
 
     Private additionalHTTPHeaders As New Dictionary(Of String, String)
     Private httpCookies As New Dictionary(Of String, cookieDetails)
@@ -400,6 +416,7 @@ Public Class httpHelper
         customErrorHandler = Nothing
         downloadStatusUpdater = Nothing
         httpResponseHeaders = Nothing
+        strLastHTTPServerResponse = Nothing
     End Sub
 
     ''' <summary>Returns the last accessed URL by this Class instance.</summary>
@@ -435,7 +452,7 @@ Public Class httpHelper
 
         If postData.Count <> 0 Then
             For Each item In postData
-                stringBuilder.AppendLine("POST Data | " & item.Key & "=" & item.Value)
+                stringBuilder.AppendLine("POST Data | " & item.Key & "=" & item.Value.ToString())
             Next
         End If
 
@@ -739,7 +756,7 @@ Public Class httpHelper
                     lastException = New noMimeTypeFoundException("No MIME Type found for " & fileInfo.Extension.ToLower)
                     Throw lastException
                 Else
-                    contentType = regPath.GetValue("Content Type", Nothing)
+                    contentType = regPath.GetValue("Content Type", Nothing).ToString
                 End If
 
                 If contentType = Nothing Then
@@ -853,9 +870,11 @@ beginAgain:
     ''' <exception cref="Exception">If this function throws a general Exception, something really went wrong; something that the function normally doesn't handle.</exception>
     ''' <exception cref="httpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="sslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
+    ''' <exception cref="dnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     Public Function downloadFile(ByVal fileDownloadURL As String, ByRef memStream As MemoryStream, Optional ByVal throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
         currentFileSize = 0
+        Dim amountDownloaded As Double
 
         Try
             If urlPreProcessor IsNot Nothing Then
@@ -867,40 +886,19 @@ beginAgain:
             Dim dataBuffer As Byte() = New Byte(intDownloadBufferSize) {}
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(fileDownloadURL), Net.HttpWebRequest)
-            httpWebRequest.Timeout = httpTimeOut
-            httpWebRequest.KeepAlive = True
-
-            If credentials IsNot Nothing Then
-                httpWebRequest.PreAuthenticate = True
-                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
-            End If
-
-            If boolUseHTTPCompression Then
-                ' We tell the web server that we can accept a GZIP and Deflate compressed data stream.
-                httpWebRequest.Accept = "gzip, deflate"
-                httpWebRequest.Headers.Add(Net.HttpRequestHeader.AcceptEncoding, "gzip, deflate")
-            End If
 
             configureProxy(httpWebRequest)
-
-            If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
-            If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
-            If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
+            addParametersToWebRequest(httpWebRequest)
 
             Dim webResponse As Net.WebResponse = httpWebRequest.GetResponse() ' We now get the web response.
-
-            If fileDownloadURL.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
-                sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
-            Else
-                sslCertificate = Nothing
-            End If
+            captureSSLInfo(fileDownloadURL, httpWebRequest)
 
             ' Gets the size of the remote file on the web server.
-            remoteFileSize = webResponse.ContentLength
+            remoteFileSize = CType(webResponse.ContentLength, ULong)
 
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
 
-            Dim lngBytesReadFromInternet As Long = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads some data from the HTTP stream into our data buffer.
+            Dim lngBytesReadFromInternet As ULong = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads some data from the HTTP stream into our data buffer.
             Dim oldCurrentFileSize As Long = 0
 
             ' We keep looping until all of the data has been downloaded.
@@ -909,12 +907,13 @@ beginAgain:
                 ' downloaded from the server repeatedly to a variable called "currentFileSize".
                 currentFileSize += lngBytesReadFromInternet
 
-                memStream.Write(dataBuffer, 0, lngBytesReadFromInternet) ' Writes the data directly to disk.
+                memStream.Write(dataBuffer, 0, CType(lngBytesReadFromInternet, Integer)) ' Writes the data directly to disk.
 
-                httpDownloadProgressPercentage = Math.Round((currentFileSize / remoteFileSize) * 100, 0) ' Update the download percentage value.
+                amountDownloaded = (currentFileSize / remoteFileSize) * 100
+                httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
                 downloadStatusUpdateInvoker()
 
-                lngBytesReadFromInternet = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
+                lngBytesReadFromInternet = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads more data into our data buffer.
             End While
 
             ' Before we return the MemoryStream to the user we have to reset the position back to the beginning of the Stream. This is so that when the
@@ -964,6 +963,11 @@ beginAgain:
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
                     Return False
+                ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
+                    Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
+                    lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    Throw lastException
+                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
@@ -985,10 +989,12 @@ beginAgain:
     ''' <exception cref="Exception">If this function throws a general Exception, something really went wrong; something that the function normally doesn't handle.</exception>
     ''' <exception cref="httpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="sslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
+    ''' <exception cref="dnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     Public Function downloadFile(fileDownloadURL As String, localFileName As String, throwExceptionIfLocalFileExists As Boolean, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim fileWriteStream As FileStream = Nothing
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
         currentFileSize = 0
+        Dim amountDownloaded As Double
 
         Try
             If urlPreProcessor IsNot Nothing Then
@@ -1009,41 +1015,20 @@ beginAgain:
             Dim dataBuffer As Byte() = New Byte(intDownloadBufferSize) {}
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(fileDownloadURL), Net.HttpWebRequest)
-            httpWebRequest.Timeout = httpTimeOut
-            httpWebRequest.KeepAlive = True
-
-            If credentials IsNot Nothing Then
-                httpWebRequest.PreAuthenticate = True
-                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
-            End If
-
-            If boolUseHTTPCompression Then
-                ' We tell the web server that we can accept a GZIP and Deflate compressed data stream.
-                httpWebRequest.Accept = "gzip, deflate"
-                httpWebRequest.Headers.Add(Net.HttpRequestHeader.AcceptEncoding, "gzip, deflate")
-            End If
 
             configureProxy(httpWebRequest)
-
-            If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
-            If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
-            If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
+            addParametersToWebRequest(httpWebRequest)
 
             Dim webResponse As Net.WebResponse = httpWebRequest.GetResponse() ' We now get the web response.
-
-            If fileDownloadURL.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
-                sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
-            Else
-                sslCertificate = Nothing
-            End If
+            captureSSLInfo(fileDownloadURL, httpWebRequest)
 
             ' Gets the size of the remote file on the web server.
-            remoteFileSize = webResponse.ContentLength
+            remoteFileSize = CType(webResponse.ContentLength, ULong)
 
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
             fileWriteStream = New FileStream(localFileName, FileMode.Create) ' Creates a file write stream.
 
-            Dim lngBytesReadFromInternet As Long = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads some data from the HTTP stream into our data buffer.
+            Dim lngBytesReadFromInternet As ULong = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads some data from the HTTP stream into our data buffer.
             Dim oldCurrentFileSize As Long = 0
 
             ' We keep looping until all of the data has been downloaded.
@@ -1052,12 +1037,13 @@ beginAgain:
                 ' downloaded from the server repeatedly to a variable called "currentFileSize".
                 currentFileSize += lngBytesReadFromInternet
 
-                fileWriteStream.Write(dataBuffer, 0, lngBytesReadFromInternet) ' Writes the data directly to disk.
+                fileWriteStream.Write(dataBuffer, 0, CType(lngBytesReadFromInternet, Integer)) ' Writes the data directly to disk.
 
-                httpDownloadProgressPercentage = Math.Round((currentFileSize / remoteFileSize) * 100, 0) ' Update the download percentage value.
+                amountDownloaded = (currentFileSize / remoteFileSize) * 100
+                httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
                 downloadStatusUpdateInvoker()
 
-                lngBytesReadFromInternet = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
+                lngBytesReadFromInternet = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads more data into our data buffer.
             End While
 
             fileWriteStream.Close() ' Closes the file stream.
@@ -1109,6 +1095,11 @@ beginAgain:
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
                     Return False
+                ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
+                    Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
+                    lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    Throw lastException
+                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
@@ -1128,6 +1119,7 @@ beginAgain:
     ''' <exception cref="Exception">If this function throws a general Exception, something really went wrong; something that the function normally doesn't handle.</exception>
     ''' <exception cref="httpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="sslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
+    ''' <exception cref="dnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.getWebData("http://www.myserver.com/mywebpage", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
     ''' <param name="shortRangeTo">This controls how much data is downloaded from the server.</param>
@@ -1144,46 +1136,14 @@ beginAgain:
             If getData.Count <> 0 Then url &= "?" & Me.getGETDataString
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
-            httpWebRequest.Timeout = httpTimeOut
-            httpWebRequest.KeepAlive = True
-
             httpWebRequest.AddRange(shortRangeFrom, shortRangeTo)
 
-            If credentials IsNot Nothing Then
-                httpWebRequest.PreAuthenticate = True
-                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
-            End If
-
-            If boolUseHTTPCompression Then httpWebRequest.Accept = "gzip, deflate"
-
             configureProxy(httpWebRequest)
-
-            If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
-            If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
-            If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
-
-            If postData.Count = 0 Then
-                httpWebRequest.Method = "GET"
-            Else
-                httpWebRequest.Method = "POST"
-                Dim postDataString As String = Me.getPOSTDataString
-                httpWebRequest.ContentType = "application/x-www-form-urlencoded"
-                httpWebRequest.ContentLength = postDataString.Length
-
-                Dim httpRequestWriter = New StreamWriter(httpWebRequest.GetRequestStream())
-                httpRequestWriter.Write(postDataString)
-                httpRequestWriter.Close()
-                httpRequestWriter.Dispose()
-                httpRequestWriter = Nothing
-            End If
+            addParametersToWebRequest(httpWebRequest)
+            addPostDataToWebRequest(httpWebRequest)
 
             Dim httpWebResponse As Net.WebResponse = httpWebRequest.GetResponse()
-
-            If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
-                sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
-            Else
-                sslCertificate = Nothing
-            End If
+            captureSSLInfo(url, httpWebRequest)
 
             Dim httpInStream As New StreamReader(httpWebResponse.GetResponseStream())
             Dim httpTextOutput As String = httpInStream.ReadToEnd.Trim()
@@ -1197,6 +1157,8 @@ beginAgain:
             httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
+            strLastHTTPServerResponse = httpResponseText
+
             Return True
         Catch ex As Exception
             If TypeOf ex Is Threading.ThreadAbortException Then
@@ -1223,6 +1185,11 @@ beginAgain:
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
                     Return False
+                ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
+                    Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
+                    lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    Throw lastException
+                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
@@ -1244,6 +1211,7 @@ beginAgain:
     ''' <exception cref="Exception">If this function throws a general Exception, something really went wrong; something that the function normally doesn't handle.</exception>
     ''' <exception cref="httpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="sslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
+    ''' <exception cref="dnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.getWebData("http://www.myserver.com/mywebpage", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
     Public Function getWebData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = True) As Boolean
@@ -1255,47 +1223,16 @@ beginAgain:
             End If
             lastAccessedURL = url
 
-            If getData.Count <> 0 Then url &= "?" & Me.getGETDataString
+            If getData.Count <> 0 Then url &= "?" & getGETDataString()
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
-            httpWebRequest.Timeout = httpTimeOut
-            httpWebRequest.KeepAlive = True
-
-            If credentials IsNot Nothing Then
-                httpWebRequest.PreAuthenticate = True
-                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
-            End If
-
-            If boolUseHTTPCompression Then httpWebRequest.Accept = "gzip, deflate"
 
             configureProxy(httpWebRequest)
-
-            If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
-            If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
-            If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
-
-            If postData.Count = 0 Then
-                httpWebRequest.Method = "GET"
-            Else
-                httpWebRequest.Method = "POST"
-                Dim postDataString As String = Me.getPOSTDataString
-                httpWebRequest.ContentType = "application/x-www-form-urlencoded"
-                httpWebRequest.ContentLength = postDataString.Length
-
-                Dim httpRequestWriter = New StreamWriter(httpWebRequest.GetRequestStream())
-                httpRequestWriter.Write(postDataString)
-                httpRequestWriter.Close()
-                httpRequestWriter.Dispose()
-                httpRequestWriter = Nothing
-            End If
+            addParametersToWebRequest(httpWebRequest)
+            addPostDataToWebRequest(httpWebRequest)
 
             Dim httpWebResponse As Net.WebResponse = httpWebRequest.GetResponse()
-
-            If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
-                sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
-            Else
-                sslCertificate = Nothing
-            End If
+            captureSSLInfo(url, httpWebRequest)
 
             Dim httpInStream As New StreamReader(httpWebResponse.GetResponseStream())
             Dim httpTextOutput As String = httpInStream.ReadToEnd.Trim()
@@ -1309,6 +1246,8 @@ beginAgain:
             httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
+            strLastHTTPServerResponse = httpResponseText
+
             Return True
         Catch ex As Exception
             If TypeOf ex Is Threading.ThreadAbortException Then
@@ -1333,6 +1272,11 @@ beginAgain:
                     Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
+                    Throw lastException
+                    Return False
+                ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
+                    Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
+                    lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
                     Return False
                 End If
@@ -1357,6 +1301,7 @@ beginAgain:
     ''' <exception cref="Exception">If this function throws a general Exception, something really went wrong; something that the function normally doesn't handle.</exception>
     ''' <exception cref="httpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="sslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
+    ''' <exception cref="dnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.uploadData("http://www.myserver.com/myscript", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
     Public Function uploadData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = False) As Boolean
@@ -1378,25 +1323,13 @@ beginAgain:
             Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes((Convert.ToString(vbCr & vbLf & "--") & boundary) & vbCr & vbLf)
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
-            httpWebRequest.Timeout = httpTimeOut
-            httpWebRequest.KeepAlive = True
-
-            If credentials IsNot Nothing Then
-                httpWebRequest.PreAuthenticate = True
-                addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
-            End If
-
-            If boolUseHTTPCompression Then httpWebRequest.Accept = "gzip, deflate"
 
             configureProxy(httpWebRequest)
+            addParametersToWebRequest(httpWebRequest)
 
             httpWebRequest.KeepAlive = True
             httpWebRequest.ContentType = "multipart/form-data; boundary=" & boundary
             httpWebRequest.Method = "POST"
-
-            If strUserAgentString <> Nothing Then httpWebRequest.UserAgent = strUserAgentString
-            If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
-            If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
 
             If postData.Count <> 0 Then
                 Dim httpRequestWriter As Stream = httpWebRequest.GetRequestStream()
@@ -1445,12 +1378,7 @@ beginAgain:
             End If
 
             Dim httpWebResponse As Net.WebResponse = httpWebRequest.GetResponse()
-
-            If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
-                sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
-            Else
-                sslCertificate = Nothing
-            End If
+            captureSSLInfo(url, httpWebRequest)
 
             Dim httpInStream As New StreamReader(httpWebResponse.GetResponseStream())
             Dim httpTextOutput As String = httpInStream.ReadToEnd.Trim()
@@ -1464,6 +1392,7 @@ beginAgain:
             httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
+            strLastHTTPServerResponse = httpResponseText
 
             Return True
         Catch ex As Exception
@@ -1490,6 +1419,11 @@ beginAgain:
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
                     Return False
+                ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
+                    Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
+                    lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    Throw lastException
+                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
@@ -1502,6 +1436,52 @@ beginAgain:
             Return False
         End Try
     End Function
+
+    Private Sub captureSSLInfo(ByVal url As String, ByRef httpWebRequest As Net.HttpWebRequest)
+        If url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
+            sslCertificate = New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate)
+        Else
+            sslCertificate = Nothing
+        End If
+    End Sub
+
+    Private Sub addPostDataToWebRequest(ByRef httpWebRequest As Net.HttpWebRequest)
+        If postData.Count = 0 Then
+            httpWebRequest.Method = "GET"
+        Else
+            httpWebRequest.Method = "POST"
+            Dim postDataString As String = getPOSTDataString()
+            httpWebRequest.ContentType = "application/x-www-form-urlencoded"
+            httpWebRequest.ContentLength = postDataString.Length
+
+            Dim httpRequestWriter = New StreamWriter(httpWebRequest.GetRequestStream())
+            httpRequestWriter.Write(postDataString)
+            httpRequestWriter.Close()
+            httpRequestWriter.Dispose()
+            httpRequestWriter = Nothing
+        End If
+    End Sub
+
+    Private Sub addParametersToWebRequest(ByRef httpWebRequest As Net.HttpWebRequest)
+        If credentials IsNot Nothing Then
+            httpWebRequest.PreAuthenticate = True
+            addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPassword)))
+        End If
+
+        If strUserAgentString IsNot Nothing Then httpWebRequest.UserAgent = strUserAgentString
+        If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
+        If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
+
+        If boolUseHTTPCompression Then
+            ' We tell the web server that we can accept a GZIP and Deflate compressed data stream.
+            httpWebRequest.Accept = "gzip, deflate"
+            httpWebRequest.Headers.Add(Net.HttpRequestHeader.AcceptEncoding, "gzip, deflate")
+            httpWebRequest.AutomaticDecompression = Net.DecompressionMethods.GZip Or Net.DecompressionMethods.Deflate
+        End If
+
+        httpWebRequest.Timeout = CType(httpTimeOut, Integer)
+        httpWebRequest.KeepAlive = True
+    End Sub
 
     Private Sub getCookies(ByRef httpWebRequest As Net.HttpWebRequest)
         Dim cookieContainer As New Net.CookieContainer
@@ -1544,7 +1524,7 @@ beginAgain:
         Dim postDataString As String = ""
         For Each entry As KeyValuePair(Of String, Object) In postData
             If Not entry.Value.GetType.Equals(GetType(FormFile)) Then
-                postDataString &= entry.Key.Trim & "=" & Web.HttpUtility.UrlEncode(entry.Value.Trim) & "&"
+                postDataString &= entry.Key.Trim & "=" & Web.HttpUtility.UrlEncode(entry.Value.ToString.Trim) & "&"
             End If
         Next
 
@@ -1589,10 +1569,10 @@ beginAgain:
             lastException = New httpProtocolException("HTTP Protocol Error while accessing " & url, ex)
         End If
 
-        Return lastException
+        Return CType(lastException, httpProtocolException)
     End Function
 
-    Public Function fileSizeToHumanReadableFormat(ByVal size As Long, Optional roundToNearestWholeNumber As Boolean = False) As String
+    Public Function fileSizeToHumanReadableFormat(ByVal size As ULong, Optional roundToNearestWholeNumber As Boolean = False) As String
         Dim result As String
 
         If size <= (2 ^ 10) Then
