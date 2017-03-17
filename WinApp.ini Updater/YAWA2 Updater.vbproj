@@ -95,6 +95,7 @@
       <DependentUpon>Form1.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="GlobalSuppressions.vb" />
     <Compile Include="HTTPHelper.vb" />
     <Compile Include="IniFileVb.vb" />
     <Compile Include="Internet Functions.vb" />
