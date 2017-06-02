@@ -240,7 +240,7 @@ Namespace programFunctions
             iniFileNotes = iniFileNotes.Replace(entriesString, iniFile.Sections.Count.ToString("N0"))
             iniFile = Nothing
 
-            Dim newINIFileContents As String = "; Version: v" & remoteINIFileVersion & vbCrLf
+            Dim newINIFileContents As String = "; Version: " & remoteINIFileVersion & vbCrLf
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
             newINIFileContents &= iniFileNotes & vbCrLf & vbCrLf
             newINIFileContents &= rawINIFileContents
