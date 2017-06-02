@@ -58,7 +58,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\Restore Point Creator\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler">
       <HintPath>..\Microsoft.Win32.TaskScheduler.dll</HintPath>
