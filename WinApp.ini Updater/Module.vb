@@ -140,7 +140,7 @@ Namespace programFunctions
                 Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
 
-                If httpHelper.getWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 140, False) Then
+                If httpHelper.getWebData(programConstants.WinApp2INIFileURL, strINIFileData, False) Then
                     Return getINIVersionFromString(strINIFileData)
                 Else
                     Return programConstants.errorRetrievingRemoteINIFileVersion
