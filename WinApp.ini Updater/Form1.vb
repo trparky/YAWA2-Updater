@@ -281,13 +281,17 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            If Not String.IsNullOrEmpty(txtCustomEntries.Text) Then
-                Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+
+            If String.IsNullOrEmpty(txtCustomEntries.Text) Then
+                streamWriter.Write(remoteINIFileData & vbCrLf)
+            Else
                 streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-                streamWriter.Close()
-                streamWriter.Dispose()
-                streamWriter = Nothing
             End If
+
+            streamWriter.Close()
+            streamWriter.Dispose()
+            streamWriter = Nothing
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
             lblUpdateNeededOrNot.Text = updateNotNeeded
@@ -321,13 +325,17 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            If Not String.IsNullOrEmpty(txtCustomEntries.Text) Then
-                Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+
+            If String.IsNullOrEmpty(txtCustomEntries.Text) Then
+                streamWriter.Write(remoteINIFileData & vbCrLf)
+            Else
                 streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-                streamWriter.Close()
-                streamWriter.Dispose()
-                streamWriter = Nothing
             End If
+
+            streamWriter.Close()
+            streamWriter.Dispose()
+            streamWriter = Nothing
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
 
