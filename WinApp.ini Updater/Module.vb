@@ -160,7 +160,7 @@ Namespace programFunctions
             streamReader.Close()
             streamReader.Dispose()
 
-            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; Application Cleaning file" & vbCrLf & ";" & vbCrLf & "; Notes" & vbCrLf & "; # of entries: ([0-9,]*)" & vbCrLf & ".*" & vbCrLf & "; Please do not host this file anywhere without permission\. This is to facilitate proper distribution of the latest version\. Thanks\.)", System.Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
+            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*)" & vbCrLf & ".*" & vbCrLf & "; Please do not host this file anywhere without permission\. This is to facilitate proper distribution of the latest version\. Thanks\.)", System.Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
             matchData = Nothing
@@ -284,7 +284,7 @@ Namespace programFunctions
 
         Public Function getINIVersionFromString(input As String) As String
             ' Special Regular Expression to extract the version of the INI file from the INI file's raw text.
-            Return System.Text.RegularExpressions.Regex.Match(input, "; Version: v([0-9.A-Za-z]+)").Groups(1).Value
+            Return System.Text.RegularExpressions.Regex.Match(input, "; Version: ([0-9.A-Za-z]+)").Groups(1).Value
         End Function
 
         Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
