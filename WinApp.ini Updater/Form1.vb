@@ -281,11 +281,13 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-            streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-            streamWriter.Close()
-            streamWriter.Dispose()
-            streamWriter = Nothing
+            If Not String.IsNullOrEmpty(txtCustomEntries.Text) Then
+                Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
+                streamWriter.Close()
+                streamWriter.Dispose()
+                streamWriter = Nothing
+            End If
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
             lblUpdateNeededOrNot.Text = updateNotNeeded
@@ -319,11 +321,13 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-            streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-            streamWriter.Close()
-            streamWriter.Dispose()
-            streamWriter = Nothing
+            If Not String.IsNullOrEmpty(txtCustomEntries.Text) Then
+                Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
+                streamWriter.Close()
+                streamWriter.Dispose()
+                streamWriter = Nothing
+            End If
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
 
