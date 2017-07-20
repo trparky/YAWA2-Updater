@@ -235,7 +235,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class httpHelper
-    Private Const classVersion As String = "1.285"
+    Private Const classVersion As String = "1.295"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -743,10 +743,11 @@ Public Class httpHelper
                 Exit Sub
             End If
         Else
-            Dim formFileInstance As New FormFile
-            formFileInstance.formName = strFormName
-            formFileInstance.localFilePath = strLocalFilePath
-            formFileInstance.remoteFileName = strRemoteFileName
+            Dim formFileInstance As New FormFile With {
+                .formName = strFormName,
+                .localFilePath = strLocalFilePath,
+                .remoteFileName = strRemoteFileName
+            }
 
             If strContentType = Nothing Then
                 Dim contentType As String
@@ -838,10 +839,11 @@ beginAgain:
             ' into the class instance by the programmer who's using this class in his/her program.
             If boolRunDownloadStatusUpdatePluginInSeparateThread Then
                 If downloadStatusUpdaterThread Is Nothing Then
-                    downloadStatusUpdaterThread = New Threading.Thread(AddressOf downloadStatusUpdaterThreadSubroutine)
-                    downloadStatusUpdaterThread.IsBackground = True
-                    downloadStatusUpdaterThread.Priority = Threading.ThreadPriority.Lowest
-                    downloadStatusUpdaterThread.Name = "HTTPHelper Class Download Status Updating Thread"
+                    downloadStatusUpdaterThread = New Threading.Thread(AddressOf downloadStatusUpdaterThreadSubroutine) With {
+                        .IsBackground = True,
+                        .Priority = Threading.ThreadPriority.Lowest,
+                        .Name = "HTTPHelper Class Download Status Updating Thread"
+                    }
                     downloadStatusUpdaterThread.Start()
                 End If
             Else
@@ -898,7 +900,7 @@ beginAgain:
 
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
 
-            Dim lngBytesReadFromInternet As ULong = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads some data from the HTTP stream into our data buffer.
+            Dim lngBytesReadFromInternet As ULong = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads some data from the HTTP stream into our data buffer.
 
             ' We keep looping until all of the data has been downloaded.
             While lngBytesReadFromInternet <> 0
@@ -906,7 +908,7 @@ beginAgain:
                 ' downloaded from the server repeatedly to a variable called "currentFileSize".
                 currentFileSize += lngBytesReadFromInternet
 
-                memStream.Write(dataBuffer, 0, CType(lngBytesReadFromInternet, Integer)) ' Writes the data directly to disk.
+                memStream.Write(dataBuffer, 0, lngBytesReadFromInternet) ' Writes the data directly to disk.
 
                 amountDownloaded = (currentFileSize / remoteFileSize) * 100
                 httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
@@ -1027,7 +1029,7 @@ beginAgain:
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
             fileWriteStream = New FileStream(localFileName, FileMode.Create) ' Creates a file write stream.
 
-            Dim lngBytesReadFromInternet As ULong = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), ULong) ' Reads some data from the HTTP stream into our data buffer.
+            Dim lngBytesReadFromInternet As ULong = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads some data from the HTTP stream into our data buffer.
 
             ' We keep looping until all of the data has been downloaded.
             While lngBytesReadFromInternet <> 0
@@ -1035,7 +1037,7 @@ beginAgain:
                 ' downloaded from the server repeatedly to a variable called "currentFileSize".
                 currentFileSize += lngBytesReadFromInternet
 
-                fileWriteStream.Write(dataBuffer, 0, CType(lngBytesReadFromInternet, Integer)) ' Writes the data directly to disk.
+                fileWriteStream.Write(dataBuffer, 0, lngBytesReadFromInternet) ' Writes the data directly to disk.
 
                 amountDownloaded = (currentFileSize / remoteFileSize) * 100
                 httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
