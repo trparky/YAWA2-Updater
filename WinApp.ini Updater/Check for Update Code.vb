@@ -61,19 +61,20 @@ Module Check_for_Update_Code
         End Try
     End Function
 
-    Private Sub extractFileFromZIPFile(ByRef memStream As IO.MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
-        memStream.Position = 0
-        Dim zipFileObject As New ICSharpCode.SharpZipLib.Zip.ZipFile(memStream)
-        Dim zipFileEntry As ICSharpCode.SharpZipLib.Zip.ZipEntry = zipFileObject.GetEntry(fileToExtract)
+    Private Sub extractFileFromZIPFile(memoryStream As IO.MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
+        memoryStream.Position = 0
 
-        If zipFileEntry IsNot Nothing Then
-            Dim fileStream As New IO.FileStream(fileToWriteExtractedFileTo, IO.FileMode.Create)
-            zipFileObject.GetInputStream(zipFileEntry).CopyTo(fileStream)
-            fileStream.Close()
-            fileStream.Dispose()
-        End If
+        Using zipFileObject As New IO.Compression.ZipArchive(memoryStream)
+            Dim zipFileEntry As IO.Compression.ZipArchiveEntry = zipFileObject.GetEntry(fileToExtract)
 
-        zipFileObject.Close()
+            If zipFileEntry IsNot Nothing Then
+                Using zipFileEntryIOStream As IO.Stream = zipFileEntry.Open()
+                    Using fileStream As New IO.FileStream(fileToWriteExtractedFileTo, IO.FileMode.Create)
+                        zipFileEntryIOStream.CopyTo(fileStream)
+                    End Using
+                End Using
+            End If
+        End Using
     End Sub
 
     Public Sub downloadAndDoUpdate(Optional ByVal outputText As Boolean = False)
