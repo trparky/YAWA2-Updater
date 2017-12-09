@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Win32
+﻿Option Strict Off
+Imports Microsoft.Win32
 Imports System.Security.Principal
 
 Namespace programConstants

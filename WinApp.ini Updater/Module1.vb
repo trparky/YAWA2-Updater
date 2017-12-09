@@ -1,4 +1,5 @@
-﻿Imports System.Runtime.CompilerServices
+﻿Option Strict Off
+Imports System.Runtime.CompilerServices
 Imports System.Runtime.InteropServices
 Imports System.Security.AccessControl
 Imports System.Security.Principal

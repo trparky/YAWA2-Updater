@@ -1,4 +1,5 @@
-﻿Namespace internetFunctions
+﻿Option Strict Off
+Namespace internetFunctions
     Module Internet_Functions
         Public Function createNewHTTPHelperObject() As httpHelper
             Dim httpHelper As New httpHelper With {
