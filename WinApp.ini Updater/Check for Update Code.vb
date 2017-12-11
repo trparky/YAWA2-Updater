@@ -1,5 +1,4 @@
-﻿Option Strict Off
-Imports System.Management
+﻿Imports System.Management
 Imports System.Text.RegularExpressions
 Imports System.Xml
 

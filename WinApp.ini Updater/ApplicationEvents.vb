@@ -1,5 +1,4 @@
-﻿Option Strict Off
-Imports System.Text.RegularExpressions
+﻿Imports System.Text.RegularExpressions
 Imports Microsoft.Win32
 
 Namespace My
