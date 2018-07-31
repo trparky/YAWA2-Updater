@@ -46,23 +46,7 @@ Namespace My
             End Try
         End Sub
 
-        'Private Function ResolveAssemblies(sender As Object, e As System.ResolveEventArgs) As Reflection.Assembly
-        '    Dim desiredAssembly = New Reflection.AssemblyName(e.Name)
-
-        '    'Debug.WriteLine("desiredAssembly.Name = " & desiredAssembly.Name)
-
-        '    ' For each of the DLLs you need to include in your program, you need to add these two lines that look like this.
-        '    ' Then add the DLL to your Project as a resource and set the Build Action of it to "Embedded Resource".
-        '    If desiredAssembly.Name = "Microsoft.Win32.TaskScheduler" Then
-        '        'Debug.WriteLine("loaded embedded Microsoft.Win32.TaskScheduler")
-        '        Return Reflection.Assembly.Load(My.Resources.Microsoft_Win32_TaskScheduler) ' Replace with your assembly's resource name
-        '    Else
-        '        Return Nothing
-        '    End If
-        'End Function
-
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
-            'AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblies ' Loads embedded libraries.
             Dim remoteINIFileVersion, localINIFileVersion As String
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim stringCustomEntries As String = Nothing
