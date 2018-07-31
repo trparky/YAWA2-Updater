@@ -74,9 +74,7 @@ Public Class Form1
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
 
-            If Environment.OSVersion.ToString.Contains("5.1") Or Environment.OSVersion.ToString.Contains("5.2") Then
-                boolWinXP = True
-            End If
+            If Environment.OSVersion.ToString.Contains("5.1") Or Environment.OSVersion.ToString.Contains("5.2") Then boolWinXP = True
 
             If Not boolWinXP And programFunctions.areWeAnAdministrator() Then
                 Dim taskService As New TaskService
@@ -94,10 +92,8 @@ Public Class Form1
 
                 taskService.Dispose()
                 taskService = Nothing
-            ElseIf Not boolWinXP And Not programFunctions.areWeAnAdministrator() Then
-                chkLoadAtUserStartup.Enabled = False
-            Else
-                chkLoadAtUserStartup.Visible = False
+            ElseIf Not boolWinXP And Not programFunctions.areWeAnAdministrator() Then : chkLoadAtUserStartup.Enabled = False
+            Else : chkLoadAtUserStartup.Visible = False
             End If
 
             Control.CheckForIllegalCrossThreadCalls = False
@@ -108,23 +104,19 @@ Public Class Form1
             strLocationOfCCleaner = getLocationOfCCleaner()
 
             If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
-                Dim streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
-                streamReader.Close()
-                streamReader.Dispose()
-                streamReader = Nothing
-            Else
-                localINIFileVersion = "(Not Installed)"
+                Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                    localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
+                End Using
+            Else : localINIFileVersion = "(Not Installed)"
             End If
 
             lblYourVersion.Text &= " " & localINIFileVersion
 
             If IO.File.Exists(programConstants.customEntriesFile) Then
-                Dim customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                txtCustomEntries.Text = customEntriesFileReader.ReadToEnd.Trim
-                customEntriesFileReader.Close()
-                customEntriesFileReader.Dispose()
-                customEntriesFileReader = Nothing
+                Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
+                    txtCustomEntries.Text = customEntriesFileReader.ReadToEnd.Trim
+                End Using
+
                 programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.convertToBase64(txtCustomEntries.Text))
                 IO.File.Delete(programConstants.customEntriesFile)
             Else
@@ -142,10 +134,6 @@ Public Class Form1
                         MsgBox("Invalid Base64 encoded data found in custom entries key in config INI file. The invalid data has been removed.", MsgBoxStyle.Information, Me.Text) ' Tell the user that bad data was found and that it has been removed from the INI file.
                     End If
                 End If
-            End If
-
-            If Environment.OSVersion.ToString.Contains("5.1") Or Environment.OSVersion.ToString.Contains("5.2") Then
-                boolWinXP = True
             End If
 
             If Not boolWinXP Then
@@ -281,17 +269,9 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-
-            If String.IsNullOrEmpty(txtCustomEntries.Text) Then
-                streamWriter.Write(remoteINIFileData & vbCrLf)
-            Else
-                streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-            End If
-
-            streamWriter.Close()
-            streamWriter.Dispose()
-            streamWriter = Nothing
+            Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                streamWriter.Write(If(String.IsNullOrEmpty(txtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf))
+            End Using
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
             lblUpdateNeededOrNot.Text = updateNotNeeded
@@ -307,11 +287,7 @@ Public Class Form1
                     Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner INI File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
                     If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                        If Environment.Is64BitOperatingSystem Then
-                            Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
-                        Else
-                            Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
-                        End If
+                        Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                     End If
                 End If
             End If
@@ -325,17 +301,9 @@ Public Class Form1
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-
-            If String.IsNullOrEmpty(txtCustomEntries.Text) Then
-                streamWriter.Write(remoteINIFileData & vbCrLf)
-            Else
-                streamWriter.Write(remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf)
-            End If
-
-            streamWriter.Close()
-            streamWriter.Dispose()
-            streamWriter = Nothing
+            Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+                streamWriter.Write(If(String.IsNullOrEmpty(txtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf))
+            End Using
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
 
@@ -346,11 +314,7 @@ Public Class Form1
                 Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
 
                 If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                    If Environment.Is64BitOperatingSystem Then
-                        Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner64.exe"))
-                    Else
-                        Process.Start(IO.Path.Combine(strLocationOfCCleaner, "CCleaner.exe"))
-                    End If
+                    Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                 End If
             End If
         Else
@@ -377,10 +341,9 @@ Public Class Form1
         If chkLoadAtUserStartup.Checked Then
             addTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
         Else
-            Dim taskService As New TaskService
-            taskService.RootFolder.DeleteTask("YAWA2 Updater")
-            taskService.Dispose()
-            taskService = Nothing
+            Using taskService As New TaskService
+                taskService.RootFolder.DeleteTask("YAWA2 Updater")
+            End Using
         End If
     End Sub
 
@@ -394,11 +357,7 @@ Public Class Form1
     End Sub
 
     Public Function checkForInternetConnection() As Boolean
-        If My.Computer.Network.IsAvailable Then
-            Return True
-        Else
-            Return False
-        End If
+        Return My.Computer.Network.IsAvailable
     End Function
 
     Private Sub btnAbout_Click(sender As Object, e As EventArgs) Handles btnAbout.Click
@@ -424,13 +383,7 @@ Public Class Form1
     Private Sub chkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
         programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, chkMobileMode.Checked.ToString)
         programVariables.boolMobileMode = chkMobileMode.Checked
-
-        If chkMobileMode.Checked Then
-            chkLoadAtUserStartup.Enabled = False
-        Else
-            chkLoadAtUserStartup.Enabled = True
-        End If
-
+        chkLoadAtUserStartup.Enabled = If(chkMobileMode.Checked, False, True)
         getLocationOfCCleaner()
     End Sub
 

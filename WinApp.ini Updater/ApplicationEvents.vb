@@ -15,15 +15,9 @@ Namespace My
 
         Private Function doesPIDExist(PID As Integer) As Boolean
             Try
-                Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
-
-                If searcher.Get.Count = 0 Then
-                    searcher.Dispose()
-                    Return False
-                Else
-                    searcher.Dispose()
-                    Return True
-                End If
+                Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
+                    Return If(searcher.Get.Count = 0, False, True)
+                End Using
             Catch ex3 As Runtime.InteropServices.COMException
                 Return False
             Catch ex As Exception
@@ -32,27 +26,12 @@ Namespace My
         End Function
 
         Private Sub killProcess(PID As Integer)
-            Debug.Write(String.Format("Killing PID {0}...", PID))
-
-            If doesPIDExist(PID) Then
-                Process.GetProcessById(PID).Kill()
-            End If
-
-            If doesPIDExist(PID) Then
-                killProcess(PID)
-                'Else
-                'debug.writeline(" Process Killed.")
-            End If
+            If doesPIDExist(PID) Then Process.GetProcessById(PID).Kill()
+            If doesPIDExist(PID) Then killProcess(PID)
         End Sub
 
         Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-            Dim fullFileName As String
-
-            If boolFullFilePathPassed Then
-                fullFileName = strFileName
-            Else
-                fullFileName = New IO.FileInfo(strFileName).FullName
-            End If
+            Dim fullFileName As String = If(boolFullFilePathPassed, strFileName, New IO.FileInfo(strFileName).FullName)
 
             Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.addSlashes())
             Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
@@ -61,8 +40,6 @@ Namespace My
                 For Each queryObj As Management.ManagementObject In searcher.Get()
                     killProcess(Integer.Parse(queryObj("ProcessId").ToString))
                 Next
-
-                'debug.writeline("All processes killed... Update process can continue.")
             Catch ex3 As Runtime.InteropServices.COMException
             Catch err As Management.ManagementException
                 ' Does nothing
@@ -157,11 +134,9 @@ Namespace My
 
                     If strLocationToSaveWinAPP2INIFile <> Nothing Then
                         If IO.File.Exists(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini")) Then
-                            Dim streamReader As New IO.StreamReader(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
-                            localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
-                            streamReader.Close()
-                            streamReader.Dispose()
-                            streamReader = Nothing
+                            Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
+                                localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
+                            End Using
                         Else
                             localINIFileVersion = "(Not Installed)"
                         End If
@@ -175,11 +150,10 @@ Namespace My
                         End If
 
                         If IO.File.Exists(programConstants.customEntriesFile) Then
-                            Dim customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                            stringCustomEntries = customEntriesFileReader.ReadToEnd.Trim
-                            customEntriesFileReader.Close()
-                            customEntriesFileReader.Dispose()
-                            customEntriesFileReader = Nothing
+                            Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
+                                stringCustomEntries = customEntriesFileReader.ReadToEnd.Trim
+                            End Using
+
                             programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.convertToBase64(stringCustomEntries))
                             IO.File.Delete(programConstants.customEntriesFile)
                         Else
@@ -187,7 +161,7 @@ Namespace My
                             iniFile.loadINIFileFromFile(programConstants.configINIFile)
                             stringCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
 
-                            If stringCustomEntries <> "" Then
+                            If Not String.IsNullOrWhiteSpace(stringCustomEntries) Then
                                 If programFunctions.isBase64(stringCustomEntries) Then
                                     stringCustomEntries = programFunctions.convertFromBase64(stringCustomEntries)
                                 Else
@@ -196,7 +170,7 @@ Namespace My
                             End If
                         End If
 
-                        If remoteINIFileVersion.Trim = localINIFileVersion.Trim Then
+                        If remoteINIFileVersion.Trim.Equals(localINIFileVersion.Trim, StringComparison.OrdinalIgnoreCase) Then
                             e.Cancel = True
                             Exit Sub
                         Else
@@ -204,17 +178,9 @@ Namespace My
                             Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
 
                             If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-                                Dim streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
-
-                                If stringCustomEntries = Nothing Then
-                                    streamWriter.Write(remoteINIFileData)
-                                Else
-                                    streamWriter.Write(remoteINIFileData & vbCrLf & stringCustomEntries & vbCrLf)
-                                End If
-
-                                streamWriter.Close()
-                                streamWriter.Dispose()
-                                streamWriter = Nothing
+                                Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
+                                    streamWriter.Write(If(String.IsNullOrWhiteSpace(stringCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & stringCustomEntries & vbCrLf))
+                                End Using
                             Else
                                 MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, "YAWA2 Updater")
                                 e.Cancel = True
@@ -230,15 +196,11 @@ Namespace My
                             Dim msgBoxResult As MsgBoxResult = MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp2.ini File Updated")
 
                             If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                If Environment.Is64BitOperatingSystem Then
-                                    Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "CCleaner64.exe"))
-                                Else
-                                    Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "CCleaner.exe"))
-                                End If
+                                Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                             End If
                         End If
                     End If
-                ElseIf commandLineArgument = "-update" Then
+                ElseIf commandLineArgument.Equals("-update", StringComparison.OrdinalIgnoreCase) Then
                     Dim currentProcessFileName As String = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).Name
 
                     If currentProcessFileName.caseInsensitiveContains(".new.exe", True) Then
@@ -262,4 +224,3 @@ Namespace My
         End Sub
     End Class
 End Namespace
-

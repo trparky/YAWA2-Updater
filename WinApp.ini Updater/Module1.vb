@@ -85,13 +85,9 @@ Module Module1
                 processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
 
                 If boolFullFilePathPassed Then
-                    If stringCompare(strFileName, processExecutablePathFileInfo.FullName) Then
-                        killProcess(process.Id)
-                    End If
+                    If stringCompare(strFileName, processExecutablePathFileInfo.FullName) Then killProcess(process.Id)
                 ElseIf Not boolFullFilePathPassed Then
-                    If stringCompare(strFileName, processExecutablePathFileInfo.Name) Then
-                        killProcess(process.Id)
-                    End If
+                    If stringCompare(strFileName, processExecutablePathFileInfo.Name) Then killProcess(process.Id)
                 End If
 
                 processExecutablePathFileInfo = Nothing
@@ -102,12 +98,7 @@ Module Module1
     Public Function areWeAnAdministrator() As Boolean
         Try
             Dim principal As WindowsPrincipal = New WindowsPrincipal(WindowsIdentity.GetCurrent())
-
-            If principal.IsInRole(WindowsBuiltInRole.Administrator) Then
-                Return True
-            Else
-                Return False
-            End If
+            Return principal.IsInRole(WindowsBuiltInRole.Administrator)
         Catch ex As Exception
             Return False
         End Try
@@ -119,13 +110,8 @@ Module Module1
 
     Private Function canIWriteThere(folderPath As String) As Boolean
         ' We make sure we get valid folder path by taking off the leading slash.
-        If folderPath.EndsWith("\") Then
-            folderPath = folderPath.Substring(0, folderPath.Length - 1)
-        End If
-
-        If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then
-            Return False
-        End If
+        If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
+        If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
 
         If checkByFolderACLs(folderPath) Then
             Try
