@@ -143,10 +143,10 @@ Namespace programFunctions
             Dim sectionsToRemove As New Specialized.StringCollection
 
             Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                oldINIFileContents = streamReader.ReadToEnd
+                oldINIFileContents = streamReader.ReadToEnd.Replace(vbLf, vbCrLf).Replace(vbCr, Nothing).Replace(vbLf, vbCrLf)
             End Using
 
-            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*)" & vbCrLf & ".*" & vbCrLf & "; Please do not host this file anywhere without permission\. This is to facilitate proper distribution of the latest version\. Thanks\.)", System.Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
+            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers\.)", Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
             matchData = Nothing
