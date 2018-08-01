@@ -1,5 +1,6 @@
 ﻿Imports Microsoft.Win32
 Imports System.Security.Principal
+Imports System.Text.RegularExpressions
 
 Namespace programConstants
     Module programConstants
@@ -146,7 +147,7 @@ Namespace programFunctions
                 oldINIFileContents = streamReader.ReadToEnd.Replace(vbLf, vbCrLf).Replace(vbCr, Nothing).Replace(vbLf, vbCrLf)
             End Using
 
-            Dim matchData As Text.RegularExpressions.Match = Text.RegularExpressions.Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers\.)", Text.RegularExpressions.RegexOptions.Singleline Or Text.RegularExpressions.RegexOptions.IgnoreCase)
+            Dim matchData As Match = Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers\.)", RegexOptions.Singleline Or RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
             matchData = Nothing
@@ -262,7 +263,7 @@ Namespace programFunctions
 
         Public Function getINIVersionFromString(input As String) As String
             ' Special Regular Expression to extract the version of the INI file from the INI file's raw text.
-            Return Text.RegularExpressions.Regex.Match(input, "; Version: ([0-9.A-Za-z]+)").Groups(1).Value
+            Return Regex.Match(input, "; Version: ([0-9.A-Za-z]+)").Groups(1).Value
         End Function
 
         Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
