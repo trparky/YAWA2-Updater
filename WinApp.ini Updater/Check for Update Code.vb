@@ -36,6 +36,9 @@ Module Check_for_Update_Code
 
             ' This checks to see if current version and the current build matches that of the remote values in the XML document.
             If remoteVersion.Equals(versionStringWithoutBuild) And remoteBuild.Equals(shortBuild.ToString) Then
+                ' OK, they match so there's no update to download and update to therefore we return a False value.
+                Return False
+            Else
                 If Short.TryParse(remoteBuild, shortRemoteBuild) And remoteVersion.Equals(versionStringWithoutBuild) Then
                     If shortRemoteBuild < shortBuild Then
                         ' This is weird, the remote build is less than the current build. Something went wrong. So to be safe we're going to return a False value indicating that there is no update to download. Better to be safe.
@@ -43,9 +46,6 @@ Module Check_for_Update_Code
                     End If
                 End If
 
-                ' OK, they match so there's no update to download and update to therefore we return a False value.
-                Return False
-            Else
                 ' We return a True value indicating that there is a new version to download and install.
                 Return True
             End If
