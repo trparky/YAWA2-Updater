@@ -71,6 +71,7 @@ Module Module1
             End Try
         End If
 
+        NativeMethods.CloseHandle(processHandle)
         Return Nothing
     End Function
 
