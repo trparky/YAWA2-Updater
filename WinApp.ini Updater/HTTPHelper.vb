@@ -236,7 +236,7 @@ End Class
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 <CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class httpHelper
-    Private Const classVersion As String = "1.305"
+    Private Const classVersion As String = "1.306"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -1444,7 +1444,7 @@ beginAgain:
             addHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.strUser & ":" & credentials.strPasswordInput)))
         End If
 
-        If strUserAgentString IsNot Nothing Then httpWebRequest.UserAgent = strUserAgentString
+        If Not String.IsNullOrWhiteSpace(strUserAgentString) Then httpWebRequest.UserAgent = strUserAgentString
         If httpCookies.Count <> 0 Then getCookies(httpWebRequest)
         If additionalHTTPHeaders.Count <> 0 Then getHeaders(httpWebRequest)
 
