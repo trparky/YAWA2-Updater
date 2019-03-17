@@ -147,7 +147,7 @@ Namespace programFunctions
                 oldINIFileContents = streamReader.ReadToEnd.Replace(vbLf, vbCrLf).Replace(vbCr, Nothing).Replace(vbLf, vbCrLf)
             End Using
 
-            Dim matchData As Match = Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*)", RegexOptions.Singleline Or RegexOptions.IgnoreCase)
+            Dim matchData As Match = Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers)", RegexOptions.Singleline Or RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
             matchData = Nothing
@@ -229,6 +229,8 @@ Namespace programFunctions
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
             newINIFileContents &= iniFileNotes & vbCrLf & vbCrLf
             newINIFileContents &= rawINIFileContents
+
+            IO.File.Delete(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
 
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 streamWriter.Write(newINIFileContents)
