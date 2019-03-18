@@ -15,7 +15,7 @@ Public Class Form1
         taskParameters = taskParameters.Trim
 
         If Not IO.File.Exists(taskEXEPath) Then
-            MsgBox("Executable path not found.", MsgBoxStyle.Critical, Me.Text)
+            MsgBox("Executable path not found.", MsgBoxStyle.Critical, "WinApp.ini Updater")
             Exit Sub
         End If
 
@@ -131,7 +131,7 @@ Public Class Form1
                         customINIFileEntries = Nothing ' Free up memory.
                     Else
                         programFunctions.removeSettingFromINIFile(programConstants.configINICustomEntriesKey) ' Remove the offending data from the INI file.
-                        MsgBox("Invalid Base64 encoded data found in custom entries key in config INI file. The invalid data has been removed.", MsgBoxStyle.Information, Me.Text) ' Tell the user that bad data was found and that it has been removed from the INI file.
+                        MsgBox("Invalid Base64 encoded data found in custom entries key in config INI file. The invalid data has been removed.", MsgBoxStyle.Information, "WinApp.ini Updater") ' Tell the user that bad data was found and that it has been removed from the INI file.
                     End If
                 End If
             End If
@@ -181,7 +181,7 @@ Public Class Form1
             Try
                 If Environment.Is64BitOperatingSystem Then
                     If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, Me.Text)
+                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "WinApp.ini Updater")
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
@@ -198,7 +198,7 @@ Public Class Form1
                     End If
                 Else
                     If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, Me.Text)
+                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "WinApp.ini Updater")
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
@@ -236,17 +236,17 @@ Public Class Form1
                 btnApplyNewINIFile.Enabled = True
                 lblUpdateNeededOrNot.Text = updateNeeded
                 lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                MsgBox("You don't have a CCleaner WinApp2.ini file installed." & vbCrLf & vbCrLf & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, Me.Text)
+                MsgBox("You don't have a CCleaner WinApp2.ini file installed." & vbCrLf & vbCrLf & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, "WinApp.ini Updater")
             Else
                 If remoteINIFileVersion = localINIFileVersion Then
                     btnApplyNewINIFile.Enabled = False
                     lblUpdateNeededOrNot.Text = updateNotNeeded
-                    MsgBox("You already have the latest CCleaner INI file version.", MsgBoxStyle.Information, Me.Text)
+                    MsgBox("You already have the latest CCleaner INI file version.", MsgBoxStyle.Information, "WinApp.ini Updater")
                 Else
                     btnApplyNewINIFile.Enabled = True
                     lblUpdateNeededOrNot.Text = updateNeeded
                     lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                    MsgBox("There is a new version of the CCleaner WinApp2.ini file." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, Me.Text)
+                    MsgBox("There is a new version of the CCleaner WinApp2.ini file." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, "WinApp.ini Updater")
                 End If
             End If
         Catch ex As Threading.ThreadAbortException
@@ -262,10 +262,10 @@ Public Class Form1
             programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, Convert.ToBase64String(Encoding.UTF8.GetBytes(txtCustomEntries.Text)))
         End If
 
-        MsgBox("Your custom entries have been saved.", MsgBoxStyle.Information, Me.Text)
+        MsgBox("Your custom entries have been saved.", MsgBoxStyle.Information, "WinApp.ini Updater")
     End Sub
 
-    Private Sub applyNewINIFileSub()
+    Private Sub downloadINIFileAndSaveIt(Optional boolUpdateLabelOnGUI As Boolean = False)
         Dim remoteINIFileData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
@@ -274,52 +274,28 @@ Public Class Form1
             End Using
 
             lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
-            lblUpdateNeededOrNot.Text = updateNotNeeded
-            lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
+
+            If boolUpdateLabelOnGUI Then
+                lblUpdateNeededOrNot.Text = updateNotNeeded
+                lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
+            End If
 
             If chkTrim.Checked Then
-                MsgBox("New CCleaner INI File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
+                MsgBox("New CCleaner WinApp2.ini File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, "WinApp.ini Updater")
                 programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
             Else
                 If programVariables.boolMobileMode Then
-                    MsgBox("New CCleaner INI File Saved.", MsgBoxStyle.Information, Me.Text)
+                    MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, "WinApp.ini Updater")
                 Else
-                    Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner INI File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
+                    Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
                     If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                        Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
+                        programFunctions.runCCleaner(strLocationOfCCleaner)
                     End If
                 End If
             End If
         Else
-            MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
-            Exit Sub
-        End If
-    End Sub
-
-    Private Sub reDownloadSub()
-        Dim remoteINIFileData As String = Nothing
-
-        If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
-            Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                streamWriter.Write(If(String.IsNullOrEmpty(txtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf))
-            End Using
-
-            lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
-
-            If chkTrim.Checked Then
-                MsgBox("New CCleaner WinApp2.ini File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, Me.Text)
-                programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
-            Else
-                Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, Me.Text)
-
-                If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                    Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
-                End If
-            End If
-        Else
-            MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, Me.Text)
-            Exit Sub
+            MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, "WinApp.ini Updater")
         End If
     End Sub
 
@@ -330,11 +306,11 @@ Public Class Form1
     End Sub
 
     Private Sub btnApplyNewINIFile_Click(sender As Object, e As EventArgs) Handles btnApplyNewINIFile.Click
-        Threading.ThreadPool.QueueUserWorkItem(AddressOf applyNewINIFileSub)
+        Threading.ThreadPool.QueueUserWorkItem(Sub() downloadINIFileAndSaveIt(True))
     End Sub
 
     Private Sub btnReDownload_Click(sender As Object, e As EventArgs) Handles btnReDownload.Click
-        Threading.ThreadPool.QueueUserWorkItem(AddressOf reDownloadSub)
+        Threading.ThreadPool.QueueUserWorkItem(Sub() downloadINIFileAndSaveIt())
     End Sub
 
     Private Sub chkLoadAtUserStartup_Click(sender As Object, e As EventArgs) Handles chkLoadAtUserStartup.Click
@@ -364,7 +340,7 @@ Public Class Form1
         Dim version() As String = Application.ProductVersion.Split(".".ToCharArray) ' Gets the program version
         Dim stringBuilder As New Text.StringBuilder
 
-        stringBuilder.AppendLine(Me.Text)
+        stringBuilder.AppendLine("WinApp.ini Updater")
         stringBuilder.AppendLine("Written By Tom Parkison")
         stringBuilder.AppendLine("Copyright Thomas Parkison 2012-2015.")
         stringBuilder.AppendLine()

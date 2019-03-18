@@ -249,10 +249,14 @@ Namespace programFunctions
                     Dim msgBoxResult As MsgBoxResult = MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
                     If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                        Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
+                        runCCleaner(strLocationOfCCleaner)
                     End If
                 End If
             End If
+        End Sub
+
+        Public Sub runCCleaner(strLocationOfCCleaner As String)
+            Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
         End Sub
 
         Private Function translateVarsInPath(input As String) As String
