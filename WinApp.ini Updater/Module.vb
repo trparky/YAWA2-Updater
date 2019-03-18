@@ -230,7 +230,9 @@ Namespace programFunctions
             newINIFileContents &= iniFileNotes & vbCrLf & vbCrLf
             newINIFileContents &= rawINIFileContents
 
-            IO.File.Delete(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+            If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
+                IO.File.Delete(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+            End If
 
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 streamWriter.Write(newINIFileContents)
