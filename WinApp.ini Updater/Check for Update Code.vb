@@ -101,7 +101,7 @@ Module Check_for_Update_Code
                 .FileName = newExecutableFilePath,
                 .Arguments = "-update"
             }
-            If Not canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
+            If Not programFunctions.canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
             Process.Start(startInfo)
 
             Process.GetCurrentProcess.Kill()

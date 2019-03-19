@@ -105,7 +105,6 @@
     <Compile Include="IniFileVb.vb" />
     <Compile Include="Internet Functions.vb" />
     <Compile Include="Module.vb" />
-    <Compile Include="Module1.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
