@@ -342,7 +342,7 @@ Public Class Form1
 
         stringBuilder.AppendLine("WinApp.ini Updater")
         stringBuilder.AppendLine("Written By Tom Parkison")
-        stringBuilder.AppendLine("Copyright Thomas Parkison 2012-2015.")
+        stringBuilder.AppendLine("Copyright Thomas Parkison 2012-2020.")
         stringBuilder.AppendLine()
         stringBuilder.AppendFormat("Version {0}.{1} Build {2}", version(0), version(1), version(2))
 
