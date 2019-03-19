@@ -262,6 +262,7 @@ Namespace programFunctions
             Dim tempString As String
             Dim oldINIFileContents As String
             Dim sectionsToRemove As New Specialized.StringCollection
+            Dim osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
 
             Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 oldINIFileContents = streamReader.ReadToEnd.Replace(vbLf, vbCrLf).Replace(vbCr, Nothing).Replace(vbLf, vbCrLf)
@@ -278,7 +279,7 @@ Namespace programFunctions
             For Each iniFileSection As IniFile.IniSection In iniFile.Sections
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectOS")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If Not tempString.Contains(Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor) Then
+                    If Not tempString.Contains(osVersionString) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Continue For
