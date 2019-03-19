@@ -34,6 +34,8 @@ End Namespace
 
 Namespace programFunctions
     Module functions
+        Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
+
         ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
         ''' <param name="PID">The PID of the process you are checking the existance of.</param>
         ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
@@ -258,11 +260,19 @@ Namespace programFunctions
             End Try
         End Function
 
+        Private Function osVersionCheck(tempString As String) As Boolean
+            If Environment.OSVersion.Version.Major = 10 Then
+                If tempString.Contains("6.2") Or tempString.Contains("10.0") Then Return True
+            Else
+                If tempString.Contains(osVersionString) Then Return True
+            End If
+            Return False
+        End Function
+
         Public Sub trimINIFile(strLocationOfCCleaner As String, remoteINIFileVersion As String, boolSilentMode As Boolean)
             Dim tempString As String
             Dim oldINIFileContents As String
             Dim sectionsToRemove As New Specialized.StringCollection
-            Dim osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
 
             Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 oldINIFileContents = streamReader.ReadToEnd.Replace(vbLf, vbCrLf).Replace(vbCr, Nothing).Replace(vbLf, vbCrLf)
@@ -279,7 +289,7 @@ Namespace programFunctions
             For Each iniFileSection As IniFile.IniSection In iniFile.Sections
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectOS")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If Not tempString.Contains(osVersionString) Then
+                    If Not osVersionCheck(tempString) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Continue For
