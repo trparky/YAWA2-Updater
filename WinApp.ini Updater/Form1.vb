@@ -49,12 +49,7 @@ Public Class Form1
     Function doesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
         Using taskServiceObject As TaskService = New TaskService
             taskObject = taskServiceObject.GetTask(nameOfTask)
-
-            If taskObject Is Nothing Then
-                Return False
-            Else
-                Return True
-            End If
+            Return If(taskObject Is Nothing, False, True)
         End Using
     End Function
 
