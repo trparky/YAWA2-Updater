@@ -21,31 +21,29 @@ Public Class Form1
 
         Dim taskService As TaskService = New TaskService()
         Dim newTask As TaskDefinition = taskService.NewTask
-
-        newTask.RegistrationInfo.Description = taskDescription
-        newTask.Triggers.Add(New TaskScheduler.LogonTrigger)
-
         Dim exeFileInfo As New IO.FileInfo(taskEXEPath)
 
-        newTask.Actions.Add(New ExecAction(Chr(34) & taskEXEPath & Chr(34), taskParameters, exeFileInfo.DirectoryName))
+        With newTask
+            .RegistrationInfo.Description = taskDescription
+            .Triggers.Add(New LogonTrigger)
+            .Actions.Add(New ExecAction(Chr(34) & taskEXEPath & Chr(34), taskParameters, exeFileInfo.DirectoryName))
 
-        newTask.Principal.RunLevel = TaskRunLevel.Highest
-        newTask.Settings.Compatibility = TaskCompatibility.V2_1
-        newTask.Settings.AllowDemandStart = True
-        newTask.Settings.DisallowStartIfOnBatteries = False
-        newTask.Settings.RunOnlyIfIdle = False
-        newTask.Settings.StopIfGoingOnBatteries = False
-        newTask.Settings.AllowHardTerminate = False
-        newTask.Settings.UseUnifiedSchedulingEngine = True
-        newTask.Settings.ExecutionTimeLimit = Nothing
-        newTask.Principal.LogonType = TaskLogonType.InteractiveToken
+            .Principal.RunLevel = TaskRunLevel.Highest
+            .Settings.Compatibility = TaskCompatibility.V2_1
+            .Settings.AllowDemandStart = True
+            .Settings.DisallowStartIfOnBatteries = False
+            .Settings.RunOnlyIfIdle = False
+            .Settings.StopIfGoingOnBatteries = False
+            .Settings.AllowHardTerminate = False
+            .Settings.UseUnifiedSchedulingEngine = True
+            .Settings.ExecutionTimeLimit = Nothing
+            .Principal.LogonType = TaskLogonType.InteractiveToken
+        End With
 
         taskService.RootFolder.RegisterTaskDefinition(taskName, newTask)
 
         newTask.Dispose()
         taskService.Dispose()
-        newTask = Nothing
-        taskService = Nothing
     End Sub
 
     Function doesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
