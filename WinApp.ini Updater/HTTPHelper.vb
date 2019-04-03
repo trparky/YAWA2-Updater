@@ -236,7 +236,7 @@ End Class
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 <CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class httpHelper
-    Private Const classVersion As String = "1.306"
+    Private Const classVersion As String = "1.307"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -1434,7 +1434,6 @@ beginAgain:
             httpRequestWriter.Write(postDataString)
             httpRequestWriter.Close()
             httpRequestWriter.Dispose()
-            httpRequestWriter = Nothing
         End If
     End Sub
 
@@ -1561,14 +1560,5 @@ beginAgain:
         End If
 
         Return result
-    End Function
-
-    Private Function doWeHaveAnInternetConnection() As Boolean
-        Try
-            Dim ping As New Net.NetworkInformation.Ping()
-            Return If(ping.Send("8.8.8.8").Status = Net.NetworkInformation.IPStatus.Success, True, False)
-        Catch ex As Exception
-            Return False
-        End Try
     End Function
 End Class
