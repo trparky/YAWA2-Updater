@@ -61,19 +61,20 @@ Module Check_for_Update_Code
         End Try
     End Function
 
-    Private Sub extractFileFromZIPFile(ByRef memStream As IO.MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
-        memStream.Position = 0
-        Dim zipFileObject As New ICSharpCode.SharpZipLib.Zip.ZipFile(memStream)
-        Dim zipFileEntry As ICSharpCode.SharpZipLib.Zip.ZipEntry = zipFileObject.GetEntry(fileToExtract)
+    Private Sub extractFileFromZIPFile(memoryStream As IO.MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
+        memoryStream.Position = 0
 
-        If zipFileEntry IsNot Nothing Then
-            Dim fileStream As New IO.FileStream(fileToWriteExtractedFileTo, IO.FileMode.Create)
-            zipFileObject.GetInputStream(zipFileEntry).CopyTo(fileStream)
-            fileStream.Close()
-            fileStream.Dispose()
-        End If
+        Using zipFileObject As New IO.Compression.ZipArchive(memoryStream)
+            Dim zipFileEntry As IO.Compression.ZipArchiveEntry = zipFileObject.GetEntry(fileToExtract)
 
-        zipFileObject.Close()
+            If zipFileEntry IsNot Nothing Then
+                Using zipFileEntryIOStream As IO.Stream = zipFileEntry.Open()
+                    Using fileStream As New IO.FileStream(fileToWriteExtractedFileTo, IO.FileMode.Create)
+                        zipFileEntryIOStream.CopyTo(fileStream)
+                    End Using
+                End Using
+            End If
+        End Using
     End Sub
 
     Public Sub downloadAndDoUpdate(Optional ByVal outputText As Boolean = False)
@@ -88,22 +89,19 @@ Module Check_for_Update_Code
             Exit Sub
         End If
 
-        If Not verifyChecksum(programZipFileSHA1URL, memStream, True) Then
-            Exit Sub
-        End If
+        If Not verifyChecksum(programZipFileSHA1URL, memStream, True) Then Exit Sub
 
         fileInfo = Nothing
 
         extractFileFromZIPFile(memStream, programFileNameInZIP, newExecutableFilePath)
 
-        If boolWinXP Then
-            Process.Start(newExecutableFilePath, "-update")
+        If boolWinXP Then : Process.Start(newExecutableFilePath, "-update")
         Else
             Dim startInfo As New ProcessStartInfo With {
                 .FileName = newExecutableFilePath,
                 .Arguments = "-update"
             }
-            If Not canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
+            If Not programFunctions.canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
             Process.Start(startInfo)
 
             Process.GetCurrentProcess.Kill()
@@ -117,8 +115,7 @@ Module Check_for_Update_Code
         memStream.Position = 0
         Dim Output As Byte() = SHA1Engine.ComputeHash(memStream)
         memStream.Position = 0
-        Dim result As String = BitConverter.ToString(Output).ToLower().Replace("-", "").Trim
-        SHA160 = result
+        Return BitConverter.ToString(Output).ToLower().Replace("-", "").Trim
     End Function
 
     Public Function verifyChecksum(urlOfChecksumFile As String, ByRef memStream As IO.MemoryStream, boolGiveUserAnErrorMessage As Boolean) As Boolean
@@ -127,30 +124,20 @@ Module Check_for_Update_Code
         Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
 
         If Not internetFunctions.createNewHTTPHelperObject().getWebData(urlOfChecksumFile, checksumFromWeb, False) Then
-            If boolGiveUserAnErrorMessage Then
-                MsgBox("There was an error downloading the checksum verification file. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
-            End If
-
+            If boolGiveUserAnErrorMessage Then MsgBox("There was an error downloading the checksum verification file. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
             Return False
         Else
             ' Checks to see if we have a valid SHA1 file.
             If Regex.IsMatch(checksumFromWeb, "([a-zA-Z0-9]{40})") Then
                 checksumFromWeb = Regex.Match(checksumFromWeb, "([a-zA-Z0-9]{40})").Groups(1).Value().ToLower.Trim()
 
-                If SHA160(memStream) = checksumFromWeb Then
-                    Return True
+                If SHA160(memStream).Equals(checksumFromWeb, StringComparison.OrdinalIgnoreCase) Then : Return True
                 Else
-                    If boolGiveUserAnErrorMessage Then
-                        MsgBox("There was an error in the download, checksums don't match. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
-                    End If
-
+                    If boolGiveUserAnErrorMessage Then MsgBox("There was an error in the download, checksums don't match. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
                     Return False
                 End If
             Else
-                If boolGiveUserAnErrorMessage Then
-                    MsgBox("Invalid SHA1 file detected. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
-                End If
-
+                If boolGiveUserAnErrorMessage Then MsgBox("Invalid SHA1 file detected. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
                 Return False
             End If
         End If
@@ -160,10 +147,8 @@ Module Check_for_Update_Code
         Dim xmlData As String = Nothing
 
         If internetFunctions.createNewHTTPHelperObject().getWebData(programUpdateCheckerXMLFile, xmlData, False) Then
-            If processUpdateXMLData(xmlData) Then
-                downloadAndDoUpdate()
-            Else
-                MsgBox("You already have the latest version.", MsgBoxStyle.Information, programName)
+            If processUpdateXMLData(xmlData) Then : downloadAndDoUpdate()
+            Else : MsgBox("You already have the latest version.", MsgBoxStyle.Information, programName)
             End If
         Else
             parentForm.Invoke(Sub() parentForm.btnCheckForUpdates.Enabled = True)
@@ -172,41 +157,24 @@ Module Check_for_Update_Code
     End Sub
 
     Private Function doesPIDExist(PID As Integer) As Boolean
-        Dim searcher As New ManagementObjectSearcher("root\CIMV2", String.Format("SELECT * FROM Win32_Process WHERE ProcessId={0}", PID))
-
-        If searcher.Get.Count = 0 Then
-            searcher.Dispose()
-            Return False
-        Else
-            searcher.Dispose()
-            Return True
-        End If
+        Using searcher As New ManagementObjectSearcher("root\CIMV2", String.Format("SELECT * FROM Win32_Process WHERE ProcessId={0}", PID))
+            Return If(searcher.Get.Count = 0, False, True)
+        End Using
     End Function
 
     Private Sub killProcess(PID As Integer)
         Dim processDetail As Process
-
-        Debug.Write(String.Format("Killing PID {0}...", PID))
 
         processDetail = Process.GetProcessById(PID)
         processDetail.Kill()
 
         Threading.Thread.Sleep(100)
 
-        If doesPIDExist(PID) Then
-            Debug.WriteLine(" Process still running.  Attempting to kill process again.")
-            killProcess(PID)
-        Else
-            Debug.WriteLine(" Process Killed.")
-        End If
+        If doesPIDExist(PID) Then killProcess(PID)
     End Sub
 
     Public Sub searchForProcessAndKillIt(fileName As String)
         Dim fullFileName As String = New IO.FileInfo(fileName).FullName
-        'Dim PID As Integer
-
-        Debug.WriteLine("Killing all processes that belong to parent executable file.  Please Wait.")
-
         Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_Process")
 
         Try

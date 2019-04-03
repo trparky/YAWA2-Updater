@@ -11,19 +11,11 @@
             httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try
                                                     If Not strURLInput.Trim.ToLower.StartsWith("http") Then
-                                                        If boolUseSSL Then
-                                                            Debug.WriteLine("setURLPreProcessor code -- https://" & strURLInput)
-                                                            Return "https://" & strURLInput
-                                                        Else
-                                                            Debug.WriteLine("setURLPreProcessor code -- http://" & strURLInput)
-                                                            Return "http://" & strURLInput
-                                                        End If
+                                                        Return If(boolUseSSL, "https://", "http://") & strURLInput
                                                     Else
-                                                        Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
                                                         Return strURLInput
                                                     End If
                                                 Catch ex As Exception
-                                                    Debug.WriteLine("setURLPreProcessor code -- " & strURLInput)
                                                     Return strURLInput
                                                 End Try
                                             End Function
@@ -46,12 +38,7 @@
                 computerInfo = Nothing
 
                 Dim dotNetVersionsInfo As String() = Environment.Version.ToString.Split(".")
-
-                If Environment.Is64BitOperatingSystem Then
-                    Return String.Format("{0} 64-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1))
-                Else
-                    Return String.Format("{0} 32-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1))
-                End If
+                Return String.Format("{0} {3}-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1), If(Environment.Is64BitOperatingSystem, "64", "32"))
             Catch ex As Exception
                 Try
                     Return "Unknown Windows Operating System (" & Environment.OSVersion.VersionString & ")"
