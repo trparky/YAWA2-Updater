@@ -4,7 +4,6 @@ Imports System.Text
 
 Public Class Form1
     Private strLocationOfCCleaner, remoteINIFileVersion, localINIFileVersion As String
-    Private boolWinXP As Boolean = False
     Private Const updateNeeded As String = "Update Needed"
     Private Const updateNotNeeded As String = "Update NOT Needed"
 
@@ -67,9 +66,7 @@ Public Class Form1
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
 
-            If Environment.OSVersion.ToString.Contains("5.1") Or Environment.OSVersion.ToString.Contains("5.2") Then boolWinXP = True
-
-            If Not boolWinXP And programFunctions.areWeAnAdministrator() Then
+            If programFunctions.areWeAnAdministrator() Then
                 Dim taskService As New TaskService
                 Dim taskObject As Task = Nothing
 
@@ -85,7 +82,7 @@ Public Class Form1
 
                 taskService.Dispose()
                 taskService = Nothing
-            ElseIf Not boolWinXP And Not programFunctions.areWeAnAdministrator() Then : chkLoadAtUserStartup.Enabled = False
+            ElseIf Not programFunctions.areWeAnAdministrator() Then : chkLoadAtUserStartup.Enabled = False
             Else : chkLoadAtUserStartup.Visible = False
             End If
 
@@ -129,23 +126,17 @@ Public Class Form1
                 End If
             End If
 
-            If Not boolWinXP Then
-                Dim strUseSSL As String = Nothing
-
-                If programFunctions.loadSettingFromINIFile("useSSL", strUseSSL) Then
-                    If strUseSSL.Equals("True", StringComparison.OrdinalIgnoreCase) Then
-                        boolUseSSL = True
-                        chkUseSSL.Checked = True
-                    Else
-                        boolUseSSL = False
-                    End If
-                Else
-                    programFunctions.saveSettingToINIFile("useSSL", "True")
+            Dim strUseSSL As String = Nothing
+            If programFunctions.loadSettingFromINIFile("useSSL", strUseSSL) Then
+                If strUseSSL.Equals("True", StringComparison.OrdinalIgnoreCase) Then
                     boolUseSSL = True
+                    chkUseSSL.Checked = True
+                Else
+                    boolUseSSL = False
                 End If
             Else
-                boolUseSSL = False
-                chkUseSSL.Visible = False
+                programFunctions.saveSettingToINIFile("useSSL", "True")
+                boolUseSSL = True
             End If
 
             Threading.ThreadPool.QueueUserWorkItem(AddressOf getINIVersion)

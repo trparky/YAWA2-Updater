@@ -47,6 +47,12 @@ Namespace My
         End Sub
 
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
+            If Environment.OSVersion.Version.Major = 5 And (Environment.OSVersion.Version.Minor = 1 Or Environment.OSVersion.Version.Minor = 2) Then
+                MsgBox("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
+                e.Cancel = True
+                Exit Sub
+            End If
+
             Dim remoteINIFileVersion, localINIFileVersion As String
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim stringCustomEntries As String = Nothing

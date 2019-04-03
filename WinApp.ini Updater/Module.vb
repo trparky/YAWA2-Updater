@@ -22,7 +22,6 @@ Namespace programConstants
 End Namespace
 
 Module globalVariables
-    Public boolWinXP As Boolean = False
     Public boolUseSSL As Boolean = True
 End Module
 
