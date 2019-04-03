@@ -95,17 +95,11 @@ Module Check_for_Update_Code
 
         extractFileFromZIPFile(memStream, programFileNameInZIP, newExecutableFilePath)
 
-        If boolWinXP Then : Process.Start(newExecutableFilePath, "-update")
-        Else
-            Dim startInfo As New ProcessStartInfo With {
-                .FileName = newExecutableFilePath,
-                .Arguments = "-update"
-            }
-            If Not programFunctions.canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
-            Process.Start(startInfo)
+        Dim startInfo As New ProcessStartInfo With {.FileName = newExecutableFilePath, .Arguments = "-update"}
+        If Not programFunctions.canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
+        Process.Start(startInfo)
 
-            Process.GetCurrentProcess.Kill()
-        End If
+        Process.GetCurrentProcess.Kill()
 
         Application.Exit()
     End Sub
