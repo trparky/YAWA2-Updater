@@ -128,15 +128,16 @@ Public Class Form1
 
             Dim strUseSSL As String = Nothing
             If programFunctions.loadSettingFromINIFile("useSSL", strUseSSL) Then
-                If strUseSSL.Equals("True", StringComparison.OrdinalIgnoreCase) Then
+                If Not Boolean.TryParse(strUseSSL, boolUseSSL) Then
                     boolUseSSL = True
-                    chkUseSSL.Checked = True
-                Else
-                    boolUseSSL = False
+                    programFunctions.saveSettingToINIFile("useSSL", "True")
                 End If
+
+                chkUseSSL.Checked = boolUseSSL
             Else
                 programFunctions.saveSettingToINIFile("useSSL", "True")
                 boolUseSSL = True
+                chkUseSSL.Checked = True
             End If
 
             Threading.ThreadPool.QueueUserWorkItem(AddressOf getINIVersion)
