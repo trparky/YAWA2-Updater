@@ -332,9 +332,6 @@ Public Class Form1
         stringBuilder.AppendFormat("Version {0}.{1} Build {2}", version(0), version(1), version(2))
 
         MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, "About")
-
-        version = Nothing
-        stringBuilder = Nothing
     End Sub
 
     Private Sub chkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
