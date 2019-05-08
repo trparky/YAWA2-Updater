@@ -571,33 +571,6 @@ Namespace programFunctions
     End Module
 End Namespace
 
-Module extensions
-    ' PHP like addSlashes and stripSlashes. Call using String.addSlashes() and String.stripSlashes().
-    <Extension()>
-    Public Function addSlashes(unsafeString As String) As String
-        Return Regex.Replace(unsafeString, "([\000\010\011\012\015\032\042\047\134\140])", "\$1")
-    End Function
-
-    <Extension()>
-    Public Function caseInsensitiveContains(haystack As String, needle As String, Optional boolDoEscaping As Boolean = False) As Boolean
-        Try
-            If boolDoEscaping Then needle = Regex.Escape(needle)
-            Return Regex.IsMatch(haystack, needle, RegexOptions.IgnoreCase)
-        Catch ex As Exception
-            Return False
-        End Try
-    End Function
-
-    <Extension()>
-    Public Function stringCompare(str1 As String, str2 As String, Optional boolCaseInsensitive As Boolean = True)
-        If boolCaseInsensitive Then
-            Return str1.Trim.Equals(str2.Trim, StringComparison.OrdinalIgnoreCase)
-        Else
-            Return str1.Trim.Equals(str2.Trim, StringComparison.Ordinal)
-        End If
-    End Function
-End Module
-
 Friend NotInheritable Class NativeMethods
     Private Sub New()
     End Sub
