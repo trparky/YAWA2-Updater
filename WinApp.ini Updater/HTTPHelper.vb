@@ -2,47 +2,18 @@
 Imports System.Security.Cryptography
 
 Public Class FormFile
-    Private m_Name, m_ContentType, m_FilePath, m_uploadedFileName As String
 
     ''' <summary>This is the name for the form entry.</summary>
     Public Property formName() As String
-        Get
-            Return m_Name
-        End Get
-        Set(value As String)
-            m_Name = value
-        End Set
-    End Property
 
     ''' <summary>This is the content type or MIME type.</summary>
     Public Property contentType() As String
-        Get
-            Return m_ContentType
-        End Get
-        Set(value As String)
-            m_ContentType = value
-        End Set
-    End Property
 
     ''' <summary>This is the path to the file to be uploaded on the local file system.</summary>
     Public Property localFilePath() As String
-        Get
-            Return m_FilePath
-        End Get
-        Set(value As String)
-            m_FilePath = value
-        End Set
-    End Property
 
     ''' <summary>This sets the name that the uploaded file will be called on the remote server.</summary>
     Public Property remoteFileName() As String
-        Get
-            Return m_uploadedFileName
-        End Get
-        Set(value As String)
-            m_uploadedFileName = value
-        End Set
-    End Property
 End Class
 
 Public Class noMimeTypeFoundException
@@ -182,7 +153,6 @@ End Class
 
 Public Class httpProtocolException
     Inherits Exception
-    Private _httpStatusCode As Net.HttpStatusCode = Net.HttpStatusCode.NoContent
 
     Public Sub New()
     End Sub
@@ -195,14 +165,7 @@ Public Class httpProtocolException
         MyBase.New(message, inner)
     End Sub
 
-    Public Property httpStatusCode As Net.HttpStatusCode
-        Get
-            Return _httpStatusCode
-        End Get
-        Set(value As Net.HttpStatusCode)
-            _httpStatusCode = value
-        End Set
-    End Property
+    Public Property httpStatusCode As Net.HttpStatusCode = Net.HttpStatusCode.NoContent
 End Class
 
 Public Class noSSLCertificateFoundException
@@ -226,17 +189,20 @@ Class cookieDetails
 End Class
 
 Public Class downloadStatusDetails
-    Public remoteFileSize As ULong, localFileSize As ULong, percentageDownloaded As Short
+    Public Property remoteFileSize As ULong
+    Public Property localFileSize As ULong
+    Public Property percentageDownloaded As Short
 End Class
 
 Class credentials
-    Public strUser, strPasswordInput As String
+    Public Property strUser As String
+    Public Property strPasswordInput As String
 End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 <CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class httpHelper
-    Private Const classVersion As String = "1.307"
+    Private Const classVersion As String = "1.308"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
