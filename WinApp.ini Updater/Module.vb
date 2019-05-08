@@ -91,9 +91,9 @@ Namespace programFunctions
                     processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
 
                     If boolFullFilePathPassed Then
-                        If stringCompare(strFileName, processExecutablePathFileInfo.FullName) Then killProcess(process.Id)
+                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then killProcess(process.Id)
                     ElseIf Not boolFullFilePathPassed Then
-                        If stringCompare(strFileName, processExecutablePathFileInfo.Name) Then killProcess(process.Id)
+                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then killProcess(process.Id)
                     End If
 
                     processExecutablePathFileInfo = Nothing
