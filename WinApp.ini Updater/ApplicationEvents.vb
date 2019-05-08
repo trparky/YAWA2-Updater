@@ -78,9 +78,9 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.AddSection(programConstants.configINISettingSection)
 
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, "False")
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, "False")
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, "False")
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, False)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, False)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, False)
 
                 programVariables.boolMobileMode = False
                 programVariables.boolTrim = False

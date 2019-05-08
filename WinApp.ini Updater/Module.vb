@@ -197,6 +197,10 @@ Namespace programFunctions
             End If
         End Sub
 
+        Public Sub saveSettingToINIFile(setting As String, value As Boolean)
+            saveSettingToINIFile(setting, If(value, "True", "False"))
+        End Sub
+
         Public Sub saveSettingToINIFile(setting As String, value As String)
             ' Check if the INI file exists.
             If IO.File.Exists(programConstants.configINIFile) Then
