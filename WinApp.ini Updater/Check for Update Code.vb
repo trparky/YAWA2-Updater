@@ -77,7 +77,7 @@ Module Check_for_Update_Code
         End Using
     End Sub
 
-    Public Sub downloadAndDoUpdate(Optional ByVal outputText As Boolean = False)
+    Public Sub downloadAndDoUpdate()
         Dim memStream As New IO.MemoryStream()
         Dim fileInfo As New IO.FileInfo(Application.ExecutablePath)
         Dim newExecutableFilePath As String = fileInfo.Name & ".new.exe"
@@ -90,8 +90,6 @@ Module Check_for_Update_Code
         End If
 
         If Not verifyChecksum(programZipFileSHA1URL, memStream, True) Then Exit Sub
-
-        fileInfo = Nothing
 
         extractFileFromZIPFile(memStream, programFileNameInZIP, newExecutableFilePath)
 

@@ -72,8 +72,6 @@ Namespace My
                 If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey), programVariables.boolNotifyAfterUpdateAtLogon) Then
                     programVariables.boolNotifyAfterUpdateAtLogon = False
                 End If
-
-                iniFile = Nothing
             Else
                 Dim iniFile As New IniFile()
                 iniFile.AddSection(programConstants.configINISettingSection)
@@ -87,7 +85,6 @@ Namespace My
                 programVariables.boolNotifyAfterUpdateAtLogon = False
 
                 iniFile.Save(programConstants.configINIFile)
-                iniFile = Nothing
             End If
 
             If My.Application.CommandLineArgs.Count = 1 Then
