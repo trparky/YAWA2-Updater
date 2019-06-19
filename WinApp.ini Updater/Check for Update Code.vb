@@ -49,12 +49,6 @@ Module Check_for_Update_Code
                 ' We return a True value indicating that there is a new version to download and install.
                 Return True
             End If
-        Catch ex As XPath.XPathException
-            ' Something went wrong so we return a False value.
-            Return False
-        Catch ex As XmlException
-            ' Something went wrong so we return a False value.
-            Return False
         Catch ex As Exception
             ' Something went wrong so we return a False value.
             Return False
