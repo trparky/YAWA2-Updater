@@ -142,46 +142,97 @@ Module Check_for_Update_Code
         End If
     End Sub
 
-    Private Function doesPIDExist(PID As Integer) As Boolean
-        Using searcher As New ManagementObjectSearcher("root\CIMV2", String.Format("SELECT * FROM Win32_Process WHERE ProcessId={0}", PID))
-            Return If(searcher.Get.Count = 0, False, True)
-        End Using
+    ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
+    ''' <param name="PID">The PID of the process you are checking the existance of.</param>
+    ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
+    ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
+    Private Function doesProcessIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
+        Try
+            processObject = Process.GetProcessById(PID)
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
     End Function
 
-    Private Sub killProcess(PID As Integer)
-        Dim processDetail As Process
+    Private Sub killProcess(processID As Integer)
+        Dim processObject As Process = Nothing
 
-        processDetail = Process.GetProcessById(PID)
-        processDetail.Kill()
+        ' First we are going to check if the Process ID exists.
+        If doesProcessIDExist(processID, processObject) Then
+            Try
+                processObject.Kill() ' Yes, it does so let's kill it.
+            Catch ex As Exception
+                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
+                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
+            End Try
+        End If
 
-        Threading.Thread.Sleep(100)
+        Threading.Thread.Sleep(250) ' We're going to sleep to give the system some time to kill the process.
 
-        If doesPIDExist(PID) Then killProcess(PID)
+        '' Now we are going to check again if the Process ID exists and if it does, we're going to attempt to kill it again.
+        If doesProcessIDExist(processID, processObject) Then
+            Try
+                processObject.Kill()
+            Catch ex As Exception
+                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
+                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
+            End Try
+        End If
+
+        Threading.Thread.Sleep(250) ' We're going to sleep (again) to give the system some time to kill the process.
     End Sub
 
-    Public Sub searchForProcessAndKillIt(fileName As String)
-        Dim fullFileName As String = New IO.FileInfo(fileName).FullName
-        Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_Process")
+    Private Function getProcessExecutablePath(processID As Integer) As String
+        Dim memoryBuffer As New Text.StringBuilder(1024)
+        Dim processHandle As IntPtr = NativeMethod.NativeMethods.OpenProcess(NativeMethod.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
 
-        Try
-            For Each queryObj As ManagementObject In searcher.Get()
-                If queryObj("ExecutablePath") IsNot Nothing Then
-                    If queryObj("ExecutablePath") = fullFileName Then
-                        killProcess(Integer.Parse(queryObj("ProcessId").ToString))
-                    End If
+        If processHandle <> IntPtr.Zero Then
+            Try
+                Dim memoryBufferSize As Integer = memoryBuffer.Capacity
+
+                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
+                    Return memoryBuffer.ToString()
                 End If
-            Next
+            Finally
+                NativeMethod.NativeMethods.CloseHandle(processHandle)
+            End Try
+        End If
 
-            Debug.WriteLine("All processes killed... Update process can continue.")
-        Catch err As ManagementException
-            ' Does nothing
-        End Try
+        NativeMethod.NativeMethods.CloseHandle(processHandle)
+        Return Nothing
+    End Function
+
+    Public Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
+        Dim processExecutablePath As String
+        Dim processExecutablePathFileInfo As IO.FileInfo
+
+        For Each process As Process In Process.GetProcesses()
+            processExecutablePath = getProcessExecutablePath(process.Id)
+
+            If processExecutablePath IsNot Nothing Then
+                Try
+                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
+
+                    If boolFullFilePathPassed Then
+                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then
+                            killProcess(process.Id)
+                        End If
+                    Else
+                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then
+                            killProcess(process.Id)
+                        End If
+                    End If
+                Catch ex As ArgumentException
+                End Try
+            End If
+        Next
     End Sub
 
     Public Sub newFileDeleter()
         If IO.File.Exists(Application.ExecutablePath & ".new.exe") = True Then
             Threading.ThreadPool.QueueUserWorkItem(Sub()
-                                                       searchForProcessAndKillIt(Application.ExecutablePath & ".new.exe")
+                                                       searchForProcessAndKillIt(Application.ExecutablePath & ".new.exe", False)
                                                        IO.File.Delete(Application.ExecutablePath & ".new.exe")
                                                    End Sub)
         End If
