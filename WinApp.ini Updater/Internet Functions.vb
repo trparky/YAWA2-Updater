@@ -33,7 +33,7 @@
 
         Private Function getFullOSVersionString() As String
             Try
-                Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.caseInsensitiveReplace("microsoft ", "", "")
+                Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.caseInsensitiveReplace("microsoft ", "", True)
 
                 Dim dotNetVersionsInfo As String() = Environment.Version.ToString.Split(".")
                 Return String.Format("{0} {3}-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1), If(Environment.Is64BitOperatingSystem, "64", "32"))
