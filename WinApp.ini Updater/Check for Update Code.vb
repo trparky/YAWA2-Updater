@@ -20,10 +20,18 @@ Module Check_for_Update_Code
 
     Public versionStringWithoutBuild As String = String.Format("{0}.{1}", versionInfo(versionPieces.major), versionInfo(versionPieces.minor))
 
+    Enum processUpdateXMLResponse As Short
+        noUpdateNeeded
+        newVersion
+        newerVersionThanWebSite
+        parseError
+        exceptionError
+    End Enum
+
     ''' <summary>This parses the XML updata data and determines if an update is needed.</summary>
     ''' <param name="xmlData">The XML data from the web site.</param>
     ''' <returns>A Boolean value indicating if the program has been updated or not.</returns>
-    Public Function processUpdateXMLData(ByVal xmlData As String, ByRef remoteVersion As String, ByRef remoteBuild As String) As Boolean
+    Public Function processUpdateXMLData(ByVal xmlData As String, ByRef remoteVersion As String, ByRef remoteBuild As String) As processUpdateXMLResponse
         Try
             Dim xmlDocument As New XmlDocument() ' First we create an XML Document Object.
             xmlDocument.Load(New IO.StringReader(xmlData)) ' Now we try and parse the XML data.
@@ -37,35 +45,35 @@ Module Check_for_Update_Code
             ' This checks to see if current version and the current build matches that of the remote values in the XML document.
             If remoteVersion.Equals(versionStringWithoutBuild) And remoteBuild.Equals(shortBuild.ToString) Then
                 ' Both the remoteVersion and the remoteBuild equals that of the current version,
-                ' therefore we return a False value indicating no update is required.
-                Return False
+                ' therefore we return a sameVersion value indicating no update is required.
+                Return processUpdateXMLResponse.noUpdateNeeded
             Else
-                ' First we do a check of the version, if it's not equal we simply return a True value.
+                ' First we do a check of the version, if it's not equal we simply return a newVersion value.
                 If Not remoteVersion.Equals(versionStringWithoutBuild) Then
-                    ' We return a True value indicating that there is a new version to download and install.
-                    Return True
+                    ' We return a newVersion value indicating that there is a new version to download and install.
+                    Return processUpdateXMLResponse.newVersion
                 Else
                     ' Now let's do some sanity checks here. 
                     If Short.TryParse(remoteBuild, shortRemoteBuild) Then
                         If shortRemoteBuild < shortBuild Then
-                            ' This is weird, the remote build is less than the current build. Something went wrong. So to be safe we're going to return a False value indicating that there is no update to download. Better to be safe.
-                            Return False
+                            ' This is weird, the remote build is less than the current build so we return a newerVersionThanWebSite value.
+                            Return processUpdateXMLResponse.newerVersionThanWebSite
                         ElseIf shortRemoteBuild.Equals(shortBuild) Then
-                            ' The build numbers match, therefore therefore we return a False value.
-                            Return False
+                            ' The build numbers match, therefore therefore we return a sameVersion value.
+                            Return processUpdateXMLResponse.noUpdateNeeded
                         End If
                     Else
-                        ' Something went wrong, we couldn't parse the value of the remoteBuild number so we return a False value.
-                        Return False
+                        ' Something went wrong, we couldn't parse the value of the remoteBuild number so we return a parseError value.
+                        Return processUpdateXMLResponse.parseError
                     End If
 
-                    ' We return a True value indicating that there is a new version to download and install.
-                    Return True
+                    ' We return a newVersion value indicating that there is a new version to download and install.
+                    Return processUpdateXMLResponse.newVersion
                 End If
             End If
         Catch ex As Exception
-            ' Something went wrong so we return a False value.
-            Return False
+            ' Something went wrong so we return a exceptionError value.
+            Return processUpdateXMLResponse.exceptionError
         End Try
     End Function
 
@@ -149,8 +157,16 @@ Module Check_for_Update_Code
         If internetFunctions.createNewHTTPHelperObject().getWebData(programUpdateCheckerXMLFile, xmlData, False) Then
             Dim remoteVersion As String = Nothing
             Dim remoteBuild As String = Nothing
-            If processUpdateXMLData(xmlData, remoteVersion, remoteBuild) Then : downloadAndDoUpdate()
-            Else : MsgBox("You already have the latest version.", MsgBoxStyle.Information, programName)
+            Dim response As processUpdateXMLResponse = processUpdateXMLData(xmlData, remoteVersion, remoteBuild)
+
+            If response = processUpdateXMLResponse.newVersion Then
+                downloadAndDoUpdate()
+            ElseIf response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError Then
+                MsgBox("There was an error when trying to parse response from server.", MsgBoxStyle.Critical, programName)
+            ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite Then
+                MsgBox("This is weird, you have a version that's newer than what's listed on the web site.", MsgBoxStyle.Information, programName)
+            ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
+                MsgBox("You already have the latest version.", MsgBoxStyle.Information, programName)
             End If
         Else
             parentForm.Invoke(Sub() parentForm.btnCheckForUpdates.Enabled = True)
