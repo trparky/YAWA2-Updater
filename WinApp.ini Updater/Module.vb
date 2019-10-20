@@ -80,27 +80,6 @@ Namespace programFunctions
             Return Nothing
         End Function
 
-        Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-            Dim processExecutablePath As String
-            Dim processExecutablePathFileInfo As IO.FileInfo
-
-            For Each process As Process In Process.GetProcesses()
-                processExecutablePath = getProcessExecutablePath(process.Id)
-
-                If processExecutablePath IsNot Nothing Then
-                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
-
-                    If boolFullFilePathPassed Then
-                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then killProcess(process.Id)
-                    ElseIf Not boolFullFilePathPassed Then
-                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then killProcess(process.Id)
-                    End If
-
-                    processExecutablePathFileInfo = Nothing
-                End If
-            Next
-        End Sub
-
         Public Function canIWriteToTheCurrentDirectory() As Boolean
             Return canIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
         End Function
