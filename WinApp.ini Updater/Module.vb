@@ -48,18 +48,6 @@ Namespace programFunctions
             End Try
         End Function
 
-        Private Sub killProcess(PID As Integer)
-            Dim processObject As Process = Nothing
-            If doesPIDExist(PID, processObject) Then
-                Try
-                    processObject.Kill() ' Yes, it does so let's kill it.
-                Catch ex As Exception
-                    ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
-                    ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
-                End Try
-            End If
-        End Sub
-
         Private Function getProcessExecutablePath(processID As Integer) As String
             Dim memoryBuffer = New Text.StringBuilder(1024)
             Dim processHandle As IntPtr = NativeMethods.OpenProcess(NativeMethods.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
