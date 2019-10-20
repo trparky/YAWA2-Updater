@@ -40,9 +40,7 @@ Namespace My
                         killProcess(Integer.Parse(queryObj("ProcessId").ToString))
                     Next
                 End Using
-            Catch ex3 As Runtime.InteropServices.COMException
-            Catch err As Management.ManagementException
-                ' Does nothing
+            Catch err As Exception
             End Try
         End Sub
 
