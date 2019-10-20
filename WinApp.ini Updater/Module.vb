@@ -48,26 +48,6 @@ Namespace programFunctions
             End Try
         End Function
 
-        Private Function getProcessExecutablePath(processID As Integer) As String
-            Dim memoryBuffer = New Text.StringBuilder(1024)
-            Dim processHandle As IntPtr = NativeMethods.OpenProcess(NativeMethods.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
-
-            If processHandle <> IntPtr.Zero Then
-                Try
-                    Dim memoryBufferSize As Integer = memoryBuffer.Capacity
-
-                    If NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                        Return memoryBuffer.ToString()
-                    End If
-                Finally
-                    NativeMethods.CloseHandle(processHandle)
-                End Try
-            End If
-
-            NativeMethods.CloseHandle(processHandle)
-            Return Nothing
-        End Function
-
         Public Function canIWriteToTheCurrentDirectory() As Boolean
             Return canIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
         End Function
