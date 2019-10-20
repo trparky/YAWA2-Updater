@@ -162,6 +162,8 @@ Module Check_for_Update_Code
 
             If response = processUpdateXMLResponse.newVersion Then
                 downloadAndDoUpdate()
+            ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
+                MsgBox("You already have the latest version, there is no need to update this program.", MsgBoxStyle.Information, programName)
             ElseIf response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError Then
                 MsgBox("There was an error when trying to parse response from server.", MsgBoxStyle.Critical, programName)
             ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite Then
