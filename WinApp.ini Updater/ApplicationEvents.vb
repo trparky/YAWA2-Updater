@@ -32,14 +32,14 @@ Namespace My
 
         Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
             Dim fullFileName As String = If(boolFullFilePathPassed, strFileName, New IO.FileInfo(strFileName).FullName)
-
             Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.addSlashes())
-            Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
 
             Try
-                For Each queryObj As Management.ManagementObject In searcher.Get()
-                    killProcess(Integer.Parse(queryObj("ProcessId").ToString))
-                Next
+                Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
+                    For Each queryObj As Management.ManagementObject In searcher.Get()
+                        killProcess(Integer.Parse(queryObj("ProcessId").ToString))
+                    Next
+                End Using
             Catch ex3 As Runtime.InteropServices.COMException
             Catch err As Management.ManagementException
                 ' Does nothing
