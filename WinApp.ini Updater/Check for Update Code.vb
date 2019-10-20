@@ -119,11 +119,12 @@ Module Check_for_Update_Code
     End Sub
 
     Private Function SHA160(ByRef memStream As IO.MemoryStream) As String
-        Dim SHA1Engine As New Security.Cryptography.SHA1CryptoServiceProvider
-        memStream.Position = 0
-        Dim Output As Byte() = SHA1Engine.ComputeHash(memStream)
-        memStream.Position = 0
-        Return BitConverter.ToString(Output).ToLower().Replace("-", "").Trim
+        Using SHA1Engine As New Security.Cryptography.SHA1CryptoServiceProvider
+            memStream.Position = 0
+            Dim Output As Byte() = SHA1Engine.ComputeHash(memStream)
+            memStream.Position = 0
+            Return BitConverter.ToString(Output).ToLower().Replace("-", "").Trim
+        End Using
     End Function
 
     Public Function verifyChecksum(urlOfChecksumFile As String, ByRef memStream As IO.MemoryStream, boolGiveUserAnErrorMessage As Boolean) As Boolean
