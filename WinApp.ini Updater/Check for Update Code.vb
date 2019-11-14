@@ -1,24 +1,132 @@
-﻿Imports System.Management
+﻿Imports System.IO
 Imports System.Text.RegularExpressions
 Imports System.Xml
+Imports System.Security.AccessControl
+Imports System.Security.Principal
 
-Module Check_for_Update_Code
-    Public Const programZipFileURL = "www.toms-world.org/download/YAWA2 Updater.zip"
-    Public Const programZipFileSHA1URL = "www.toms-world.org/download/YAWA2 Updater.zip.sha1"
+Module checkForUpdateModules
+    ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
+    ''' <param name="PID">The PID of the process you are checking the existance of.</param>
+    ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
+    ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
+    Private Function doesProcessIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
+        Try
+            processObject = Process.GetProcessById(PID)
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
+    End Function
 
-    Public Const programFileNameInZIP As String = "YAWA2 Updater.exe"
+    Public Sub newFileDeleter()
+        If IO.File.Exists(Application.ExecutablePath & ".new.exe") Then
+            Threading.ThreadPool.QueueUserWorkItem(Sub()
+                                                       searchForProcessAndKillIt(New FileInfo(Application.ExecutablePath).Name & ".new.exe", False)
+                                                       File.Delete(Application.ExecutablePath & ".new.exe")
+                                                   End Sub)
+        End If
+    End Sub
 
-    Public versionInfo As String() = Application.ProductVersion.Split(".")
-    Public shortMajor As Short = Short.Parse(versionInfo(versionPieces.major).Trim)
-    Public shortMinor As Short = Short.Parse(versionInfo(versionPieces.minor).Trim)
-    Public shortBuild As Short = Short.Parse(versionInfo(versionPieces.build).Trim)
+    Private Sub killProcess(processID As Integer)
+        Dim processObject As Process = Nothing
 
-    Public Const webSiteURL As String = "www.toms-world.org/blog/yawa2updater"
+        ' First we are going to check if the Process ID exists.
+        If doesProcessIDExist(processID, processObject) Then
+            Try
+                processObject.Kill() ' Yes, it does so let's kill it.
+            Catch ex As Exception
+                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
+                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
+            End Try
+        End If
 
-    Public Const programUpdateCheckerXMLFile As String = "www.toms-world.org/updates/yawa2_update.xml"
-    Public Const programName As String = "YAWA2 Updater"
+        Threading.Thread.Sleep(250) ' We're going to sleep to give the system some time to kill the process.
 
-    Public versionStringWithoutBuild As String = String.Format("{0}.{1}", versionInfo(versionPieces.major), versionInfo(versionPieces.minor))
+        '' Now we are going to check again if the Process ID exists and if it does, we're going to attempt to kill it again.
+        If doesProcessIDExist(processID, processObject) Then
+            Try
+                processObject.Kill()
+            Catch ex As Exception
+                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
+                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
+            End Try
+        End If
+
+        Threading.Thread.Sleep(250) ' We're going to sleep (again) to give the system some time to kill the process.
+    End Sub
+
+    Private Function getProcessExecutablePath(processID As Integer) As String
+        Dim memoryBuffer As New Text.StringBuilder(1024)
+        Dim processHandle As IntPtr = NativeMethod.NativeMethods.OpenProcess(NativeMethod.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
+
+        If processHandle <> IntPtr.Zero Then
+            Try
+                Dim memoryBufferSize As Integer = memoryBuffer.Capacity
+
+                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
+                    Return memoryBuffer.ToString()
+                End If
+            Finally
+                NativeMethod.NativeMethods.CloseHandle(processHandle)
+            End Try
+        End If
+
+        NativeMethod.NativeMethods.CloseHandle(processHandle)
+        Return Nothing
+    End Function
+
+    Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
+        Dim processExecutablePath As String
+        Dim processExecutablePathFileInfo As IO.FileInfo
+
+        For Each process As Process In Process.GetProcesses()
+            processExecutablePath = getProcessExecutablePath(process.Id)
+
+            If processExecutablePath IsNot Nothing Then
+                Try
+                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
+
+                    If boolFullFilePathPassed Then
+                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then
+                            killProcess(process.Id)
+                        End If
+                    Else
+                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then
+                            killProcess(process.Id)
+                        End If
+                    End If
+                Catch ex As ArgumentException
+                End Try
+            End If
+        Next
+    End Sub
+End Module
+
+Class Check_for_Update_Stuff
+    Private Const programZipFileURL = "www.toms-world.org/download/YAWA2 Updater.zip"
+    Private Const programZipFileSHA256URL = "www.toms-world.org/download/YAWA2 Updater.zip.sha2"
+    Private Const programFileNameInZIP As String = "YAWA2 Updater.exe"
+    Private Const programUpdateCheckerXMLFile As String = "www.toms-world.org/updates/yawa2_update.xml"
+    Private Const strMessageBoxTitleText As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
+    Private Const strProgramName As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
+
+    Public windowObject As Form1
+    Public Shared versionInfo As String() = Application.ProductVersion.Split(".")
+    Private shortBuild As Short = Short.Parse(versionInfo(versionPieces.build).Trim)
+    Public Shared versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
+    Private versionStringWithoutBuild As String = String.Format("{0}.{1}", versionInfo(versionPieces.major), versionInfo(versionPieces.minor))
+
+    Public Sub New(inputWindowObject As Form1)
+        windowObject = inputWindowObject
+    End Sub
+
+    Private Shared Sub extractFileFromZIPFile(ByRef memoryStream As MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
+        Using zipFileObject As New Compression.ZipArchive(memoryStream, Compression.ZipArchiveMode.Read)
+            Using fileStream As New FileStream(fileToWriteExtractedFileTo, FileMode.Create)
+                zipFileObject.GetEntry(fileToExtract).Open().CopyTo(fileStream)
+            End Using
+        End Using
+    End Sub
 
     Enum processUpdateXMLResponse As Short
         noUpdateNeeded
@@ -77,202 +185,274 @@ Module Check_for_Update_Code
         End Try
     End Function
 
-    Private Sub extractFileFromZIPFile(memoryStream As IO.MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
-        memoryStream.Position = 0
-
-        Using zipFileObject As New IO.Compression.ZipArchive(memoryStream)
-            Dim zipFileEntry As IO.Compression.ZipArchiveEntry = zipFileObject.GetEntry(fileToExtract)
-
-            If zipFileEntry IsNot Nothing Then
-                Using zipFileEntryIOStream As IO.Stream = zipFileEntry.Open()
-                    Using fileStream As New IO.FileStream(fileToWriteExtractedFileTo, IO.FileMode.Create)
-                        zipFileEntryIOStream.CopyTo(fileStream)
-                    End Using
-                End Using
-            End If
-        End Using
-    End Sub
-
-    Public Sub downloadAndDoUpdate()
-        Dim memStream As New IO.MemoryStream()
-        Dim fileInfo As New IO.FileInfo(Application.ExecutablePath)
-        Dim newExecutableFilePath As String = fileInfo.Name & ".new.exe"
-
-        Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
-
-        If Not httpHelper.downloadFile(programZipFileURL, memStream, False) Then
-            MsgBox("There was an error while downloading required files.", MsgBoxStyle.Critical, programName)
-            Exit Sub
-        End If
-
-        If Not verifyChecksum(programZipFileSHA1URL, memStream, True) Then Exit Sub
-
-        extractFileFromZIPFile(memStream, programFileNameInZIP, newExecutableFilePath)
-
-        Dim startInfo As New ProcessStartInfo With {.FileName = newExecutableFilePath, .Arguments = "-update"}
-        If Not programFunctions.canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
-        Process.Start(startInfo)
-
-        Process.GetCurrentProcess.Kill()
-
-        Application.Exit()
-    End Sub
-
-    Private Function SHA160(ByRef memStream As IO.MemoryStream) As String
-        Using SHA1Engine As New Security.Cryptography.SHA1CryptoServiceProvider
-            memStream.Position = 0
-            Dim Output As Byte() = SHA1Engine.ComputeHash(memStream)
-            memStream.Position = 0
-            Return BitConverter.ToString(Output).ToLower().Replace("-", "").Trim
-        End Using
+    Private Shared Function canIWriteToTheCurrentDirectory() As Boolean
+        Return canIWriteThere(New FileInfo(Application.ExecutablePath).DirectoryName)
     End Function
 
-    Public Function verifyChecksum(urlOfChecksumFile As String, ByRef memStream As IO.MemoryStream, boolGiveUserAnErrorMessage As Boolean) As Boolean
-        Dim checksumFromWeb As String = Nothing
+    Private Shared Function randomString(length As Integer) As String
+        Dim random As Random = New Random()
+        Dim builder As New Text.StringBuilder()
+        Dim ch As Char
+        Dim legalCharacters As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 
-        Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+        For cntr As Integer = 0 To length
+            ch = legalCharacters.Substring(random.Next(0, legalCharacters.Length), 1)
+            builder.Append(ch)
+        Next
 
-        If Not internetFunctions.createNewHTTPHelperObject().getWebData(urlOfChecksumFile, checksumFromWeb, False) Then
-            If boolGiveUserAnErrorMessage Then MsgBox("There was an error downloading the checksum verification file. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
-            Return False
-        Else
-            ' Checks to see if we have a valid SHA1 file.
-            If Regex.IsMatch(checksumFromWeb, "([a-zA-Z0-9]{40})") Then
-                checksumFromWeb = Regex.Match(checksumFromWeb, "([a-zA-Z0-9]{40})").Groups(1).Value().ToLower.Trim()
+        Return builder.ToString()
+    End Function
 
-                If SHA160(memStream).Equals(checksumFromWeb, StringComparison.OrdinalIgnoreCase) Then : Return True
-                Else
-                    If boolGiveUserAnErrorMessage Then MsgBox("There was an error in the download, checksums don't match. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
-                    Return False
-                End If
-            Else
-                If boolGiveUserAnErrorMessage Then MsgBox("Invalid SHA1 file detected. Update process aborted.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
+    Private Shared Function canIWriteThere(folderPath As String) As Boolean
+        ' We make sure we get valid folder path by taking off the leading slash.
+        If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
+
+        If String.IsNullOrEmpty(folderPath) Or Not Directory.Exists(folderPath) Then Return False
+
+        If checkByFolderACLs(folderPath) Then
+            Try
+                Dim strRandomFileName As String = randomString(15) & ".txt"
+                File.Create(Path.Combine(folderPath, strRandomFileName), 1, FileOptions.DeleteOnClose).Close()
+                If File.Exists(Path.Combine(folderPath, strRandomFileName)) Then File.Delete(Path.Combine(folderPath, strRandomFileName))
+                Return True
+            Catch ex As Exception
                 Return False
-            End If
+            End Try
+        Else
+            Return False
         End If
     End Function
 
-    Public Sub checkForUpdates(parentForm As Form1)
-        Dim xmlData As String = Nothing
-
-        If internetFunctions.createNewHTTPHelperObject().getWebData(programUpdateCheckerXMLFile, xmlData, False) Then
-            Dim remoteVersion As String = Nothing
-            Dim remoteBuild As String = Nothing
-            Dim response As processUpdateXMLResponse = processUpdateXMLData(xmlData, remoteVersion, remoteBuild)
-
-            If response = processUpdateXMLResponse.newVersion Then
-                downloadAndDoUpdate()
-            ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
-                MsgBox("You already have the latest version, there is no need to update this program.", MsgBoxStyle.Information, programName)
-            ElseIf response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError Then
-                MsgBox("There was an error when trying to parse response from server.", MsgBoxStyle.Critical, programName)
-            ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite Then
-                MsgBox("This is weird, you have a version that's newer than what's listed on the web site.", MsgBoxStyle.Information, programName)
-            ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
-                MsgBox("You already have the latest version.", MsgBoxStyle.Information, programName)
-            End If
-        Else
-            parentForm.Invoke(Sub() parentForm.btnCheckForUpdates.Enabled = True)
-            MsgBox("There was an error checking for updates.", MsgBoxStyle.Information, programName)
-        End If
-    End Sub
-
-    ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
-    ''' <param name="PID">The PID of the process you are checking the existance of.</param>
-    ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
-    ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
-    Private Function doesProcessIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
+    Private Shared Function checkByFolderACLs(folderPath As String) As Boolean
         Try
-            processObject = Process.GetProcessById(PID)
-            Return True
+            Dim directoryACLs As DirectorySecurity = Directory.GetAccessControl(folderPath)
+            Dim directoryUsers As String = WindowsIdentity.GetCurrent.User.Value
+            Dim directoryAccessRights As FileSystemAccessRule
+            Dim fileSystemRightsVariable As FileSystemRights
+
+            For Each rule As AuthorizationRule In directoryACLs.GetAccessRules(True, True, GetType(SecurityIdentifier))
+                If rule.IdentityReference.Value = directoryUsers Then
+                    directoryAccessRights = DirectCast(rule, FileSystemAccessRule)
+
+                    If directoryAccessRights.AccessControlType = AccessControlType.Allow Then
+                        fileSystemRightsVariable = directoryAccessRights.FileSystemRights
+
+                        If fileSystemRightsVariable = (FileSystemRights.Read Or FileSystemRights.Modify Or FileSystemRights.Write Or FileSystemRights.FullControl) Then
+                            Return True
+                        End If
+                    End If
+                End If
+            Next
+
+            Return False
         Catch ex As Exception
             Return False
         End Try
     End Function
 
-    Private Sub killProcess(processID As Integer)
-        Dim processObject As Process = Nothing
+    Private Shared Function createNewHTTPHelperObject() As httpHelper
+        Dim httpHelper As New httpHelper With {
+            .setUserAgent = createHTTPUserAgentHeaderString(),
+            .useHTTPCompression = True,
+            .setProxyMode = True
+        }
+        httpHelper.addHTTPHeader("PROGRAM_NAME", strProgramName)
+        httpHelper.addHTTPHeader("PROGRAM_VERSION", versionString)
+        httpHelper.addHTTPHeader("OPERATING_SYSTEM", getFullOSVersionString())
 
-        ' First we are going to check if the Process ID exists.
-        If doesProcessIDExist(processID, processObject) Then
-            Try
-                processObject.Kill() ' Yes, it does so let's kill it.
-            Catch ex As Exception
-                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
-                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
-            End Try
-        End If
+        httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
+                                            Try
+                                                If Not strURLInput.Trim.ToLower.StartsWith("http") Then
+                                                    Return If(programFunctions.loadSettingFromINIFile("useSSL", True), "https://", "http://") & strURLInput
+                                                Else
+                                                    Return strURLInput
+                                                End If
+                                            Catch ex As Exception
+                                                Return strURLInput
+                                            End Try
+                                        End Function
 
-        Threading.Thread.Sleep(250) ' We're going to sleep to give the system some time to kill the process.
-
-        '' Now we are going to check again if the Process ID exists and if it does, we're going to attempt to kill it again.
-        If doesProcessIDExist(processID, processObject) Then
-            Try
-                processObject.Kill()
-            Catch ex As Exception
-                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
-                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
-            End Try
-        End If
-
-        Threading.Thread.Sleep(250) ' We're going to sleep (again) to give the system some time to kill the process.
-    End Sub
-
-    Private Function getProcessExecutablePath(processID As Integer) As String
-        Dim memoryBuffer As New Text.StringBuilder(1024)
-        Dim processHandle As IntPtr = NativeMethod.NativeMethods.OpenProcess(NativeMethod.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
-
-        If processHandle <> IntPtr.Zero Then
-            Try
-                Dim memoryBufferSize As Integer = memoryBuffer.Capacity
-
-                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                    Return memoryBuffer.ToString()
-                End If
-            Finally
-                NativeMethod.NativeMethods.CloseHandle(processHandle)
-            End Try
-        End If
-
-        NativeMethod.NativeMethods.CloseHandle(processHandle)
-        Return Nothing
+        Return httpHelper
     End Function
 
-    Public Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-        Dim processExecutablePath As String
-        Dim processExecutablePathFileInfo As IO.FileInfo
+    Private Shared Function SHA256ChecksumStream(ByRef stream As Stream) As String
+        Using SHA256Engine As New Security.Cryptography.SHA256CryptoServiceProvider
+            Return BitConverter.ToString(SHA256Engine.ComputeHash(stream)).ToLower().Replace("-", "").Trim
+        End Using
+    End Function
 
-        For Each process As Process In Process.GetProcesses()
-            processExecutablePath = getProcessExecutablePath(process.Id)
+    Private Shared Function verifyChecksum(urlOfChecksumFile As String, ByRef memStream As MemoryStream, ByRef httpHelper As httpHelper, boolGiveUserAnErrorMessage As Boolean) As Boolean
+        Dim checksumFromWeb As String = Nothing
+        memStream.Position = 0
 
-            If processExecutablePath IsNot Nothing Then
-                Try
-                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
+        Try
+            If httpHelper.getWebData(urlOfChecksumFile, checksumFromWeb) Then
+                Dim regexObject As New Regex("([a-zA-Z0-9]{64})")
 
-                    If boolFullFilePathPassed Then
-                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then
-                            killProcess(process.Id)
-                        End If
+                ' Checks to see if we have a valid SHA256 file.
+                If regexObject.IsMatch(checksumFromWeb) Then
+                    ' Now that we have a valid SHA256 file we need to parse out what we want.
+                    checksumFromWeb = regexObject.Match(checksumFromWeb).Groups(1).Value.Trim()
+
+                    ' Now we do the actual checksum verification by passing the name of the file to the SHA256() function
+                    ' which calculates the checksum of the file on disk. We then compare it to the checksum from the web.
+                    If SHA256ChecksumStream(memStream).Equals(checksumFromWeb, StringComparison.OrdinalIgnoreCase) Then
+                        Return True ' OK, things are good; the file passed checksum verification so we return True.
                     Else
-                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then
-                            killProcess(process.Id)
+                        ' The checksums don't match. Oops.
+                        If boolGiveUserAnErrorMessage Then
+                            MsgBox("There was an error in the download, checksums don't match. Update process aborted.", MsgBoxStyle.Critical, strMessageBoxTitleText)
                         End If
+
+                        Return False
                     End If
-                Catch ex As ArgumentException
-                End Try
+                Else
+                    If boolGiveUserAnErrorMessage Then
+                        MsgBox("Invalid SHA2 file detected. Update process aborted.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+                    End If
+
+                    Return False
+                End If
+            Else
+                If boolGiveUserAnErrorMessage Then
+                    MsgBox("There was an error downloading the checksum verification file. Update process aborted.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+                End If
+
+                Return False
             End If
-        Next
+        Catch ex As Exception
+            If boolGiveUserAnErrorMessage Then
+                MsgBox("There was an error downloading the checksum verification file. Update process aborted.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+            End If
+
+            Return False
+        End Try
+    End Function
+
+    Private Sub downloadAndPerformUpdate()
+        Dim fileInfo As New FileInfo(Application.ExecutablePath)
+        Dim newExecutableName As String = fileInfo.Name & ".new.exe"
+
+        Dim httpHelper As httpHelper = createNewHTTPHelperObject()
+
+        Using memoryStream As New MemoryStream()
+            If Not httpHelper.downloadFile(programZipFileURL, memoryStream, False) Then
+                MsgBox("There was an error while downloading required files.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+                Exit Sub
+            End If
+
+            If Not verifyChecksum(programZipFileSHA256URL, memoryStream, httpHelper, True) Then
+                MsgBox("There was an error while downloading required files.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+                Exit Sub
+            End If
+
+            fileInfo = Nothing
+            memoryStream.Position = 0
+
+            extractFileFromZIPFile(memoryStream, programFileNameInZIP, newExecutableName)
+        End Using
+
+        Dim startInfo As New ProcessStartInfo With {
+            .FileName = newExecutableName,
+            .Arguments = "-update"
+        }
+        If Not canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
+        Process.Start(startInfo)
+
+        Process.GetCurrentProcess.Kill()
     End Sub
 
-    Public Sub newFileDeleter()
-        If IO.File.Exists(Application.ExecutablePath & ".new.exe") = True Then
-            Threading.ThreadPool.QueueUserWorkItem(Sub()
-                                                       searchForProcessAndKillIt(Application.ExecutablePath & ".new.exe", False)
-                                                       IO.File.Delete(Application.ExecutablePath & ".new.exe")
-                                                   End Sub)
+    ''' <summary>Creates a User Agent String for this program to be used in HTTP requests.</summary>
+    ''' <returns>String type.</returns>
+    Private Shared Function createHTTPUserAgentHeaderString() As String
+        Dim versionInfo As String() = Application.ProductVersion.Split(".")
+        Dim versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
+        Return String.Format("Hasher version {0} on {1}", versionString, getFullOSVersionString())
+    End Function
+
+    Private Shared Function getFullOSVersionString() As String
+        Try
+            Dim intOSMajorVersion As Integer = Environment.OSVersion.Version.Major
+            Dim intOSMinorVersion As Integer = Environment.OSVersion.Version.Minor
+            Dim dblDOTNETVersion As Double = Double.Parse(Environment.Version.Major & "." & Environment.Version.Minor)
+            Dim strOSName As String
+
+            If intOSMajorVersion = 5 And intOSMinorVersion = 0 Then
+                strOSName = "Windows 2000"
+            ElseIf intOSMajorVersion = 5 And intOSMinorVersion = 1 Then
+                strOSName = "Windows XP"
+            ElseIf intOSMajorVersion = 6 And intOSMinorVersion = 0 Then
+                strOSName = "Windows Vista"
+            ElseIf intOSMajorVersion = 6 And intOSMinorVersion = 1 Then
+                strOSName = "Windows 7"
+            ElseIf intOSMajorVersion = 6 And intOSMinorVersion = 2 Then
+                strOSName = "Windows 8"
+            ElseIf intOSMajorVersion = 6 And intOSMinorVersion = 3 Then
+                strOSName = "Windows 8.1"
+            ElseIf intOSMajorVersion = 10 Then
+                strOSName = "Windows 10"
+            Else
+                strOSName = String.Format("Windows NT {0}.{1}", intOSMajorVersion, intOSMinorVersion)
+            End If
+
+            Return String.Format("{0} {2}-bit (Microsoft .NET {1})", strOSName, dblDOTNETVersion, If(Environment.Is64BitOperatingSystem, "64", "32"))
+        Catch ex As Exception
+            Try
+                Return "Unknown Windows Operating System (" & Environment.OSVersion.VersionString & ")"
+            Catch ex2 As Exception
+                Return "Unknown Windows Operating System"
+            End Try
+        End Try
+    End Function
+
+    Public Sub checkForUpdates(Optional boolShowMessageBox As Boolean = True)
+        windowObject.Invoke(Sub()
+                                windowObject.btnCheckForUpdates.Enabled = False
+                            End Sub)
+
+        If Not checkForInternetConnection() Then
+            MsgBox("No Internet connection detected.", MsgBoxStyle.Information, strMessageBoxTitleText)
+        Else
+            Try
+                Dim xmlData As String = Nothing
+                Dim httpHelper As httpHelper = createNewHTTPHelperObject()
+
+                If httpHelper.getWebData(programUpdateCheckerXMLFile, xmlData, False) Then
+                    Dim remoteVersion As String = Nothing
+                    Dim remoteBuild As String = Nothing
+                    Dim response As processUpdateXMLResponse = processUpdateXMLData(xmlData, remoteVersion, remoteBuild)
+
+                    If response = processUpdateXMLResponse.newVersion Then
+                        If MsgBox(String.Format("An update to Hasher (version {0} Build {1}) is available to be downloaded, do you want to download and update to this new version?", remoteVersion, remoteBuild), MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitleText) = MsgBoxResult.Yes Then
+                            downloadAndPerformUpdate()
+                        Else
+                            MsgBox("The update will not be downloaded.", MsgBoxStyle.Information, strMessageBoxTitleText)
+                        End If
+                    ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
+                        If boolShowMessageBox Then MsgBox("You already have the latest version, there is no need to update this program.", MsgBoxStyle.Information, strMessageBoxTitleText)
+                    ElseIf response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError Then
+                        If boolShowMessageBox Then MsgBox("There was an error when trying to parse the response from the server.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+                    ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite Then
+                        If boolShowMessageBox Then MsgBox("This is weird, you have a version that's newer than what's listed on the web site.", MsgBoxStyle.Information, strMessageBoxTitleText)
+                    End If
+                Else
+                    If boolShowMessageBox Then MsgBox("There was an error checking for updates.", MsgBoxStyle.Information, strMessageBoxTitleText)
+                End If
+            Catch ex As Exception
+                ' Ok, we crashed but who cares.
+            Finally
+                windowObject.Invoke(Sub()
+                                        windowObject.btnCheckForUpdates.Enabled = True
+                                    End Sub)
+                windowObject = Nothing
+            End Try
         End If
     End Sub
-End Module
+
+    Private Shared Function checkForInternetConnection() As Boolean
+        Return My.Computer.Network.IsAvailable
+    End Function
+End Class
 
 Public Enum versionPieces As Short
     major = 0

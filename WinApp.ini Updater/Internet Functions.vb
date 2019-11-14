@@ -28,7 +28,7 @@
         Private Function createHTTPUserAgentHeaderString() As String
             Dim versionInfo As String() = Application.ProductVersion.Split(".")
             Dim versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
-            Return String.Format("{0} version {1} on {2}", programName, versionString, getFullOSVersionString())
+            Return String.Format("{0} version {1} on {2}", "YAWA2 (Yet Another WinApp2.ini) Updater", versionString, getFullOSVersionString())
         End Function
 
         Private Function getFullOSVersionString() As String
