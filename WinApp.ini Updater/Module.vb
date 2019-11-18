@@ -405,94 +405,167 @@ Namespace programFunctions
 
         Public Function processRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Try
+                Dim regKey1, regKey2 As RegistryKey
                 If tempString.Contains(".NETFramework") Then Return True
 
                 If tempString.StartsWith("HKCU") Then
                     tempString = tempString.Replace("HKCU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.CurrentUser.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.CurrentUser
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKLM") Then
                     tempString = tempString.Replace("HKLM\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.LocalMachine.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.LocalMachine
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKCR") Then
                     tempString = tempString.Replace("HKCR\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.ClassesRoot.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.ClassesRoot
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKU") Then
                     tempString = tempString.Replace("HKU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.Users.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.Users
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
                 End If
