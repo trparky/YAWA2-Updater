@@ -343,12 +343,11 @@ Namespace programFunctions
         End Function
 
         Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
-            Dim directory As String = tempString.Split("|")(0)
-            directory = directory.Replace("*", "")
+            Dim directory As String = tempString.Split("|")(0).Replace("*", "")
 
-            If directory.Contains("%ProgramFiles%") Then
+            If directory.caseInsensitiveContains("%ProgramFiles%", True) Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -357,7 +356,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -366,9 +365,9 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 End If
-            ElseIf directory.Contains("%CommonProgramFiles%") Then
+            ElseIf directory.caseInsensitiveContains("%CommonProgramFiles%", True) Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -377,7 +376,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -387,8 +386,7 @@ Namespace programFunctions
                     End If
                 End If
             Else
-                directory = translateVarsInPath(directory)
-                directory = directory.Replace("*", "")
+                directory = translateVarsInPath(directory).Replace("*", "")
 
                 If Not IO.Directory.Exists(directory) Then
                     If Not sectionsToRemove.Contains(iniFileSection.Name) Then
@@ -408,8 +406,8 @@ Namespace programFunctions
                 Dim regKey1, regKey2 As RegistryKey
                 If tempString.Contains(".NETFramework") Then Return True
 
-                If tempString.StartsWith("HKCU") Then
-                    tempString = tempString.Replace("HKCU\", "")
+                If tempString.StartsWith("HKCU", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKCU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32)
@@ -448,8 +446,8 @@ Namespace programFunctions
                             Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKLM") Then
-                    tempString = tempString.Replace("HKLM\", "")
+                ElseIf tempString.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKLM\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
@@ -488,8 +486,8 @@ Namespace programFunctions
                             Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKCR") Then
-                    tempString = tempString.Replace("HKCR\", "")
+                ElseIf tempString.StartsWith("HKCR", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKCR\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32)
@@ -528,8 +526,8 @@ Namespace programFunctions
                             Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKU") Then
-                    tempString = tempString.Replace("HKU\", "")
+                ElseIf tempString.StartsWith("HKU", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32)
