@@ -5,6 +5,29 @@ Imports System.Security.AccessControl
 Imports System.Security.Principal
 
 Module checkForUpdateModules
+    Public Const strMessageBoxTitleText As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
+    Public Const strProgramName As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
+    Private Const strZipFileName As String = "YAWA2 Updater.zip"
+
+    Public Sub doUpdateAtStartup()
+        If File.Exists(strZipFileName) Then File.Delete(strZipFileName)
+        Dim currentProcessFileName As String = New FileInfo(Application.ExecutablePath).Name
+
+        If currentProcessFileName.caseInsensitiveContains(".new.exe", True) Then
+            Dim mainEXEName As String = currentProcessFileName.caseInsensitiveReplace(".new.exe", "")
+            searchForProcessAndKillIt(mainEXEName, False)
+
+            File.Delete(mainEXEName)
+            File.Copy(currentProcessFileName, mainEXEName)
+
+            Process.Start(New ProcessStartInfo With {.FileName = mainEXEName})
+            Process.GetCurrentProcess.Kill()
+        Else
+            MsgBox("The environment is not ready for an update. This process will now terminate.", MsgBoxStyle.Critical, strMessageBoxTitleText)
+            Process.GetCurrentProcess.Kill()
+        End If
+    End Sub
+
     ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
     ''' <param name="PID">The PID of the process you are checking the existance of.</param>
     ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
@@ -107,8 +130,6 @@ Class Check_for_Update_Stuff
     Private Const programZipFileSHA256URL = "www.toms-world.org/download/YAWA2 Updater.zip.sha2"
     Private Const programFileNameInZIP As String = "YAWA2 Updater.exe"
     Private Const programUpdateCheckerXMLFile As String = "www.toms-world.org/updates/yawa2_update.xml"
-    Private Const strMessageBoxTitleText As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
-    Private Const strProgramName As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
 
     Public windowObject As Form1
     Public Shared versionInfo As String() = Application.ProductVersion.Split(".")
