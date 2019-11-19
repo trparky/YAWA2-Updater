@@ -36,10 +36,10 @@ Public Class IniFile
         Dim line As String = rawINIText.ReadLine()
 
         While line IsNot Nothing
-            Dim m As Match = Nothing
+            Dim m As Match
 
             If regexcomment.Match(line).Success Then
-                m = regexcomment.Match(line)
+                Dim unused As Match = regexcomment.Match(line)
                 'Trace.WriteLine(String.Format("Skipping Comment: {0}", m.Groups(0).Value))
             ElseIf regexsection.Match(line).Success Then
                 m = regexsection.Match(line)
@@ -82,9 +82,9 @@ Public Class IniFile
         While Not oReader.EndOfStream
             Dim line As String = oReader.ReadLine()
             If line <> String.Empty Then
-                Dim m As Match = Nothing
+                Dim m As Match
                 If regexcomment.Match(line).Success Then
-                    m = regexcomment.Match(line)
+                    Dim unused As Match = regexcomment.Match(line)
                     'Trace.WriteLine(String.Format("Skipping Comment: {0}", m.Groups(0).Value))
                 ElseIf regexsection.Match(line).Success Then
                     m = regexsection.Match(line)
@@ -161,7 +161,7 @@ Public Class IniFile
 
     ' Adds a section to the IniFile object, returns a IniSection object to the new or existing object
     Public Function AddSection(ByVal sSection As String) As IniSection
-        Dim s As IniSection = Nothing
+        Dim s As IniSection
         sSection = sSection.Trim()
         ' Trim spaces
         If m_sections.ContainsKey(sSection) Then
