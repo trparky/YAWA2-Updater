@@ -388,7 +388,7 @@ Class Check_for_Update_Stuff
     Private Shared Function createHTTPUserAgentHeaderString() As String
         Dim versionInfo As String() = Application.ProductVersion.Split(".")
         Dim versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
-        Return String.Format("Hasher version {0} on {1}", versionString, getFullOSVersionString())
+        Return String.Format("{2} version {0} on {1}", versionString, getFullOSVersionString(), strProgramName)
     End Function
 
     Private Shared Function getFullOSVersionString() As String
@@ -444,7 +444,7 @@ Class Check_for_Update_Stuff
                     Dim response As processUpdateXMLResponse = processUpdateXMLData(xmlData, remoteVersion, remoteBuild)
 
                     If response = processUpdateXMLResponse.newVersion Then
-                        If MsgBox(String.Format("An update to Hasher (version {0} Build {1}) is available to be downloaded, do you want to download and update to this new version?", remoteVersion, remoteBuild), MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitleText) = MsgBoxResult.Yes Then
+                        If MsgBox(String.Format("An update to {2} (version {0} Build {1}) is available to be downloaded, do you want to download and update to this new version?", remoteVersion, remoteBuild, strProgramName), MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitleText) = MsgBoxResult.Yes Then
                             downloadAndPerformUpdate()
                         Else
                             MsgBox("The update will not be downloaded.", MsgBoxStyle.Information, strMessageBoxTitleText)
