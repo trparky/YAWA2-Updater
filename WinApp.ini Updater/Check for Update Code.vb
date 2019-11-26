@@ -439,7 +439,7 @@ Class Check_for_Update_Stuff
                                 windowObject.btnCheckForUpdates.Enabled = False
                             End Sub)
 
-        If Not checkForInternetConnection() Then
+        If Not My.Computer.Network.IsAvailable Then
             windowObject.Invoke(Sub() MsgBox("No Internet connection detected.", MsgBoxStyle.Information, strMessageBoxTitleText))
         Else
             Try
@@ -477,10 +477,6 @@ Class Check_for_Update_Stuff
             End Try
         End If
     End Sub
-
-    Private Shared Function checkForInternetConnection() As Boolean
-        Return My.Computer.Network.IsAvailable
-    End Function
 End Class
 
 Public Enum versionPieces As Short
