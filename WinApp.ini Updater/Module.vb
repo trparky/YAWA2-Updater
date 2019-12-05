@@ -345,7 +345,7 @@ Namespace programFunctions
         Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Dim directory As String = tempString.Split("|")(0).Replace("*", "")
 
-            If directory.caseInsensitiveContains("%ProgramFiles%", True) Then
+            If directory.caseInsensitiveContains("%ProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
                     If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
@@ -365,7 +365,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 End If
-            ElseIf directory.caseInsensitiveContains("%CommonProgramFiles%", True) Then
+            ElseIf directory.caseInsensitiveContains("%CommonProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
                     If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then

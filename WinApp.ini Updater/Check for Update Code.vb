@@ -13,7 +13,7 @@ Module checkForUpdateModules
         If File.Exists(strZipFileName) Then File.Delete(strZipFileName)
         Dim currentProcessFileName As String = New FileInfo(Application.ExecutablePath).Name
 
-        If currentProcessFileName.caseInsensitiveContains(".new.exe", True) Then
+        If currentProcessFileName.caseInsensitiveContains(".new.exe") Then
             Dim mainEXEName As String = currentProcessFileName.caseInsensitiveReplace(".new.exe", "")
             searchForProcessAndKillIt(mainEXEName, False)
 
