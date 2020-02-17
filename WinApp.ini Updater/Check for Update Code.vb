@@ -141,13 +141,19 @@ Class Check_for_Update_Stuff
         windowObject = inputWindowObject
     End Sub
 
-    Private Shared Sub extractFileFromZIPFile(ByRef memoryStream As MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String)
-        Using zipFileObject As New Compression.ZipArchive(memoryStream, Compression.ZipArchiveMode.Read)
-            Using fileStream As New FileStream(fileToWriteExtractedFileTo, FileMode.Create)
-                zipFileObject.GetEntry(fileToExtract).Open().CopyTo(fileStream)
+    Private Shared Function extractFileFromZIPFile(ByRef memoryStream As MemoryStream, fileToExtract As String, fileToWriteExtractedFileTo As String) As Boolean
+        Try
+            Using zipFileObject As New Compression.ZipArchive(memoryStream, Compression.ZipArchiveMode.Read)
+                Using fileStream As New FileStream(fileToWriteExtractedFileTo, FileMode.Create)
+                    zipFileObject.GetEntry(fileToExtract).Open().CopyTo(fileStream)
+                    Return True ' Extraction of file was successful, return True.
+                End Using
             End Using
-        End Using
-    End Sub
+            Return False ' Something went wrong, return False.
+        Catch ex As Exception
+            Return False ' Something went wrong, return False.
+        End Try
+    End Function
 
     Enum processUpdateXMLResponse As Short
         noUpdateNeeded
@@ -363,7 +369,12 @@ Class Check_for_Update_Stuff
 
             memoryStream.Position = 0
 
-            extractFileFromZIPFile(memoryStream, programFileNameInZIP, newExecutableName)
+            ' This checks to see if the file was extracted successfully from the downloaded ZIP file.
+            If Not extractFileFromZIPFile(memoryStream, programFileNameInZIP, newExecutableName) Then
+                ' Nope, something went wrong; let's abort.
+                windowObject.Invoke(Sub() MsgBox("There was an error while extracting required files from the downloaded ZIP file.", MsgBoxStyle.Critical, strMessageBoxTitleText))
+                Exit Sub
+            End If
         End Using
 
         Dim startInfo As New ProcessStartInfo With {
