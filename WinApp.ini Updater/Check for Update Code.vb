@@ -193,6 +193,9 @@ Class Check_for_Update_Stuff
                         If shortRemoteBuild < shortBuild Then
                             ' This is weird, the remote build is less than the current build so we return a newerVersionThanWebSite value.
                             Return processUpdateXMLResponse.newerVersionThanWebSite
+                        ElseIf shortRemoteBuild > shortBuild Then
+                            ' We return a newVersion value indicating that there is a new version to download and install.
+                            Return processUpdateXMLResponse.newVersion
                         ElseIf shortRemoteBuild.Equals(shortBuild) Then
                             ' The build numbers match, therefore therefore we return a sameVersion value.
                             Return processUpdateXMLResponse.noUpdateNeeded
@@ -202,8 +205,8 @@ Class Check_for_Update_Stuff
                         Return processUpdateXMLResponse.parseError
                     End If
 
-                    ' We return a newVersion value indicating that there is a new version to download and install.
-                    Return processUpdateXMLResponse.newVersion
+                    ' We return a noUpdateNeeded flag.
+                    Return processUpdateXMLResponse.noUpdateNeeded
                 End If
             End If
         Catch ex As Exception
