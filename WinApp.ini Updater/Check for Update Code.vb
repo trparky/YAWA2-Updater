@@ -464,12 +464,12 @@ Class Check_for_Update_Stuff
                         Else
                             windowObject.Invoke(Sub() MsgBox("The update will not be downloaded.", MsgBoxStyle.Information, strMessageBoxTitleText))
                         End If
-                    ElseIf response = processUpdateXMLResponse.noUpdateNeeded Then
-                        If boolShowMessageBox Then windowObject.Invoke(Sub() MsgBox("You already have the latest version, there is no need to update this program.", MsgBoxStyle.Information, strMessageBoxTitleText))
-                    ElseIf response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError Then
-                        If boolShowMessageBox Then windowObject.Invoke(Sub() MsgBox("There was an error when trying to parse the response from the server.", MsgBoxStyle.Critical, strMessageBoxTitleText))
-                    ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite Then
-                        If boolShowMessageBox Then windowObject.Invoke(Sub() MsgBox("This is weird, you have a version that's newer than what's listed on the web site.", MsgBoxStyle.Information, strMessageBoxTitleText))
+                    ElseIf response = processUpdateXMLResponse.noUpdateNeeded AndAlso boolShowMessageBox Then
+                        windowObject.Invoke(Sub() MsgBox("You already have the latest version, there is no need to update this program.", MsgBoxStyle.Information, strMessageBoxTitleText))
+                    ElseIf (response = processUpdateXMLResponse.parseError Or response = processUpdateXMLResponse.exceptionError) AndAlso boolShowMessageBox Then
+                        windowObject.Invoke(Sub() MsgBox("There was an error when trying to parse the response from the server.", MsgBoxStyle.Critical, strMessageBoxTitleText))
+                    ElseIf response = processUpdateXMLResponse.newerVersionThanWebSite AndAlso boolShowMessageBox Then
+                        windowObject.Invoke(Sub() MsgBox("This is weird, you have a version that's newer than what's listed on the web site.", MsgBoxStyle.Information, strMessageBoxTitleText))
                     End If
                 Else
                     If boolShowMessageBox Then windowObject.Invoke(Sub() MsgBox("There was an error checking for updates.", MsgBoxStyle.Information, strMessageBoxTitleText))
