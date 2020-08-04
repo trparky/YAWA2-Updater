@@ -285,6 +285,7 @@ Class Check_for_Update_Stuff
         httpHelper.addHTTPHeader("PROGRAM_NAME", strProgramName)
         httpHelper.addHTTPHeader("PROGRAM_VERSION", versionString)
         httpHelper.addHTTPHeader("OPERATING_SYSTEM", getFullOSVersionString())
+        If File.Exists("tom") Then httpHelper.addHTTPCookie("dontcount", "True", "www.toms-world.org", False)
 
         httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
                                             Try
