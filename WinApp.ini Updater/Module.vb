@@ -103,6 +103,14 @@ Namespace programFunctions
             End If
         End Sub
 
+        Public Function getBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
+            Dim boolValue As Boolean
+            If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), boolValue) Then
+                boolValue = False
+            End If
+            Return boolValue
+        End Function
+
         Public Sub saveSettingToINIFile(setting As String, value As Boolean)
             saveSettingToINIFile(setting, If(value, "True", "False"))
         End Sub

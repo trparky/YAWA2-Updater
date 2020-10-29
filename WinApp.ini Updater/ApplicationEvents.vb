@@ -59,17 +59,9 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.loadINIFileFromFile(programConstants.configINIFile)
 
-                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey), programVariables.boolMobileMode) Then
-                    programVariables.boolMobileMode = False
-                End If
-
-                If Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey), programVariables.boolTrim) = False Then
-                    programVariables.boolTrim = False
-                End If
-
-                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey), programVariables.boolNotifyAfterUpdateAtLogon) Then
-                    programVariables.boolNotifyAfterUpdateAtLogon = False
-                End If
+                programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
             Else
                 Dim iniFile As New IniFile()
                 iniFile.AddSection(programConstants.configINISettingSection)
