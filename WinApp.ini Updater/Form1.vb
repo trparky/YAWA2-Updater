@@ -126,15 +126,15 @@ Public Class Form1
             End If
 
             Dim strUseSSL As String = Nothing
-            If programFunctions.loadSettingFromINIFile("useSSL", strUseSSL) Then
+            If programFunctions.loadSettingFromINIFile(programConstants.configINIUseSSLKey, strUseSSL) Then
                 If Not Boolean.TryParse(strUseSSL, boolUseSSL) Then
                     boolUseSSL = True
-                    programFunctions.saveSettingToINIFile("useSSL", True)
+                    programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, True)
                 End If
 
                 chkUseSSL.Checked = boolUseSSL
             Else
-                programFunctions.saveSettingToINIFile("useSSL", True)
+                programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, True)
                 boolUseSSL = True
                 chkUseSSL.Checked = True
             End If
@@ -347,7 +347,7 @@ Public Class Form1
     End Sub
 
     Private Sub chkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        programFunctions.saveSettingToINIFile("useSSL", chkUseSSL.Checked)
+        programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, chkUseSSL.Checked)
         boolUseSSL = chkUseSSL.Checked
     End Sub
 End Class

@@ -17,6 +17,7 @@ Namespace programConstants
         Public Const configINICustomEntriesKey As String = "customEntries"
         Public Const configINIMobileModeKey As String = "MobileMode"
         Public Const configINITrimKey As String = "trim"
+        Public Const configINIUseSSLKey As String = "useSSL"
         Public Const configINInotifyAfterUpdateAtLogonKey As String = "notifyAfterUpdateAtLogon"
     End Module
 End Namespace
