@@ -18,6 +18,7 @@ Namespace programConstants
         Public Const configINIMobileModeKey As String = "MobileMode"
         Public Const configINITrimKey As String = "trim"
         Public Const configINIUseSSLKey As String = "useSSL"
+        Public Const configINIConvertedSettings As String = "convertedSettings"
         Public Const configINInotifyAfterUpdateAtLogonKey As String = "notifyAfterUpdateAtLogon"
     End Module
 End Namespace
@@ -28,7 +29,7 @@ End Module
 
 Namespace programVariables
     Module variables
-        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon As Boolean
+        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
     End Module
 End Namespace
 
@@ -111,8 +112,20 @@ Namespace programFunctions
             Return boolValue
         End Function
 
+        Public Function getIntegerSettingFromINIFileAsBoolean(ByRef iniFile As IniFile, strSetting As String) As Boolean
+            Dim intValue As Integer
+            If Not Integer.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), intValue) Then
+                intValue = 0
+            End If
+            Return intValue = 1
+        End Function
+
         Public Sub saveSettingToINIFile(setting As String, value As Boolean)
             saveSettingToINIFile(setting, If(value, "True", "False"))
+        End Sub
+
+        Public Sub saveSettingToINIFile(setting As String, value As Integer)
+            saveSettingToINIFile(setting, value.ToString)
         End Sub
 
         Public Sub saveSettingToINIFile(setting As String, value As String)

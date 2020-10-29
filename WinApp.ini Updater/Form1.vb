@@ -125,19 +125,7 @@ Public Class Form1
                 End If
             End If
 
-            Dim strUseSSL As String = Nothing
-            If programFunctions.loadSettingFromINIFile(programConstants.configINIUseSSLKey, strUseSSL) Then
-                If Not Boolean.TryParse(strUseSSL, boolUseSSL) Then
-                    boolUseSSL = True
-                    programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, True)
-                End If
-
-                chkUseSSL.Checked = boolUseSSL
-            Else
-                programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, True)
-                boolUseSSL = True
-                chkUseSSL.Checked = True
-            End If
+            chkUseSSL.Checked = globalVariables.boolUseSSL
 
             Threading.ThreadPool.QueueUserWorkItem(AddressOf getINIVersion)
         Catch ex As Exception
@@ -166,7 +154,7 @@ Public Class Form1
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
-                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, True)
+                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -182,7 +170,7 @@ Public Class Form1
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
-                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, True)
+                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -332,22 +320,22 @@ Public Class Form1
     End Sub
 
     Private Sub chkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINInotifyAfterUpdateAtLogonKey, chkNotifyAfterUpdateatLogon.Checked)
+        programFunctions.saveSettingToINIFile(programConstants.configINInotifyAfterUpdateAtLogonKey, If(chkNotifyAfterUpdateatLogon.Checked, 1, 0))
     End Sub
 
     Private Sub chkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, chkMobileMode.Checked)
+        programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, If(chkMobileMode.Checked, 1, 0))
         programVariables.boolMobileMode = chkMobileMode.Checked
         chkLoadAtUserStartup.Enabled = Not chkMobileMode.Checked
         getLocationOfCCleaner()
     End Sub
 
     Private Sub chkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINITrimKey, chkTrim.Checked)
+        programFunctions.saveSettingToINIFile(programConstants.configINITrimKey, If(chkTrim.Checked, 1, 0))
     End Sub
 
     Private Sub chkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, chkUseSSL.Checked)
-        boolUseSSL = chkUseSSL.Checked
+        programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, If(chkUseSSL.Checked, 1, 0))
+        globalVariables.boolUseSSL = chkUseSSL.Checked
     End Sub
 End Class

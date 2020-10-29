@@ -59,20 +59,39 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.loadINIFileFromFile(programConstants.configINIFile)
 
-                programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
-                programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
-                programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                If Not programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIConvertedSettings) Then
+                    programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
+
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(programVariables.boolMobileMode, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(programVariables.boolTrim, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(programVariables.boolNotifyAfterUpdateAtLogon, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(programVariables.boolUseSSL, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIConvertedSettings, 1)
+
+                    iniFile.Save(programConstants.configINIFile)
+                Else
+                    programVariables.boolMobileMode = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
+                End If
             Else
                 Dim iniFile As New IniFile()
                 iniFile.AddSection(programConstants.configINISettingSection)
 
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, False)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, False)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, False)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIConvertedSettings, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, 1)
 
                 programVariables.boolMobileMode = False
                 programVariables.boolTrim = False
                 programVariables.boolNotifyAfterUpdateAtLogon = False
+                programVariables.boolUseSSL = True
 
                 iniFile.Save(programConstants.configINIFile)
             End If
