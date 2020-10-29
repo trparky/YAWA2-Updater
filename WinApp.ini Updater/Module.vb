@@ -44,7 +44,7 @@ Namespace programFunctions
             If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
             If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
 
-            If checkByFolderACLs(folderPath) Then
+            If Check_for_Update_Stuff.checkByFolderACLs(folderPath) Then
                 Try
                     IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
                     If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
@@ -55,35 +55,6 @@ Namespace programFunctions
             Else
                 Return False
             End If
-        End Function
-
-        Private Function checkByFolderACLs(folderPath As String) As Boolean
-            If WindowsIdentity.GetCurrent().IsSystem Then Return True
-
-            Try
-                Dim dsDirectoryACLs As DirectorySecurity = IO.Directory.GetAccessControl(folderPath)
-                Dim strCurrentUserSDDL As String = WindowsIdentity.GetCurrent.User.Value
-                Dim ircCurrentUserGroups As IdentityReferenceCollection = WindowsIdentity.GetCurrent.Groups
-
-                Dim arcAuthorizationRules As AuthorizationRuleCollection = dsDirectoryACLs.GetAccessRules(True, True, GetType(SecurityIdentifier))
-                Dim fsarDirectoryAccessRights As FileSystemAccessRule
-
-                For Each arAccessRule As AuthorizationRule In arcAuthorizationRules
-                    If arAccessRule.IdentityReference.Value.Equals(strCurrentUserSDDL, StringComparison.OrdinalIgnoreCase) Or ircCurrentUserGroups.Contains(arAccessRule.IdentityReference) Then
-                        fsarDirectoryAccessRights = DirectCast(arAccessRule, FileSystemAccessRule)
-
-                        If fsarDirectoryAccessRights.AccessControlType = AccessControlType.Allow Then
-                            If fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.Modify Or fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.WriteData Or fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.FullControl Then
-                                Return True
-                            End If
-                        End If
-                    End If
-                Next
-
-                Return False
-            Catch ex As Exception
-                Return False
-            End Try
         End Function
 
         Public Function areWeAnAdministrator() As Boolean

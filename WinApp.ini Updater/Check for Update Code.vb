@@ -85,10 +85,7 @@ Module checkForUpdateModules
         If processHandle <> IntPtr.Zero Then
             Try
                 Dim memoryBufferSize As Integer = memoryBuffer.Capacity
-
-                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                    Return memoryBuffer.ToString()
-                End If
+                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then Return memoryBuffer.ToString()
             Finally
                 NativeMethod.NativeMethods.CloseHandle(processHandle)
             End Try
@@ -253,7 +250,7 @@ Class Check_for_Update_Stuff
         End If
     End Function
 
-    Private Shared Function checkByFolderACLs(folderPath As String) As Boolean
+    Public Shared Function checkByFolderACLs(folderPath As String) As Boolean
         Try
             Dim directoryACLs As DirectorySecurity = Directory.GetAccessControl(folderPath)
             Dim directoryAccessRights As FileSystemAccessRule
@@ -262,10 +259,8 @@ Class Check_for_Update_Stuff
                 If rule.IdentityReference.Value.Equals(WindowsIdentity.GetCurrent.User.Value, StringComparison.OrdinalIgnoreCase) Then
                     directoryAccessRights = DirectCast(rule, FileSystemAccessRule)
 
-                    If directoryAccessRights.AccessControlType = AccessControlType.Allow Then
-                        If directoryAccessRights.FileSystemRights = (FileSystemRights.Read Or FileSystemRights.Modify Or FileSystemRights.Write Or FileSystemRights.FullControl) Then
-                            Return True
-                        End If
+                    If directoryAccessRights.AccessControlType = AccessControlType.Allow AndAlso directoryAccessRights.FileSystemRights = (FileSystemRights.Read Or FileSystemRights.Modify Or FileSystemRights.Write Or FileSystemRights.FullControl) Then
+                        Return True
                     End If
                 End If
             Next
@@ -381,10 +376,7 @@ Class Check_for_Update_Stuff
             End If
         End Using
 
-        Dim startInfo As New ProcessStartInfo With {
-            .FileName = newExecutableName,
-            .Arguments = "-update"
-        }
+        Dim startInfo As New ProcessStartInfo With {.FileName = newExecutableName, .Arguments = "-update"}
         If Not canIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
         Process.Start(startInfo)
 
@@ -436,7 +428,7 @@ Class Check_for_Update_Stuff
 
     Private Function BackgroundThreadMessageBox(ByVal strMsgBoxPrompt As String, ByVal style As MsgBoxStyle, ByVal strMsgBoxTitle As String) As MsgBoxResult
         If windowObject.InvokeRequired Then
-            Return CType(windowObject.Invoke(New Func(Of MsgBoxResult)(Function() MsgBox(strMsgBoxPrompt, style, strMsgBoxTitle))), MsgBoxResult)
+            Return windowObject.Invoke(New Func(Of MsgBoxResult)(Function() MsgBox(strMsgBoxPrompt, style, strMsgBoxTitle)))
         Else
             Return MsgBox(strMsgBoxPrompt, style, strMsgBoxTitle)
         End If

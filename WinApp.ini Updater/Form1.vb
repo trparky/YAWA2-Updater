@@ -48,7 +48,7 @@ Public Class Form1
     Function doesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
         Using taskServiceObject As TaskService = New TaskService
             taskObject = taskServiceObject.GetTask(nameOfTask)
-            Return If(taskObject Is Nothing, False, True)
+            Return taskObject IsNot Nothing
         End Using
     End Function
 
@@ -153,10 +153,7 @@ Public Class Form1
             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
         Else
             If Not programFunctions.areWeAnAdministrator() And Short.Parse(Environment.OSVersion.Version.Major) >= 6 Then
-                Dim startInfo As New ProcessStartInfo With {
-                    .FileName = Process.GetCurrentProcess.MainModule.FileName,
-                    .Verb = "runas"
-                }
+                Dim startInfo As New ProcessStartInfo With {.FileName = Process.GetCurrentProcess.MainModule.FileName, .Verb = "runas"}
                 Process.Start(startInfo)
                 Process.GetCurrentProcess.Kill()
                 Return Nothing
@@ -177,7 +174,6 @@ Public Class Form1
                             Return Nothing
                         End If
                     Else
-                        'strLocationOfCCleaner = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
                         Return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
                     End If
                 Else
@@ -194,7 +190,6 @@ Public Class Form1
                             Return Nothing
                         End If
                     Else
-                        'strLocationOfCCleaner = Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
                         Return Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
                     End If
                 End If
@@ -274,11 +269,7 @@ Public Class Form1
                               If programVariables.boolMobileMode Then
                                   MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, "WinApp.ini Updater")
                               Else
-                                  Dim msgBoxResult As MsgBoxResult = MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
-
-                                  If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                      programFunctions.runCCleaner(strLocationOfCCleaner)
-                                  End If
+                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then programFunctions.runCCleaner(strLocationOfCCleaner)
                               End If
                           End If
                       End Sub)
@@ -347,7 +338,7 @@ Public Class Form1
     Private Sub chkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
         programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, chkMobileMode.Checked)
         programVariables.boolMobileMode = chkMobileMode.Checked
-        chkLoadAtUserStartup.Enabled = If(chkMobileMode.Checked, False, True)
+        chkLoadAtUserStartup.Enabled = Not chkMobileMode.Checked
         getLocationOfCCleaner()
     End Sub
 
@@ -356,12 +347,7 @@ Public Class Form1
     End Sub
 
     Private Sub chkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        If chkUseSSL.Checked Then
-            programFunctions.saveSettingToINIFile("useSSL", True)
-            boolUseSSL = True
-        Else
-            programFunctions.saveSettingToINIFile("useSSL", False)
-            boolUseSSL = False
-        End If
+        programFunctions.saveSettingToINIFile("useSSL", chkUseSSL.Checked)
+        boolUseSSL = chkUseSSL.Checked
     End Sub
 End Class
