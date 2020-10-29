@@ -16,7 +16,7 @@ Namespace My
         Private Function doesPIDExist(PID As Integer) As Boolean
             Try
                 Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
-                    Return If(searcher.Get.Count = 0, False, True)
+                    Return searcher.Get.Count <> 0
                 End Using
             Catch ex3 As Runtime.InteropServices.COMException
                 Return False

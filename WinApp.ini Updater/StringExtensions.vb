@@ -14,7 +14,7 @@ Module StringExtensions
     <Extension()>
     Public Function caseInsensitiveContains(haystack As String, needle As String) As Boolean
         Dim index As Integer = haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase)
-        Return If(index = -1, False, True)
+        Return index <> -1
     End Function
 
     ''' <summary>This function uses a RegEx search to do a case-insensitive search but with more power and more responsibilities. This function operates a lot like Contains().</summary>
