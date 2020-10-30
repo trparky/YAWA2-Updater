@@ -84,7 +84,6 @@ Namespace My
                 iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, 0)
                 iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, 0)
                 iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, 0)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIConvertedSettings, 0)
                 iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, 1)
 
                 programVariables.boolMobileMode = False
