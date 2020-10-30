@@ -59,7 +59,7 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.loadINIFileFromFile(programConstants.configINIFile)
 
-                If Not programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIConvertedSettings) Then
+                If programFunctions.getINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.settingType.bool Then
                     programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
                     programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
                     programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
@@ -69,7 +69,6 @@ Namespace My
                     iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(programVariables.boolTrim, 1, 0))
                     iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(programVariables.boolNotifyAfterUpdateAtLogon, 1, 0))
                     iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(programVariables.boolUseSSL, 1, 0))
-                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIConvertedSettings, 1)
 
                     iniFile.Save(programConstants.configINIFile)
                 Else

@@ -120,6 +120,38 @@ Namespace programFunctions
             Return intValue = 1
         End Function
 
+        Private Function doesINISettingExist(ByRef iniFile As IniFile, strSetting As String, ByRef strRawValue As String) As Boolean
+            strRawValue = iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting)
+            Return Not String.IsNullOrWhiteSpace(strRawValue)
+        End Function
+
+        Public Function getINISettingType(ByRef iniFile As IniFile, strSetting As String) As settingType
+            Dim strRawValue As String = Nothing
+            Dim boolTestValue As Boolean
+            Dim intTestValue As Integer
+
+            If doesINISettingExist(iniFile, strSetting, strRawValue) Then
+                strRawValue = strRawValue.Trim
+
+                If Boolean.TryParse(strRawValue, boolTestValue) Then
+                    Return settingType.bool
+                ElseIf Integer.TryParse(strRawValue, intTestValue) Then
+                    Return settingType.number
+                Else
+                    Return settingType.unknown
+                End If
+            Else
+                Return settingType.null
+            End If
+        End Function
+
+        Public Enum settingType As Byte
+            bool
+            number
+            null
+            unknown
+        End Enum
+
         Public Sub saveSettingToINIFile(setting As String, value As Boolean)
             saveSettingToINIFile(setting, If(value, "True", "False"))
         End Sub
