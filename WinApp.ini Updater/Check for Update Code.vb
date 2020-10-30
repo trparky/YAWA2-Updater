@@ -99,7 +99,7 @@ Module checkForUpdateModules
         Dim processExecutablePath As String
         Dim processExecutablePathFileInfo As IO.FileInfo
 
-        For Each process As Process In process.GetProcesses()
+        For Each process As Process In Process.GetProcesses()
             processExecutablePath = getProcessExecutablePath(process.Id)
 
             If processExecutablePath IsNot Nothing Then
