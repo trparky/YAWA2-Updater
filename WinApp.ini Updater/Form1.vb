@@ -54,11 +54,9 @@ Public Class Form1
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            If programFunctions.areWeAnAdministrator() Then
-                lblAdmin.Visible = True
-                uacImage.Visible = True
-                chkLoadAtUserStartup.Enabled = False
-            End If
+            Dim boolAreWeAnAdmin As Boolean = programFunctions.areWeAnAdministrator()
+            lblAdmin.Visible = boolAreWeAnAdmin
+            chkLoadAtUserStartup.Enabled = Not boolAreWeAnAdmin
 
             newFileDeleter()
 

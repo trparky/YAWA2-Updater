@@ -39,9 +39,7 @@ Partial Class Form1
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
         Me.btnSaveCustomEntries = New System.Windows.Forms.Button()
-        Me.uacImage = New System.Windows.Forms.PictureBox()
         Me.chkUseSSL = New System.Windows.Forms.CheckBox()
-        CType(Me.uacImage, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'lblWebSiteVersion
@@ -131,13 +129,15 @@ Partial Class Form1
         '
         'lblAdmin
         '
-        Me.lblAdmin.AutoSize = True
-        Me.lblAdmin.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblAdmin.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblAdmin.Image = Global.YAWA2_Updater.My.Resources.Resources.UAC
+        Me.lblAdmin.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
         Me.lblAdmin.Location = New System.Drawing.Point(4, 41)
         Me.lblAdmin.Name = "lblAdmin"
-        Me.lblAdmin.Size = New System.Drawing.Size(148, 13)
+        Me.lblAdmin.Size = New System.Drawing.Size(200, 20)
         Me.lblAdmin.TabIndex = 12
-        Me.lblAdmin.Text = "Running as Administrator"
+        Me.lblAdmin.Text = "WARNING! Running as Administrator"
+        Me.lblAdmin.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         Me.lblAdmin.Visible = False
         '
         'btnAbout
@@ -210,16 +210,6 @@ Partial Class Form1
         Me.btnSaveCustomEntries.Text = "Save Your Custom Entries"
         Me.btnSaveCustomEntries.UseVisualStyleBackColor = True
         '
-        'uacImage
-        '
-        Me.uacImage.Image = Global.YAWA2_Updater.My.Resources.Resources.UAC
-        Me.uacImage.Location = New System.Drawing.Point(151, 41)
-        Me.uacImage.Name = "uacImage"
-        Me.uacImage.Size = New System.Drawing.Size(16, 20)
-        Me.uacImage.TabIndex = 13
-        Me.uacImage.TabStop = False
-        Me.uacImage.Visible = False
-        '
         'chkUseSSL
         '
         Me.chkUseSSL.AutoSize = True
@@ -236,7 +226,6 @@ Partial Class Form1
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(659, 445)
         Me.Controls.Add(Me.chkUseSSL)
-        Me.Controls.Add(Me.uacImage)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
         Me.Controls.Add(Me.lblUpdateNeededOrNot)
@@ -258,7 +247,6 @@ Partial Class Form1
         Me.MaximizeBox = False
         Me.Name = "Form1"
         Me.Text = "YAWA2 (Yet Another WinApp2.ini) Updater"
-        CType(Me.uacImage, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -279,6 +267,5 @@ Partial Class Form1
     Friend WithEvents lblUpdateNeededOrNot As System.Windows.Forms.Label
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
-    Friend WithEvents uacImage As System.Windows.Forms.PictureBox
     Friend WithEvents chkUseSSL As CheckBox
 End Class
