@@ -2,47 +2,18 @@
 Imports System.Security.Cryptography
 
 Public Class FormFile
-    Private m_Name, m_ContentType, m_FilePath, m_uploadedFileName As String
 
     ''' <summary>This is the name for the form entry.</summary>
     Public Property formName() As String
-        Get
-            Return m_Name
-        End Get
-        Set(value As String)
-            m_Name = value
-        End Set
-    End Property
 
     ''' <summary>This is the content type or MIME type.</summary>
     Public Property contentType() As String
-        Get
-            Return m_ContentType
-        End Get
-        Set(value As String)
-            m_ContentType = value
-        End Set
-    End Property
 
     ''' <summary>This is the path to the file to be uploaded on the local file system.</summary>
     Public Property localFilePath() As String
-        Get
-            Return m_FilePath
-        End Get
-        Set(value As String)
-            m_FilePath = value
-        End Set
-    End Property
 
     ''' <summary>This sets the name that the uploaded file will be called on the remote server.</summary>
     Public Property remoteFileName() As String
-        Get
-            Return m_uploadedFileName
-        End Get
-        Set(value As String)
-            m_uploadedFileName = value
-        End Set
-    End Property
 End Class
 
 Public Class noMimeTypeFoundException
@@ -182,7 +153,6 @@ End Class
 
 Public Class httpProtocolException
     Inherits Exception
-    Private _httpStatusCode As Net.HttpStatusCode = Net.HttpStatusCode.NoContent
 
     Public Sub New()
     End Sub
@@ -195,14 +165,7 @@ Public Class httpProtocolException
         MyBase.New(message, inner)
     End Sub
 
-    Public Property httpStatusCode As Net.HttpStatusCode
-        Get
-            Return _httpStatusCode
-        End Get
-        Set(value As Net.HttpStatusCode)
-            _httpStatusCode = value
-        End Set
-    End Property
+    Public Property httpStatusCode As Net.HttpStatusCode = Net.HttpStatusCode.NoContent
 End Class
 
 Public Class noSSLCertificateFoundException
@@ -226,17 +189,20 @@ Class cookieDetails
 End Class
 
 Public Class downloadStatusDetails
-    Public remoteFileSize As ULong, localFileSize As ULong, percentageDownloaded As Short
+    Public Property remoteFileSize As ULong
+    Public Property localFileSize As ULong
+    Public Property percentageDownloaded As Short
 End Class
 
 Class credentials
-    Public strUser, strPasswordInput As String
+    Public Property strUser As String
+    Public Property strPasswordInput As String
 End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 <CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class httpHelper
-    Private Const classVersion As String = "1.306"
+    Private Const classVersion As String = "1.315"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -253,12 +219,13 @@ Public Class httpHelper
     Private downloadStatusUpdaterThread As Threading.Thread = Nothing
     Private _intDownloadThreadSleepTime As Integer = 1000
     Private intDownloadBufferSize As Integer = 8191 ' The default is 8192 bytes or 8 KBs.
-    Private strLastHTTPServerResponse As String
 
-    Private additionalHTTPHeaders As New Dictionary(Of String, String)
-    Private httpCookies As New Dictionary(Of String, cookieDetails)
-    Private postData As New Dictionary(Of String, Object)
-    Private getData As New Dictionary(Of String, String)
+#Disable Warning IDE0044 ' Add readonly modifier
+    Private ReadOnly additionalHTTPHeaders As New Dictionary(Of String, String)
+    Private ReadOnly httpCookies As New Dictionary(Of String, cookieDetails)
+    Private ReadOnly postData As New Dictionary(Of String, Object)
+    Private ReadOnly getData As New Dictionary(Of String, String)
+#Enable Warning IDE0044 ' Add readonly modifier
     Private downloadStatusDetails As downloadStatusDetails
     Private credentials As credentials
 
@@ -417,7 +384,6 @@ Public Class httpHelper
         customErrorHandler = Nothing
         downloadStatusUpdater = Nothing
         httpResponseHeaders = Nothing
-        strLastHTTPServerResponse = Nothing
     End Sub
 
     ''' <summary>Returns the last accessed URL by this Class instance.</summary>
@@ -940,21 +906,17 @@ beginAgain:
 
                 If ex2.Status = Net.WebExceptionStatus.ProtocolError Then
                     Throw handleWebExceptionProtocolError(fileDownloadURL, ex2)
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
                     lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
-                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
                 Throw lastException
-                Return False
             End If
 
             Return False
@@ -1047,7 +1009,6 @@ beginAgain:
                 fileWriteStream.Dispose() ' Disposes the file stream.
             End If
 
-            If fileWriteStream IsNot Nothing Then fileWriteStream.Dispose() ' Disposes the file stream.
             Return False
         Catch ex As Exception
             abortDownloadStatusUpdaterThread()
@@ -1057,7 +1018,6 @@ beginAgain:
                 fileWriteStream.Close() ' Closes the file stream.
                 fileWriteStream.Dispose() ' Disposes the file stream.
             End If
-            If fileWriteStream IsNot Nothing Then fileWriteStream.Dispose() ' Disposes the file stream.
 
             If Not throwExceptionIfError Then Return False
 
@@ -1072,21 +1032,17 @@ beginAgain:
 
                 If ex2.Status = Net.WebExceptionStatus.ProtocolError Then
                     Throw handleWebExceptionProtocolError(fileDownloadURL, ex2)
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
                     lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
-                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
                 Throw lastException
-                Return False
             End If
 
             Return False
@@ -1134,11 +1090,8 @@ beginAgain:
 
             httpWebResponse.Close()
             httpWebResponse.Dispose()
-            httpWebResponse = Nothing
-            httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
-            strLastHTTPServerResponse = httpResponseText
 
             Return True
         Catch ex As Exception
@@ -1161,26 +1114,21 @@ beginAgain:
 
                 If ex2.Status = Net.WebExceptionStatus.ProtocolError Then
                     Throw handleWebExceptionProtocolError(url, ex2)
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
                     lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
-                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
                 Throw lastException
-                Return False
             End If
 
             lastException = New Exception(ex.Message, ex)
             Throw lastException
-            Return False
         End Try
     End Function
 
@@ -1222,11 +1170,8 @@ beginAgain:
 
             httpWebResponse.Close()
             httpWebResponse.Dispose()
-            httpWebResponse = Nothing
-            httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
-            strLastHTTPServerResponse = httpResponseText
 
             Return True
         Catch ex As Exception
@@ -1249,26 +1194,21 @@ beginAgain:
 
                 If ex2.Status = Net.WebExceptionStatus.ProtocolError Then
                     Throw handleWebExceptionProtocolError(url, ex2)
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
                     lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
-                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
                 Throw lastException
-                Return False
             End If
 
             lastException = New Exception(ex.Message, ex)
             Throw lastException
-            Return False
         End Try
     End Function
 
@@ -1368,11 +1308,8 @@ beginAgain:
 
             httpWebResponse.Close()
             httpWebResponse.Dispose()
-            httpWebResponse = Nothing
-            httpWebRequest = Nothing
 
             httpResponseText = convertLineFeeds(httpTextOutput).Trim()
-            strLastHTTPServerResponse = httpResponseText
 
             Return True
         Catch ex As Exception
@@ -1394,26 +1331,21 @@ beginAgain:
 
                 If ex2.Status = Net.WebExceptionStatus.ProtocolError Then
                     Throw handleWebExceptionProtocolError(url, ex2)
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.TrustFailure Then
                     lastException = New sslErrorException("There was an error establishing an SSL connection.", ex2)
                     Throw lastException
-                    Return False
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
                     lastException = New dnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
                     Throw lastException
-                    Return False
                 End If
 
                 lastException = New Net.WebException(ex.Message, ex2)
                 Throw lastException
-                Return False
             End If
 
             lastException = New Exception(ex.Message, ex)
             Throw lastException
-            Return False
         End Try
     End Function
 
@@ -1434,7 +1366,6 @@ beginAgain:
             httpRequestWriter.Write(postDataString)
             httpRequestWriter.Close()
             httpRequestWriter.Dispose()
-            httpRequestWriter = Nothing
         End If
     End Sub
 
@@ -1561,14 +1492,5 @@ beginAgain:
         End If
 
         Return result
-    End Function
-
-    Private Function doWeHaveAnInternetConnection() As Boolean
-        Try
-            Dim ping As New Net.NetworkInformation.Ping()
-            Return If(ping.Send("8.8.8.8").Status = Net.NetworkInformation.IPStatus.Success, True, False)
-        Catch ex As Exception
-            Return False
-        End Try
     End Function
 End Class

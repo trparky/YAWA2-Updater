@@ -17,6 +17,8 @@ Namespace programConstants
         Public Const configINICustomEntriesKey As String = "customEntries"
         Public Const configINIMobileModeKey As String = "MobileMode"
         Public Const configINITrimKey As String = "trim"
+        Public Const configINIUseSSLKey As String = "useSSL"
+        Public Const configINIConvertedSettings As String = "convertedSettings"
         Public Const configINInotifyAfterUpdateAtLogonKey As String = "notifyAfterUpdateAtLogon"
     End Module
 End Namespace
@@ -27,79 +29,13 @@ End Module
 
 Namespace programVariables
     Module variables
-        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon As Boolean
+        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
     End Module
 End Namespace
 
 Namespace programFunctions
     Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
-
-        ''' <summary>Checks to see if a Process ID or PID exists on the system.</summary>
-        ''' <param name="PID">The PID of the process you are checking the existance of.</param>
-        ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
-        ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
-        Private Function doesPIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
-            Try
-                processObject = Process.GetProcessById(PID)
-                Return True
-            Catch ex As Exception
-                Return False
-            End Try
-        End Function
-
-        Private Sub killProcess(PID As Integer)
-            Dim processObject As Process = Nothing
-            If doesPIDExist(PID, processObject) Then
-                Try
-                    processObject.Kill() ' Yes, it does so let's kill it.
-                Catch ex As Exception
-                    ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
-                    ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
-                End Try
-            End If
-        End Sub
-
-        Private Function getProcessExecutablePath(processID As Integer) As String
-            Dim memoryBuffer = New Text.StringBuilder(1024)
-            Dim processHandle As IntPtr = NativeMethods.OpenProcess(NativeMethods.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
-
-            If processHandle <> IntPtr.Zero Then
-                Try
-                    Dim memoryBufferSize As Integer = memoryBuffer.Capacity
-
-                    If NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                        Return memoryBuffer.ToString()
-                    End If
-                Finally
-                    NativeMethods.CloseHandle(processHandle)
-                End Try
-            End If
-
-            NativeMethods.CloseHandle(processHandle)
-            Return Nothing
-        End Function
-
-        Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-            Dim processExecutablePath As String
-            Dim processExecutablePathFileInfo As IO.FileInfo
-
-            For Each process As Process In Process.GetProcesses()
-                processExecutablePath = getProcessExecutablePath(process.Id)
-
-                If processExecutablePath IsNot Nothing Then
-                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
-
-                    If boolFullFilePathPassed Then
-                        If stringCompare(strFileName, processExecutablePathFileInfo.FullName) Then killProcess(process.Id)
-                    ElseIf Not boolFullFilePathPassed Then
-                        If stringCompare(strFileName, processExecutablePathFileInfo.Name) Then killProcess(process.Id)
-                    End If
-
-                    processExecutablePathFileInfo = Nothing
-                End If
-            Next
-        End Sub
 
         Public Function canIWriteToTheCurrentDirectory() As Boolean
             Return canIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
@@ -110,7 +46,7 @@ Namespace programFunctions
             If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
             If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
 
-            If checkByFolderACLs(folderPath) Then
+            If Check_for_Update_Stuff.checkByFolderACLs(folderPath) Then
                 Try
                     IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
                     If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
@@ -121,35 +57,6 @@ Namespace programFunctions
             Else
                 Return False
             End If
-        End Function
-
-        Private Function checkByFolderACLs(folderPath As String) As Boolean
-            If WindowsIdentity.GetCurrent().IsSystem Then Return True
-
-            Try
-                Dim dsDirectoryACLs As DirectorySecurity = IO.Directory.GetAccessControl(folderPath)
-                Dim strCurrentUserSDDL As String = WindowsIdentity.GetCurrent.User.Value
-                Dim ircCurrentUserGroups As IdentityReferenceCollection = WindowsIdentity.GetCurrent.Groups
-
-                Dim arcAuthorizationRules As AuthorizationRuleCollection = dsDirectoryACLs.GetAccessRules(True, True, GetType(SecurityIdentifier))
-                Dim fsarDirectoryAccessRights As FileSystemAccessRule
-
-                For Each arAccessRule As AuthorizationRule In arcAuthorizationRules
-                    If arAccessRule.IdentityReference.Value.Equals(strCurrentUserSDDL, StringComparison.OrdinalIgnoreCase) Or ircCurrentUserGroups.Contains(arAccessRule.IdentityReference) Then
-                        fsarDirectoryAccessRights = DirectCast(arAccessRule, FileSystemAccessRule)
-
-                        If fsarDirectoryAccessRights.AccessControlType = AccessControlType.Allow Then
-                            If fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.Modify Or fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.WriteData Or fsarDirectoryAccessRights.FileSystemRights = FileSystemRights.FullControl Then
-                                Return True
-                            End If
-                        End If
-                    End If
-                Next
-
-                Return False
-            Catch ex As Exception
-                Return False
-            End Try
         End Function
 
         Public Function areWeAnAdministrator() As Boolean
@@ -195,6 +102,62 @@ Namespace programFunctions
                 iniFile.Save(programConstants.configINIFile) ' Save the data to disk.
                 iniFile = Nothing ' And destroy the INIFile object.
             End If
+        End Sub
+
+        Public Function getBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
+            Dim boolValue As Boolean
+            If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), boolValue) Then
+                boolValue = False
+            End If
+            Return boolValue
+        End Function
+
+        Public Function getIntegerSettingFromINIFileAsBoolean(ByRef iniFile As IniFile, strSetting As String) As Boolean
+            Dim intValue As Integer
+            If Not Integer.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), intValue) Then
+                intValue = 0
+            End If
+            Return intValue = 1
+        End Function
+
+        Private Function doesINISettingExist(ByRef iniFile As IniFile, strSetting As String, ByRef strRawValue As String) As Boolean
+            strRawValue = iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting)
+            Return Not String.IsNullOrWhiteSpace(strRawValue)
+        End Function
+
+        Public Function getINISettingType(ByRef iniFile As IniFile, strSetting As String) As settingType
+            Dim strRawValue As String = Nothing
+            Dim boolTestValue As Boolean
+            Dim intTestValue As Integer
+
+            If doesINISettingExist(iniFile, strSetting, strRawValue) Then
+                strRawValue = strRawValue.Trim
+
+                If Boolean.TryParse(strRawValue, boolTestValue) Then
+                    Return settingType.bool
+                ElseIf Integer.TryParse(strRawValue, intTestValue) Then
+                    Return settingType.number
+                Else
+                    Return settingType.unknown
+                End If
+            Else
+                Return settingType.null
+            End If
+        End Function
+
+        Public Enum settingType As Byte
+            bool
+            number
+            null
+            unknown
+        End Enum
+
+        Public Sub saveSettingToINIFile(setting As String, value As Boolean)
+            saveSettingToINIFile(setting, If(value, "True", "False"))
+        End Sub
+
+        Public Sub saveSettingToINIFile(setting As String, value As Integer)
+            saveSettingToINIFile(setting, value.ToString)
         End Sub
 
         Public Sub saveSettingToINIFile(setting As String, value As String)
@@ -405,12 +368,11 @@ Namespace programFunctions
         End Function
 
         Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
-            Dim directory As String = tempString.Split("|")(0)
-            directory = directory.Replace("*", "")
+            Dim directory As String = tempString.Split("|")(0).Replace("*", "")
 
-            If directory.Contains("%ProgramFiles%") Then
+            If directory.caseInsensitiveContains("%ProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -419,7 +381,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -428,9 +390,9 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 End If
-            ElseIf directory.Contains("%CommonProgramFiles%") Then
+            ElseIf directory.caseInsensitiveContains("%CommonProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -439,7 +401,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -449,8 +411,7 @@ Namespace programFunctions
                     End If
                 End If
             Else
-                directory = translateVarsInPath(directory)
-                directory = directory.Replace("*", "")
+                directory = translateVarsInPath(directory).Replace("*", "")
 
                 If Not IO.Directory.Exists(directory) Then
                     If Not sectionsToRemove.Contains(iniFileSection.Name) Then
@@ -467,94 +428,167 @@ Namespace programFunctions
 
         Public Function processRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Try
+                Dim regKey1, regKey2 As RegistryKey
                 If tempString.Contains(".NETFramework") Then Return True
 
-                If tempString.StartsWith("HKCU") Then
-                    tempString = tempString.Replace("HKCU\", "")
+                If tempString.StartsWith("HKCU", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKCU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.CurrentUser.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.CurrentUser
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKLM") Then
-                    tempString = tempString.Replace("HKLM\", "")
+                ElseIf tempString.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKLM\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.LocalMachine.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.LocalMachine
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKCR") Then
-                    tempString = tempString.Replace("HKCR\", "")
+                ElseIf tempString.StartsWith("HKCR", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKCR\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.ClassesRoot.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.ClassesRoot
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
-                ElseIf tempString.StartsWith("HKU") Then
-                    tempString = tempString.Replace("HKU\", "")
+                ElseIf tempString.StartsWith("HKU", StringComparison.OrdinalIgnoreCase) Then
+                    tempString = tempString.caseInsensitiveReplace("HKU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
-                        If Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32).OpenSubKey(tempString) Is Nothing) And Boolean.Parse(RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64).OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32)
+                        regKey2 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64)
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) And Boolean.Parse(regKey2.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
+                                regKey2.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                regKey2.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            regKey2.Dispose()
+                            Return True
                         End If
                     Else
-                        If Boolean.Parse(Registry.Users.OpenSubKey(tempString) Is Nothing) Then
+                        regKey1 = Registry.Users
+
+                        If Boolean.Parse(regKey1.OpenSubKey(tempString) Is Nothing) Then
                             If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                                 sectionsToRemove.Add(iniFileSection.Name)
+                                regKey1.Dispose()
                                 Return True
-                            Else : Return True
+                            Else
+                                regKey1.Dispose()
+                                Return True
                             End If
-                        Else : Return True
+                        Else
+                            regKey1.Dispose()
+                            Return True
                         End If
                     End If
                 End If
@@ -566,69 +600,3 @@ Namespace programFunctions
         End Function
     End Module
 End Namespace
-
-Module extensions
-    ' PHP like addSlashes and stripSlashes. Call using String.addSlashes() and String.stripSlashes().
-    <Extension()>
-    Public Function addSlashes(unsafeString As String) As String
-        Return Regex.Replace(unsafeString, "([\000\010\011\012\015\032\042\047\134\140])", "\$1")
-    End Function
-
-    <Extension()>
-    Public Function caseInsensitiveContains(haystack As String, needle As String, Optional boolDoEscaping As Boolean = False) As Boolean
-        Try
-            If boolDoEscaping Then needle = Regex.Escape(needle)
-            Return Regex.IsMatch(haystack, needle, RegexOptions.IgnoreCase)
-        Catch ex As Exception
-            Return False
-        End Try
-    End Function
-
-    <Extension()>
-    Public Function stringCompare(str1 As String, str2 As String, Optional boolCaseInsensitive As Boolean = True)
-        If boolCaseInsensitive Then
-            Return str1.Trim.Equals(str2.Trim, StringComparison.OrdinalIgnoreCase)
-        Else
-            Return str1.Trim.Equals(str2.Trim, StringComparison.Ordinal)
-        End If
-    End Function
-End Module
-
-Friend NotInheritable Class NativeMethods
-    Private Sub New()
-    End Sub
-
-    <Flags>
-    Public Enum ProcessAccessFlags As UInteger
-        PROCESS_QUERY_LIMITED_INFORMATION = &H1000
-        All = &H1F0FFF
-        Terminate = &H1
-        CreateThread = &H2
-        VirtualMemoryOperation = &H8
-        VirtualMemoryRead = &H10
-        VirtualMemoryWrite = &H20
-        DuplicateHandle = &H40
-        CreateProcess = &H80
-        SetQuota = &H100
-        SetInformation = &H200
-        QueryInformation = &H400
-        QueryLimitedInformation = &H1000
-        Synchronize = &H100000
-    End Enum
-
-    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
-    Friend Shared Function QueryFullProcessImageName(hprocess As IntPtr, dwFlags As Integer, lpExeName As Text.StringBuilder, ByRef size As Integer) As Boolean
-    End Function
-
-    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
-    Friend Shared Function OpenProcess(dwDesiredAccess As ProcessAccessFlags, bInheritHandle As Boolean, dwProcessId As Integer) As IntPtr
-    End Function
-
-    <DllImport("kernel32.dll", SetLastError:=True, CharSet:=CharSet.Unicode)>
-    Friend Shared Function CloseHandle(hHandle As IntPtr) As Boolean
-    End Function
-
-    <DllImport("kernel32.dll", CharSet:=CharSet.Unicode)>
-    Friend Shared Function MoveFileEx(ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal dwFlags As Int32) As Boolean
-    End Function
-End Class

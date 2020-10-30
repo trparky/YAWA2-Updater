@@ -1,11 +1,7 @@
 ﻿Namespace internetFunctions
     Module Internet_Functions
         Public Function createNewHTTPHelperObject() As httpHelper
-            Dim httpHelper As New httpHelper With {
-                .setUserAgent = createHTTPUserAgentHeaderString(),
-                .useHTTPCompression = True,
-                .setProxyMode = True
-            }
+            Dim httpHelper As New httpHelper With {.setUserAgent = createHTTPUserAgentHeaderString(), .useHTTPCompression = True, .setProxyMode = True}
             httpHelper.addHTTPHeader("OPERATING_SYSTEM", getFullOSVersionString())
 
             httpHelper.setURLPreProcessor = Function(ByVal strURLInput As String) As String
@@ -28,14 +24,12 @@
         Private Function createHTTPUserAgentHeaderString() As String
             Dim versionInfo As String() = Application.ProductVersion.Split(".")
             Dim versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
-            Return String.Format("{0} version {1} on {2}", programName, versionString, getFullOSVersionString())
+            Return String.Format("{0} version {1} on {2}", "YAWA2 (Yet Another WinApp2.ini) Updater", versionString, getFullOSVersionString())
         End Function
 
         Private Function getFullOSVersionString() As String
             Try
-                Dim computerInfo As New Devices.ComputerInfo()
-                Dim osName As String = Text.RegularExpressions.Regex.Replace(computerInfo.OSFullName.Trim, "microsoft ", "", Text.RegularExpressions.RegexOptions.IgnoreCase)
-                computerInfo = Nothing
+                Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.caseInsensitiveReplace("microsoft ", "", True)
 
                 Dim dotNetVersionsInfo As String() = Environment.Version.ToString.Split(".")
                 Return String.Format("{0} {3}-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1), If(Environment.Is64BitOperatingSystem, "64", "32"))

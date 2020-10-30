@@ -244,3 +244,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /yawa2_update.xml.lnk
+/WinApp.ini Updater/My Project/AssemblyInfo.vb

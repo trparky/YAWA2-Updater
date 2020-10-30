@@ -16,7 +16,7 @@ Namespace My
         Private Function doesPIDExist(PID As Integer) As Boolean
             Try
                 Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
-                    Return If(searcher.Get.Count = 0, False, True)
+                    Return searcher.Get.Count <> 0
                 End Using
             Catch ex3 As Runtime.InteropServices.COMException
                 Return False
@@ -32,17 +32,15 @@ Namespace My
 
         Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
             Dim fullFileName As String = If(boolFullFilePathPassed, strFileName, New IO.FileInfo(strFileName).FullName)
-
             Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.addSlashes())
-            Dim searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
 
             Try
-                For Each queryObj As Management.ManagementObject In searcher.Get()
-                    killProcess(Integer.Parse(queryObj("ProcessId").ToString))
-                Next
-            Catch ex3 As Runtime.InteropServices.COMException
-            Catch err As Management.ManagementException
-                ' Does nothing
+                Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
+                    For Each queryObj As Management.ManagementObject In searcher.Get()
+                        killProcess(Integer.Parse(queryObj("ProcessId").ToString))
+                    Next
+                End Using
+            Catch err As Exception
             End Try
         End Sub
 
@@ -61,33 +59,40 @@ Namespace My
                 Dim iniFile As New IniFile()
                 iniFile.loadINIFileFromFile(programConstants.configINIFile)
 
-                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey), programVariables.boolMobileMode) Then
-                    programVariables.boolMobileMode = False
-                End If
+                If programFunctions.getINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.settingType.bool Then
+                    programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
 
-                If Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey), programVariables.boolTrim) = False Then
-                    programVariables.boolTrim = False
-                End If
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(programVariables.boolMobileMode, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(programVariables.boolTrim, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(programVariables.boolNotifyAfterUpdateAtLogon, 1, 0))
+                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(programVariables.boolUseSSL, 1, 0))
 
-                If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey), programVariables.boolNotifyAfterUpdateAtLogon) Then
-                    programVariables.boolNotifyAfterUpdateAtLogon = False
+                    iniFile.Save(programConstants.configINIFile)
+                Else
+                    programVariables.boolMobileMode = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
                 End If
-
-                iniFile = Nothing
             Else
                 Dim iniFile As New IniFile()
                 iniFile.AddSection(programConstants.configINISettingSection)
 
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, "False")
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, "False")
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, "False")
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIConvertedSettings, 0)
+                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, 1)
 
                 programVariables.boolMobileMode = False
                 programVariables.boolTrim = False
                 programVariables.boolNotifyAfterUpdateAtLogon = False
+                programVariables.boolUseSSL = True
 
                 iniFile.Save(programConstants.configINIFile)
-                iniFile = Nothing
             End If
 
             If My.Application.CommandLineArgs.Count = 1 Then
@@ -191,21 +196,7 @@ Namespace My
                         End If
                     End If
                 ElseIf commandLineArgument.Equals("-update", StringComparison.OrdinalIgnoreCase) Then
-                    Dim currentProcessFileName As String = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).Name
-
-                    If currentProcessFileName.caseInsensitiveContains(".new.exe", True) Then
-                        Dim mainEXEName As String = Regex.Replace(currentProcessFileName, Regex.Escape(".new.exe"), "", RegexOptions.IgnoreCase)
-                        searchForProcessAndKillIt(mainEXEName, False)
-
-                        IO.File.Delete(mainEXEName)
-                        IO.File.Copy(currentProcessFileName, mainEXEName)
-
-                        Process.Start(New ProcessStartInfo With {.FileName = mainEXEName})
-                        Process.GetCurrentProcess.Kill()
-                    Else
-                        MsgBox("The environment is not ready for an update. This process will now terminate.", MsgBoxStyle.Critical, "Add Adobe Flash to Microsoft EMET")
-                        Process.GetCurrentProcess.Kill()
-                    End If
+                    doUpdateAtStartup()
                 End If
 
                 e.Cancel = True
