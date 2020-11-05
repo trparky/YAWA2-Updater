@@ -212,7 +212,14 @@ Public Class Form1
                                   btnApplyNewINIFile.Enabled = True
                                   lblUpdateNeededOrNot.Text = updateNeeded
                                   lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                                  MsgBox("There is a new version of the CCleaner WinApp2.ini file." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, "WinApp.ini Updater")
+
+                                  Dim stringBuilder As New StringBuilder()
+                                  stringBuilder.AppendLine("There is a new version of the CCleaner WinApp2.ini file.")
+                                  stringBuilder.AppendLine()
+                                  stringBuilder.AppendLine("Currently Installed INI File Version: " & localINIFileVersion)
+                                  stringBuilder.AppendLine("New Remote INI File Version: " & remoteINIFileVersion)
+
+                                  MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, "WinApp.ini Updater")
                               End If
                           End If
                       End Sub)
