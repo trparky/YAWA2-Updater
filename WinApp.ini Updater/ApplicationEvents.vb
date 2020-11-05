@@ -186,12 +186,8 @@ Namespace My
                             programFunctions.trimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
-                        If programVariables.boolNotifyAfterUpdateAtLogon Then
-                            Dim msgBoxResult As MsgBoxResult = MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "New Remote INI File Version: " & remoteINIFileVersion & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp2.ini File Updated")
-
-                            If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                                Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
-                            End If
+                        If programVariables.boolNotifyAfterUpdateAtLogon AndAlso MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
+                            Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If
                 ElseIf commandLineArgument.Equals("-update", StringComparison.OrdinalIgnoreCase) Then
