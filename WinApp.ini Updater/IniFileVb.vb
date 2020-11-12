@@ -10,7 +10,7 @@ Imports System.Diagnostics
 ' IniFile class used to read and write ini files by loading the file into memory
 Public Class IniFile
     ' List of IniSection objects keeps track of all the sections in the INI file
-    Private m_sections As Hashtable
+    Private ReadOnly m_sections As Hashtable
 
     ' Public constructor
     Public Sub New()
@@ -269,11 +269,11 @@ Public Class IniFile
     ' IniSection class 
     Public Class IniSection
         '  IniFile IniFile object instance
-        Private m_pIniFile As IniFile
+        Private ReadOnly m_pIniFile As IniFile
         '  Name of the section
         Private m_sSection As String
         '  List of IniKeys in the section
-        Private m_keys As Hashtable
+        Private ReadOnly m_keys As Hashtable
 
         ' Constuctor so objects are internally managed
         Protected Friend Sub New(ByVal parent As IniFile, ByVal sSection As String)
@@ -381,7 +381,7 @@ Public Class IniFile
             '  Value associated
             Private m_sValue As String
             '  Pointer to the parent CIniSection
-            Private m_section As IniSection
+            Private ReadOnly m_section As IniSection
 
             ' Constuctor so objects are internally managed
             Protected Friend Sub New(ByVal parent As IniSection, ByVal sKey As String)
