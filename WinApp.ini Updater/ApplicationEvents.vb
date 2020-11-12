@@ -13,7 +13,7 @@ Namespace My
     Partial Friend Class MyApplication
         Private Const messageBoxTitle As String = "YAWA2 Updater"
 
-        Private Function doesPIDExist(PID As Integer) As Boolean
+        Private Function DoesPIDExist(PID As Integer) As Boolean
             Try
                 Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
                     Return searcher.Get.Count <> 0
@@ -25,19 +25,19 @@ Namespace My
             End Try
         End Function
 
-        Private Sub killProcess(PID As Integer)
-            If doesPIDExist(PID) Then Process.GetProcessById(PID).Kill()
-            If doesPIDExist(PID) Then killProcess(PID)
+        Private Sub KillProcess(PID As Integer)
+            If DoesPIDExist(PID) Then Process.GetProcessById(PID).Kill()
+            If DoesPIDExist(PID) Then KillProcess(PID)
         End Sub
 
-        Private Sub searchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
+        Private Sub SearchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
             Dim fullFileName As String = If(boolFullFilePathPassed, strFileName, New IO.FileInfo(strFileName).FullName)
-            Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.addSlashes())
+            Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.AddSlashes())
 
             Try
                 Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
                     For Each queryObj As Management.ManagementObject In searcher.Get()
-                        killProcess(Integer.Parse(queryObj("ProcessId").ToString))
+                        KillProcess(Integer.Parse(queryObj("ProcessId").ToString))
                     Next
                 End Using
             Catch err As Exception
@@ -57,13 +57,13 @@ Namespace My
 
             If IO.File.Exists(programConstants.configINIFile) Then
                 Dim iniFile As New IniFile()
-                iniFile.loadINIFileFromFile(programConstants.configINIFile)
+                iniFile.LoadINIFileFromFile(programConstants.configINIFile)
 
-                If programFunctions.getINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.settingType.bool Then
-                    programVariables.boolMobileMode = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
-                    programVariables.boolTrim = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
-                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                    programVariables.boolUseSSL = programFunctions.getBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
+                If programFunctions.GetINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.SettingType.bool Then
+                    programVariables.boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
 
                     iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(programVariables.boolMobileMode, 1, 0))
                     iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(programVariables.boolTrim, 1, 0))
@@ -72,10 +72,10 @@ Namespace My
 
                     iniFile.Save(programConstants.configINIFile)
                 Else
-                    programVariables.boolMobileMode = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
-                    programVariables.boolTrim = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
-                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                    programVariables.boolUseSSL = programFunctions.getIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
+                    programVariables.boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
+                    programVariables.boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
+                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                    programVariables.boolUseSSL = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
                 End If
             Else
                 Dim iniFile As New IniFile()
@@ -129,13 +129,13 @@ Namespace My
                     If strLocationToSaveWinAPP2INIFile <> Nothing Then
                         If IO.File.Exists(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini")) Then
                             Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
-                                localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
+                                localINIFileVersion = programFunctions.GetINIVersionFromString(streamReader.ReadLine)
                             End Using
                         Else
                             localINIFileVersion = "(Not Installed)"
                         End If
 
-                        remoteINIFileVersion = programFunctions.getRemoteINIFileVersion()
+                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                             MsgBox("Error Retrieving Remote INI File Version.  Please try again.", MsgBoxStyle.Critical, messageBoxTitle)
@@ -148,16 +148,16 @@ Namespace My
                                 stringCustomEntries = customEntriesFileReader.ReadToEnd.Trim
                             End Using
 
-                            programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.convertToBase64(stringCustomEntries))
+                            programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.ConvertToBase64(stringCustomEntries))
                             IO.File.Delete(programConstants.customEntriesFile)
                         Else
                             Dim iniFile As New IniFile()
-                            iniFile.loadINIFileFromFile(programConstants.configINIFile)
+                            iniFile.LoadINIFileFromFile(programConstants.configINIFile)
                             stringCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
 
                             If Not String.IsNullOrWhiteSpace(stringCustomEntries) Then
-                                If programFunctions.isBase64(stringCustomEntries) Then
-                                    stringCustomEntries = programFunctions.convertFromBase64(stringCustomEntries)
+                                If programFunctions.IsBase64(stringCustomEntries) Then
+                                    stringCustomEntries = programFunctions.ConvertFromBase64(stringCustomEntries)
                                 Else
                                     stringCustomEntries = Nothing
                                 End If
@@ -169,7 +169,7 @@ Namespace My
                             Exit Sub
                         Else
                             Dim remoteINIFileData As String = Nothing
-                            Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+                            Dim httpHelper As httpHelper = internetFunctions.CreateNewHTTPHelperObject()
 
                             If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
@@ -183,7 +183,7 @@ Namespace My
                         End If
 
                         If programVariables.boolTrim Then
-                            programFunctions.trimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
+                            programFunctions.TrimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
                         If programVariables.boolNotifyAfterUpdateAtLogon AndAlso MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
@@ -191,7 +191,7 @@ Namespace My
                         End If
                     End If
                 ElseIf commandLineArgument.Equals("-update", StringComparison.OrdinalIgnoreCase) Then
-                    doUpdateAtStartup()
+                    DoUpdateAtStartup()
                 End If
 
                 e.Cancel = True

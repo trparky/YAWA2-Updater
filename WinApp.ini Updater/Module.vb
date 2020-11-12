@@ -36,16 +36,16 @@ Namespace programFunctions
     Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
 
-        Public Function canIWriteToTheCurrentDirectory() As Boolean
-            Return canIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
+        Public Function CanIWriteToTheCurrentDirectory() As Boolean
+            Return CanIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
         End Function
 
-        Private Function canIWriteThere(folderPath As String) As Boolean
+        Private Function CanIWriteThere(folderPath As String) As Boolean
             ' We make sure we get valid folder path by taking off the leading slash.
             If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
             If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
 
-            If Check_for_Update_Stuff.checkByFolderACLs(folderPath) Then
+            If Check_for_Update_Stuff.CheckByFolderACLs(folderPath) Then
                 Try
                     IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
                     If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
@@ -58,7 +58,7 @@ Namespace programFunctions
             End If
         End Function
 
-        Public Function areWeAnAdministrator() As Boolean
+        Public Function AreWeAnAdministrator() As Boolean
             Try
                 Dim principal As New WindowsPrincipal(WindowsIdentity.GetCurrent())
                 Return principal.IsInRole(WindowsBuiltInRole.Administrator)
@@ -67,7 +67,7 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function isBase64(base64String As String) As Boolean
+        Public Function IsBase64(base64String As String) As Boolean
             If base64String.Replace(" ", "").Length Mod 4 <> 0 Then Return False
             Try
                 Convert.FromBase64String(base64String)
@@ -77,21 +77,21 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function convertToBase64(input As String) As String
+        Public Function ConvertToBase64(input As String) As String
             Return Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(input))
         End Function
 
-        Public Function convertFromBase64(input As String) As String
+        Public Function ConvertFromBase64(input As String) As String
             Return Text.Encoding.UTF8.GetString(Convert.FromBase64String(input))
         End Function
 
-        Public Sub removeSettingFromINIFile(settingToRemove As String)
+        Public Sub RemoveSettingFromINIFile(settingToRemove As String)
             ' Check if the INI file exists.
             If IO.File.Exists(programConstants.configINIFile) Then
                 ' Yes, it does exist; now let's load the file into memory.
 
                 Dim iniFile As New IniFile() ' First we create an IniFile class object.
-                iniFile.loadINIFileFromFile(programConstants.configINIFile) ' Now we load the data into memory.
+                iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Now we load the data into memory.
 
                 Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingToRemove) ' Load the data from the INI object into local program memory.
                 If String.IsNullOrWhiteSpace(temp) Then
@@ -103,7 +103,7 @@ Namespace programFunctions
             End If
         End Sub
 
-        Public Function getBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
+        Public Function GetBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
             Dim boolValue As Boolean
             If Not Boolean.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), boolValue) Then
                 boolValue = False
@@ -111,7 +111,7 @@ Namespace programFunctions
             Return boolValue
         End Function
 
-        Public Function getIntegerSettingFromINIFileAsBoolean(ByRef iniFile As IniFile, strSetting As String) As Boolean
+        Public Function GetIntegerSettingFromINIFileAsBoolean(ByRef iniFile As IniFile, strSetting As String) As Boolean
             Dim intValue As Integer
             If Not Integer.TryParse(iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting), intValue) Then
                 intValue = 0
@@ -119,47 +119,47 @@ Namespace programFunctions
             Return intValue = 1
         End Function
 
-        Private Function doesINISettingExist(ByRef iniFile As IniFile, strSetting As String, ByRef strRawValue As String) As Boolean
+        Private Function DoesINISettingExist(ByRef iniFile As IniFile, strSetting As String, ByRef strRawValue As String) As Boolean
             strRawValue = iniFile.GetKeyValue(programConstants.configINISettingSection, strSetting)
             Return Not String.IsNullOrWhiteSpace(strRawValue)
         End Function
 
-        Public Function getINISettingType(ByRef iniFile As IniFile, strSetting As String) As settingType
+        Public Function GetINISettingType(ByRef iniFile As IniFile, strSetting As String) As SettingType
             Dim strRawValue As String = Nothing
             Dim boolTestValue As Boolean
             Dim intTestValue As Integer
 
-            If doesINISettingExist(iniFile, strSetting, strRawValue) Then
+            If DoesINISettingExist(iniFile, strSetting, strRawValue) Then
                 strRawValue = strRawValue.Trim
 
                 If Boolean.TryParse(strRawValue, boolTestValue) Then
-                    Return settingType.bool
+                    Return SettingType.bool
                 ElseIf Integer.TryParse(strRawValue, intTestValue) Then
-                    Return settingType.number
+                    Return SettingType.number
                 Else
-                    Return settingType.unknown
+                    Return SettingType.unknown
                 End If
             Else
-                Return settingType.null
+                Return SettingType.null
             End If
         End Function
 
-        Public Enum settingType As Byte
+        Public Enum SettingType As Byte
             bool
             number
             null
             unknown
         End Enum
 
-        Public Sub saveSettingToINIFile(setting As String, value As Boolean)
-            saveSettingToINIFile(setting, If(value, "True", "False"))
+        Public Sub SaveSettingToINIFile(setting As String, value As Boolean)
+            SaveSettingToINIFile(setting, If(value, "True", "False"))
         End Sub
 
-        Public Sub saveSettingToINIFile(setting As String, value As Integer)
-            saveSettingToINIFile(setting, value.ToString)
+        Public Sub SaveSettingToINIFile(setting As String, value As Integer)
+            SaveSettingToINIFile(setting, value.ToString)
         End Sub
 
-        Public Sub saveSettingToINIFile(setting As String, value As String)
+        Public Sub SaveSettingToINIFile(setting As String, value As String)
             ' Check if the INI file exists.
             If IO.File.Exists(programConstants.configINIFile) Then
                 ' Yes, it does exist; now let's load the file into memory.
@@ -168,7 +168,7 @@ Namespace programFunctions
 
                 ' Now, we have to load the existing data into memory or we're going to end up overwriting the existing INI file with just
                 ' the setting we're setting now. Essentially you'd end up with an INI file with only one entry in it and that's bad.
-                iniFile.loadINIFileFromFile(programConstants.configINIFile)
+                iniFile.LoadINIFileFromFile(programConstants.configINIFile)
 
                 iniFile.SetKeyValue(programConstants.configINISettingSection, setting, value) ' We now set the value.
                 iniFile.Save(programConstants.configINIFile) ' Save what's in memory to disk.
@@ -183,13 +183,13 @@ Namespace programFunctions
             End If
         End Sub
 
-        Public Function loadSettingFromINIFile(ByVal settingKey As String, ByRef settingKeyValue As String) As Boolean
+        Public Function LoadSettingFromINIFile(ByVal settingKey As String, ByRef settingKeyValue As String) As Boolean
             Try
                 Dim iniFile As New IniFile() ' First we create an IniFile class object.
 
                 ' Check if the INI file exists.
                 If IO.File.Exists(programConstants.configINIFile) Then
-                    iniFile.loadINIFileFromFile(programConstants.configINIFile) ' Yes, it does exist; now let's load the file into memory.
+                    iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Yes, it does exist; now let's load the file into memory.
 
                     ' Load the data from the INI object into local program memory.
                     Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingKey)
@@ -211,17 +211,17 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function getRemoteINIFileVersion() As String
+        Public Function GetRemoteINIFileVersion() As String
             Try
-                Dim httpHelper As httpHelper = internetFunctions.createNewHTTPHelperObject()
+                Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
-                Return If(httpHelper.getWebData(programConstants.WinApp2INIFileURL, strINIFileData, False), getINIVersionFromString(strINIFileData), programConstants.errorRetrievingRemoteINIFileVersion)
+                Return If(httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, False), GetINIVersionFromString(strINIFileData), programConstants.errorRetrievingRemoteINIFileVersion)
             Catch ex As Exception
                 Return programConstants.errorRetrievingRemoteINIFileVersion
             End Try
         End Function
 
-        Private Function osVersionCheck(tempString As String) As Boolean
+        Private Function OsVersionCheck(tempString As String) As Boolean
             If Environment.OSVersion.Version.Major = 10 Then
                 If tempString.Contains("6.2") Or tempString.Contains("10.0") Then Return True
             Else
@@ -230,7 +230,7 @@ Namespace programFunctions
             Return False
         End Function
 
-        Public Sub trimINIFile(strLocationOfCCleaner As String, remoteINIFileVersion As String, boolSilentMode As Boolean)
+        Public Sub TrimINIFile(strLocationOfCCleaner As String, remoteINIFileVersion As String, boolSilentMode As Boolean)
             Dim tempString As String
             Dim oldINIFileContents As String
             Dim sectionsToRemove As New Specialized.StringCollection
@@ -245,12 +245,12 @@ Namespace programFunctions
             matchData = Nothing
 
             Dim iniFile As New IniFile()
-            iniFile.loadINIFileFromFile(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
+            iniFile.LoadINIFileFromFile(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
 
             For Each iniFileSection As IniFile.IniSection In iniFile.Sections
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectOS")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If Not osVersionCheck(tempString) Then
+                    If Not OsVersionCheck(tempString) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Continue For
@@ -261,7 +261,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "Detect")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -269,7 +269,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectFile")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -277,7 +277,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "Detect1")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -285,7 +285,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "DetectFile1")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -293,7 +293,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "FileKey1")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processFilePath(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessFilePath(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -301,7 +301,7 @@ Namespace programFunctions
 
                 tempString = iniFile.GetKeyValue(iniFileSection.Name, "RegKey1")
                 If Not String.IsNullOrWhiteSpace(tempString) Then
-                    If processRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
+                    If ProcessRegistryKey(tempString, sectionsToRemove, iniFileSection) Then
                         Continue For
                     End If
                 End If
@@ -312,7 +312,7 @@ Namespace programFunctions
                 iniFile.RemoveSection(sectionToRemove)
             Next
 
-            Dim rawINIFileContents As String = iniFile.getRawINIText
+            Dim rawINIFileContents As String = iniFile.GetRawINIText
 
             iniFileNotes = iniFileNotes.Replace(entriesString, iniFile.Sections.Count.ToString("N0"))
             iniFile = Nothing
@@ -341,17 +341,17 @@ Namespace programFunctions
                     Dim msgBoxResult As MsgBoxResult = MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater")
 
                     If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                        runCCleaner(strLocationOfCCleaner)
+                        RunCCleaner(strLocationOfCCleaner)
                     End If
                 End If
             End If
         End Sub
 
-        Public Sub runCCleaner(strLocationOfCCleaner As String)
+        Public Sub RunCCleaner(strLocationOfCCleaner As String)
             Process.Start(IO.Path.Combine(strLocationOfCCleaner, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
         End Sub
 
-        Private Function translateVarsInPath(input As String) As String
+        Private Function TranslateVarsInPath(input As String) As String
             input = input.Replace("%AppData%", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData))
             input = input.Replace("%LocalAppData%", Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))
             input = input.Replace("%Documents%", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
@@ -361,17 +361,17 @@ Namespace programFunctions
             Return input
         End Function
 
-        Public Function getINIVersionFromString(input As String) As String
+        Public Function GetINIVersionFromString(input As String) As String
             ' Special Regular Expression to extract the version of the INI file from the INI file's raw text.
             Return Regex.Match(input, "; Version: ([0-9.A-Za-z]+)").Groups(1).Value
         End Function
 
-        Public Function processFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function ProcessFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Dim directory As String = tempString.Split("|")(0).Replace("*", "")
 
-            If directory.caseInsensitiveContains("%ProgramFiles%") Then
+            If directory.CaseInsensitiveContains("%ProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.CaseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -380,7 +380,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.CaseInsensitiveReplace("%ProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -389,9 +389,9 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 End If
-            ElseIf directory.caseInsensitiveContains("%CommonProgramFiles%") Then
+            ElseIf directory.CaseInsensitiveContains("%CommonProgramFiles%") Then
                 If Environment.Is64BitOperatingSystem Then
-                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
+                    If Not IO.Directory.Exists(directory.CaseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) And Not IO.Directory.Exists(directory.Replace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -400,7 +400,7 @@ Namespace programFunctions
                     Else : Return True
                     End If
                 Else
-                    If Not IO.Directory.Exists(directory.caseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
+                    If Not IO.Directory.Exists(directory.CaseInsensitiveReplace("%CommonProgramFiles%", Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles))) Then
                         If Not sectionsToRemove.Contains(iniFileSection.Name) Then
                             sectionsToRemove.Add(iniFileSection.Name)
                             Return True
@@ -410,7 +410,7 @@ Namespace programFunctions
                     End If
                 End If
             Else
-                directory = translateVarsInPath(directory).Replace("*", "")
+                directory = TranslateVarsInPath(directory).Replace("*", "")
 
                 If Not IO.Directory.Exists(directory) Then
                     If Not sectionsToRemove.Contains(iniFileSection.Name) Then
@@ -425,13 +425,13 @@ Namespace programFunctions
             Return False
         End Function
 
-        Public Function processRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function ProcessRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Try
                 Dim regKey1, regKey2 As RegistryKey
                 If tempString.Contains(".NETFramework") Then Return True
 
                 If tempString.StartsWith("HKCU", StringComparison.OrdinalIgnoreCase) Then
-                    tempString = tempString.caseInsensitiveReplace("HKCU\", "")
+                    tempString = tempString.CaseInsensitiveReplace("HKCU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32)
@@ -471,7 +471,7 @@ Namespace programFunctions
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) Then
-                    tempString = tempString.caseInsensitiveReplace("HKLM\", "")
+                    tempString = tempString.CaseInsensitiveReplace("HKLM\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
@@ -511,7 +511,7 @@ Namespace programFunctions
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKCR", StringComparison.OrdinalIgnoreCase) Then
-                    tempString = tempString.caseInsensitiveReplace("HKCR\", "")
+                    tempString = tempString.CaseInsensitiveReplace("HKCR\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry32)
@@ -551,7 +551,7 @@ Namespace programFunctions
                         End If
                     End If
                 ElseIf tempString.StartsWith("HKU", StringComparison.OrdinalIgnoreCase) Then
-                    tempString = tempString.caseInsensitiveReplace("HKU\", "")
+                    tempString = tempString.CaseInsensitiveReplace("HKU\", "")
 
                     If Environment.Is64BitOperatingSystem Then
                         regKey1 = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry32)

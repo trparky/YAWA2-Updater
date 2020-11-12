@@ -7,7 +7,7 @@ Public Class Form1
     Private Const updateNeeded As String = "Update Needed"
     Private Const updateNotNeeded As String = "Update NOT Needed"
 
-    Sub addTask(taskName As String, taskDescription As String, taskEXEPath As String, taskParameters As String)
+    Sub AddTask(taskName As String, taskDescription As String, taskEXEPath As String, taskParameters As String)
         taskName = taskName.Trim
         taskDescription = taskDescription.Trim
         taskEXEPath = taskEXEPath.Trim
@@ -45,7 +45,7 @@ Public Class Form1
         taskService.Dispose()
     End Sub
 
-    Function doesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
+    Function DoesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
         Using taskServiceObject As TaskService = New TaskService
             taskObject = taskServiceObject.GetTask(nameOfTask)
             Return taskObject IsNot Nothing
@@ -54,33 +54,33 @@ Public Class Form1
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            Dim boolAreWeAnAdmin As Boolean = programFunctions.areWeAnAdministrator()
+            Dim boolAreWeAnAdmin As Boolean = programFunctions.AreWeAnAdministrator()
             lblAdmin.Visible = boolAreWeAnAdmin
             chkLoadAtUserStartup.Enabled = Not boolAreWeAnAdmin
 
-            newFileDeleter()
+            NewFileDeleter()
 
             If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
 
-            If programFunctions.areWeAnAdministrator() Then
+            If programFunctions.AreWeAnAdministrator() Then
                 Dim taskService As New TaskService
                 Dim taskObject As Task = Nothing
 
                 chkLoadAtUserStartup.Enabled = True
 
-                If doesTaskExist("WinApp.ini Updater", taskObject) Then
-                    addTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
+                If DoesTaskExist("WinApp.ini Updater", taskObject) Then
+                    AddTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
                     taskService.RootFolder.DeleteTask("WinApp.ini Updater")
                     chkLoadAtUserStartup.Checked = True
-                ElseIf doesTaskExist("YAWA2 Updater (User " & Environment.UserName & ")", taskObject) Then
+                ElseIf DoesTaskExist("YAWA2 Updater (User " & Environment.UserName & ")", taskObject) Then
                     chkLoadAtUserStartup.Checked = True
                 End If
 
                 taskService.Dispose()
                 taskService = Nothing
-            ElseIf Not programFunctions.areWeAnAdministrator() Then : chkLoadAtUserStartup.Enabled = False
+            ElseIf Not programFunctions.AreWeAnAdministrator() Then : chkLoadAtUserStartup.Enabled = False
             Else : chkLoadAtUserStartup.Visible = False
             End If
 
@@ -88,11 +88,11 @@ Public Class Form1
             chkNotifyAfterUpdateatLogon.Checked = programVariables.boolNotifyAfterUpdateAtLogon
             chkMobileMode.Checked = programVariables.boolMobileMode
 
-            strLocationOfCCleaner = getLocationOfCCleaner()
+            strLocationOfCCleaner = GetLocationOfCCleaner()
 
             If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
                 Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                    localINIFileVersion = programFunctions.getINIVersionFromString(streamReader.ReadLine)
+                    localINIFileVersion = programFunctions.GetINIVersionFromString(streamReader.ReadLine)
                 End Using
             Else : localINIFileVersion = "(Not Installed)"
             End If
@@ -104,20 +104,20 @@ Public Class Form1
                     txtCustomEntries.Text = customEntriesFileReader.ReadToEnd.Trim
                 End Using
 
-                programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.convertToBase64(txtCustomEntries.Text))
+                programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.ConvertToBase64(txtCustomEntries.Text))
                 IO.File.Delete(programConstants.customEntriesFile)
             Else
                 Dim customINIFileEntries As String = Nothing ' This variable is used in a ByRef method later in this routine.
 
                 ' Check if the setting in the INI file exists.
-                If programFunctions.loadSettingFromINIFile(programConstants.configINICustomEntriesKey, customINIFileEntries) Then
+                If programFunctions.LoadSettingFromINIFile(programConstants.configINICustomEntriesKey, customINIFileEntries) Then
                     ' Yes, it does; let's work with it.
-                    If programFunctions.isBase64(customINIFileEntries) Then ' Checks to see if the data from the INI file is valid Base64 encoded data.
-                        customINIFileEntries = programFunctions.convertFromBase64(customINIFileEntries) ' Yes it is... so let's decode the Base64 data back into human readable data.
+                    If programFunctions.IsBase64(customINIFileEntries) Then ' Checks to see if the data from the INI file is valid Base64 encoded data.
+                        customINIFileEntries = programFunctions.ConvertFromBase64(customINIFileEntries) ' Yes it is... so let's decode the Base64 data back into human readable data.
                         txtCustomEntries.Text = customINIFileEntries ' Put the data into the GUI.
                         customINIFileEntries = Nothing ' Free up memory.
                     Else
-                        programFunctions.removeSettingFromINIFile(programConstants.configINICustomEntriesKey) ' Remove the offending data from the INI file.
+                        programFunctions.RemoveSettingFromINIFile(programConstants.configINICustomEntriesKey) ' Remove the offending data from the INI file.
                         MsgBox("Invalid Base64 encoded data found in custom entries key in config INI file. The invalid data has been removed.", MsgBoxStyle.Information, "WinApp.ini Updater") ' Tell the user that bad data was found and that it has been removed from the INI file.
                     End If
                 End If
@@ -125,20 +125,20 @@ Public Class Form1
 
             chkUseSSL.Checked = globalVariables.boolUseSSL
 
-            Threading.ThreadPool.QueueUserWorkItem(AddressOf getINIVersion)
+            Threading.ThreadPool.QueueUserWorkItem(AddressOf GetINIVersion)
         Catch ex As Exception
             MsgBox(ex.Message)
         End Try
     End Sub
 
-    Function getLocationOfCCleaner() As String
+    Function GetLocationOfCCleaner() As String
         Dim msgBoxResult As MsgBoxResult
 
         If programVariables.boolMobileMode Then
             'strLocationOfCCleaner = New IO.FileInfo(Application.ExecutablePath).DirectoryName
             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
         Else
-            If Not programFunctions.areWeAnAdministrator() And Short.Parse(Environment.OSVersion.Version.Major) >= 6 Then
+            If Not programFunctions.AreWeAnAdministrator() And Short.Parse(Environment.OSVersion.Version.Major) >= 6 Then
                 Dim startInfo As New ProcessStartInfo With {.FileName = Process.GetCurrentProcess.MainModule.FileName, .Verb = "runas"}
                 Process.Start(startInfo)
                 Process.GetCurrentProcess.Kill()
@@ -152,7 +152,7 @@ Public Class Form1
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
-                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
+                            programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -168,7 +168,7 @@ Public Class Form1
 
                         If msgBoxResult = Microsoft.VisualBasic.MsgBoxResult.Yes Then
                             programVariables.boolMobileMode = True
-                            programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
+                            programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -186,9 +186,9 @@ Public Class Form1
         End If
     End Function
 
-    Sub getINIVersion()
+    Sub GetINIVersion()
         Try
-            remoteINIFileVersion = programFunctions.getRemoteINIFileVersion()
+            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
             If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                 MsgBox("Error Retrieving Remote INI File Version.  Please try again.", MsgBoxStyle.Critical, "WinApp.ini Updater")
@@ -229,20 +229,20 @@ Public Class Form1
         End Try
     End Sub
 
-    Private Sub btnSaveCustomEntries_Click(sender As Object, e As EventArgs) Handles btnSaveCustomEntries.Click
+    Private Sub BtnSaveCustomEntries_Click(sender As Object, e As EventArgs) Handles btnSaveCustomEntries.Click
         If txtCustomEntries.Text.Trim = Nothing Then
-            programFunctions.removeSettingFromINIFile(programConstants.configINICustomEntriesKey)
+            programFunctions.RemoveSettingFromINIFile(programConstants.configINICustomEntriesKey)
         Else
-            programFunctions.saveSettingToINIFile(programConstants.configINICustomEntriesKey, Convert.ToBase64String(Encoding.UTF8.GetBytes(txtCustomEntries.Text)))
+            programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, Convert.ToBase64String(Encoding.UTF8.GetBytes(txtCustomEntries.Text)))
         End If
 
         MsgBox("Your custom entries have been saved.", MsgBoxStyle.Information, "WinApp.ini Updater")
     End Sub
 
-    Private Sub downloadINIFileAndSaveIt(Optional boolUpdateLabelOnGUI As Boolean = False)
+    Private Sub DownloadINIFileAndSaveIt(Optional boolUpdateLabelOnGUI As Boolean = False)
         Dim remoteINIFileData As String = Nothing
 
-        If internetFunctions.createNewHTTPHelperObject().getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
+        If internetFunctions.CreateNewHTTPHelperObject().GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 streamWriter.Write(If(String.IsNullOrEmpty(txtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf))
             End Using
@@ -257,12 +257,12 @@ Public Class Form1
 
                           If chkTrim.Checked Then
                               MsgBox("New CCleaner WinApp2.ini File Saved.  Trimming of INI file will now commence.", MsgBoxStyle.Information, "WinApp.ini Updater")
-                              programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
+                              programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
                           Else
                               If programVariables.boolMobileMode Then
                                   MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, "WinApp.ini Updater")
                               Else
-                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then programFunctions.runCCleaner(strLocationOfCCleaner)
+                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Information + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
                               End If
                           End If
                       End Sub)
@@ -271,23 +271,23 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub btnTrim_Click(sender As Object, e As EventArgs) Handles btnTrim.Click
+    Private Sub BtnTrim_Click(sender As Object, e As EventArgs) Handles btnTrim.Click
         Threading.ThreadPool.QueueUserWorkItem(Sub()
-                                                   programFunctions.trimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
+                                                   programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
                                                End Sub)
     End Sub
 
-    Private Sub btnApplyNewINIFile_Click(sender As Object, e As EventArgs) Handles btnApplyNewINIFile.Click
-        Threading.ThreadPool.QueueUserWorkItem(Sub() downloadINIFileAndSaveIt(True))
+    Private Sub BtnApplyNewINIFile_Click(sender As Object, e As EventArgs) Handles btnApplyNewINIFile.Click
+        Threading.ThreadPool.QueueUserWorkItem(Sub() DownloadINIFileAndSaveIt(True))
     End Sub
 
-    Private Sub btnReDownload_Click(sender As Object, e As EventArgs) Handles btnReDownload.Click
-        Threading.ThreadPool.QueueUserWorkItem(Sub() downloadINIFileAndSaveIt())
+    Private Sub BtnReDownload_Click(sender As Object, e As EventArgs) Handles btnReDownload.Click
+        Threading.ThreadPool.QueueUserWorkItem(Sub() DownloadINIFileAndSaveIt())
     End Sub
 
-    Private Sub chkLoadAtUserStartup_Click(sender As Object, e As EventArgs) Handles chkLoadAtUserStartup.Click
+    Private Sub ChkLoadAtUserStartup_Click(sender As Object, e As EventArgs) Handles chkLoadAtUserStartup.Click
         If chkLoadAtUserStartup.Checked Then
-            addTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
+            AddTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
         Else
             Using taskService As New TaskService
                 taskService.RootFolder.DeleteTask("YAWA2 Updater")
@@ -299,19 +299,19 @@ Public Class Form1
     ' ==== Updater Code Below ====
     ' ============================
 
-    Private Sub btnCheckForUpdates_Click(sender As Object, e As EventArgs) Handles btnCheckForUpdates.Click
+    Private Sub BtnCheckForUpdates_Click(sender As Object, e As EventArgs) Handles btnCheckForUpdates.Click
         Threading.ThreadPool.QueueUserWorkItem(Sub()
                                                    Dim checkForUpdatesClassObject As New Check_for_Update_Stuff(Me)
-                                                   checkForUpdatesClassObject.checkForUpdates()
+                                                   checkForUpdatesClassObject.CheckForUpdates()
                                                End Sub)
         btnCheckForUpdates.Enabled = False
     End Sub
 
-    Public Function checkForInternetConnection() As Boolean
+    Public Function CheckForInternetConnection() As Boolean
         Return My.Computer.Network.IsAvailable
     End Function
 
-    Private Sub btnAbout_Click(sender As Object, e As EventArgs) Handles btnAbout.Click
+    Private Sub BtnAbout_Click(sender As Object, e As EventArgs) Handles btnAbout.Click
         Dim version() As String = Application.ProductVersion.Split(".".ToCharArray) ' Gets the program version
         Dim stringBuilder As New Text.StringBuilder
 
@@ -324,23 +324,23 @@ Public Class Form1
         MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, "About")
     End Sub
 
-    Private Sub chkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINInotifyAfterUpdateAtLogonKey, If(chkNotifyAfterUpdateatLogon.Checked, 1, 0))
+    Private Sub ChkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
+        programFunctions.SaveSettingToINIFile(programConstants.configINInotifyAfterUpdateAtLogonKey, If(chkNotifyAfterUpdateatLogon.Checked, 1, 0))
     End Sub
 
-    Private Sub chkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINIMobileModeKey, If(chkMobileMode.Checked, 1, 0))
+    Private Sub ChkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
+        programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, If(chkMobileMode.Checked, 1, 0))
         programVariables.boolMobileMode = chkMobileMode.Checked
         chkLoadAtUserStartup.Enabled = Not chkMobileMode.Checked
-        getLocationOfCCleaner()
+        GetLocationOfCCleaner()
     End Sub
 
-    Private Sub chkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINITrimKey, If(chkTrim.Checked, 1, 0))
+    Private Sub ChkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
+        programFunctions.SaveSettingToINIFile(programConstants.configINITrimKey, If(chkTrim.Checked, 1, 0))
     End Sub
 
-    Private Sub chkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        programFunctions.saveSettingToINIFile(programConstants.configINIUseSSLKey, If(chkUseSSL.Checked, 1, 0))
+    Private Sub ChkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
+        programFunctions.SaveSettingToINIFile(programConstants.configINIUseSSLKey, If(chkUseSSL.Checked, 1, 0))
         globalVariables.boolUseSSL = chkUseSSL.Checked
     End Sub
 End Class

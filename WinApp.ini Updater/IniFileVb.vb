@@ -17,11 +17,11 @@ Public Class IniFile
         m_sections = New Hashtable(StringComparer.InvariantCultureIgnoreCase)
     End Sub
 
-    Public Sub loadINIFileFromText(rawINIText As String, Optional ByVal bMerge As Boolean = False)
-        loadINIFileFromStringReader(New StringReader(rawINIText), bMerge)
+    Public Sub LoadINIFileFromText(rawINIText As String, Optional ByVal bMerge As Boolean = False)
+        LoadINIFileFromStringReader(New StringReader(rawINIText), bMerge)
     End Sub
 
-    Public Sub loadINIFileFromStringReader(rawINIText As StringReader, Optional ByVal bMerge As Boolean = False)
+    Public Sub LoadINIFileFromStringReader(rawINIText As StringReader, Optional ByVal bMerge As Boolean = False)
         If Not bMerge Then
             RemoveAllSections()
         End If
@@ -65,7 +65,7 @@ Public Class IniFile
     End Sub
 
     ' Loads the Reads the data in the ini file into the IniFile object
-    Public Sub loadINIFileFromFile(ByVal sFileName As String, Optional ByVal bMerge As Boolean = False)
+    Public Sub LoadINIFileFromFile(ByVal sFileName As String, Optional ByVal bMerge As Boolean = False)
         If Not bMerge Then
             RemoveAllSections()
         End If
@@ -107,7 +107,7 @@ Public Class IniFile
         oReader.Close()
     End Sub
 
-    Public Function getRawINIText() As String
+    Public Function GetRawINIText() As String
         Dim stringWriter As New StringWriter
 
         For Each s As IniSection In Sections
