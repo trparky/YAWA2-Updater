@@ -213,41 +213,7 @@ Class Check_for_Update_Stuff
     End Function
 
     Private Shared Function CanIWriteToTheCurrentDirectory() As Boolean
-        Return CanIWriteThere(New FileInfo(Application.ExecutablePath).DirectoryName)
-    End Function
-
-    Private Shared Function RandomString(length As Integer) As String
-        Dim random As Random = New Random()
-        Dim builder As New Text.StringBuilder()
-        Dim ch As Char
-        Dim legalCharacters As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
-
-        For cntr As Integer = 0 To length
-            ch = legalCharacters.Substring(random.Next(0, legalCharacters.Length), 1)
-            builder.Append(ch)
-        Next
-
-        Return builder.ToString()
-    End Function
-
-    Private Shared Function CanIWriteThere(folderPath As String) As Boolean
-        ' We make sure we get valid folder path by taking off the leading slash.
-        If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
-
-        If String.IsNullOrEmpty(folderPath) Or Not Directory.Exists(folderPath) Then Return False
-
-        If CheckByFolderACLs(folderPath) Then
-            Try
-                Dim strRandomFileName As String = RandomString(15) & ".txt"
-                File.Create(Path.Combine(folderPath, strRandomFileName), 1, FileOptions.DeleteOnClose).Close()
-                If File.Exists(Path.Combine(folderPath, strRandomFileName)) Then File.Delete(Path.Combine(folderPath, strRandomFileName))
-                Return True
-            Catch ex As Exception
-                Return False
-            End Try
-        Else
-            Return False
-        End If
+        Return CheckByFolderACLs(New FileInfo(Application.ExecutablePath).DirectoryName)
     End Function
 
     Private Shared Function CheckByFolderACLs(folderPath As String) As Boolean
