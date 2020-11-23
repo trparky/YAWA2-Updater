@@ -250,7 +250,7 @@ Class Check_for_Update_Stuff
         End If
     End Function
 
-    Public Shared Function CheckByFolderACLs(folderPath As String) As Boolean
+    Private Shared Function CheckByFolderACLs(folderPath As String) As Boolean
         Try
             Dim directoryACLs As DirectorySecurity = Directory.GetAccessControl(folderPath)
             Dim directoryAccessRights As FileSystemAccessRule
