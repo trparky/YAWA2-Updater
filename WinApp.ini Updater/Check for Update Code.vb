@@ -212,11 +212,7 @@ Class Check_for_Update_Stuff
         End Try
     End Function
 
-    Private Shared Function CanIWriteToTheCurrentDirectory() As Boolean
-        Return CheckByFolderACLs(New FileInfo(Application.ExecutablePath).DirectoryName)
-    End Function
-
-    Private Shared Function CheckByFolderACLs(folderPath As String) As Boolean
+    Public Shared Function CheckFolderPermissionsByACLs(folderPath As String) As Boolean
         Try
             Dim directoryACLs As DirectorySecurity = Directory.GetAccessControl(folderPath)
             Dim directoryAccessRights As FileSystemAccessRule
@@ -343,7 +339,7 @@ Class Check_for_Update_Stuff
         End Using
 
         Dim startInfo As New ProcessStartInfo With {.FileName = newExecutableName, .Arguments = "-update"}
-        If Not CanIWriteToTheCurrentDirectory() Then startInfo.Verb = "runas"
+        If Not CheckFolderPermissionsByACLs(New FileInfo(Application.ExecutablePath).DirectoryName) Then startInfo.Verb = "runas"
         Process.Start(startInfo)
 
         Process.GetCurrentProcess.Kill()

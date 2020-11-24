@@ -45,7 +45,7 @@ Namespace programFunctions
             If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
             If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
 
-            If Check_for_Update_Stuff.CheckByFolderACLs(folderPath) Then
+            If Check_for_Update_Stuff.CheckFolderPermissionsByACLs(folderPath) Then
                 Try
                     IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
                     If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
