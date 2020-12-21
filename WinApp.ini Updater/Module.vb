@@ -34,25 +34,7 @@ Namespace programFunctions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
 
         Public Function CanIWriteToTheCurrentDirectory() As Boolean
-            Return CanIWriteThere(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
-        End Function
-
-        Private Function CanIWriteThere(folderPath As String) As Boolean
-            ' We make sure we get valid folder path by taking off the leading slash.
-            If folderPath.EndsWith("\") Then folderPath = folderPath.Substring(0, folderPath.Length - 1)
-            If String.IsNullOrEmpty(folderPath) Or Not IO.Directory.Exists(folderPath) Then Return False
-
-            If Check_for_Update_Stuff.CheckFolderPermissionsByACLs(folderPath) Then
-                Try
-                    IO.File.Create(IO.Path.Combine(folderPath, "test.txt"), 1, IO.FileOptions.DeleteOnClose).Close()
-                    If IO.File.Exists(IO.Path.Combine(folderPath, "test.txt")) Then IO.File.Delete(IO.Path.Combine(folderPath, "test.txt"))
-                    Return True
-                Catch ex As Exception
-                    Return False
-                End Try
-            Else
-                Return False
-            End If
+            Return Check_for_Update_Stuff.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
         End Function
 
         Public Function AreWeAnAdministrator() As Boolean
