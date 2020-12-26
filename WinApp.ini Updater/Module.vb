@@ -194,7 +194,12 @@ Namespace programFunctions
             Try
                 Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
-                Return If(httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, False), GetINIVersionFromString(strINIFileData), programConstants.errorRetrievingRemoteINIFileVersion)
+
+                If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 2048, False) Then
+                    Return GetINIVersionFromString(strINIFileData)
+                Else
+                    Return programConstants.errorRetrievingRemoteINIFileVersion
+                End If
             Catch ex As Exception
                 Return programConstants.errorRetrievingRemoteINIFileVersion
             End Try
