@@ -46,7 +46,7 @@ Namespace My
 
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
             If Environment.OSVersion.Version.Major = 5 And (Environment.OSVersion.Version.Minor = 1 Or Environment.OSVersion.Version.Minor = 2) Then
-                WPFCustomMessageBox.CustomMessageBox.ShowOK("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", "YAWA2 (Yet Another WinApp2.ini) Updater", "OK", Windows.MessageBoxImage.Error)
+                WPFCustomMessageBox.CustomMessageBox.ShowOK("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", "YAWA2 (Yet Another WinApp2.ini) Updater", programConstants.strOK, Windows.MessageBoxImage.Error)
                 e.Cancel = True
                 Exit Sub
             End If
@@ -106,7 +106,7 @@ Namespace My
                         Try
                             If Environment.Is64BitOperatingSystem Then
                                 If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, "OK", Windows.MessageBoxImage.Information)
+                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                                     e.Cancel = True
                                     Exit Sub
                                 Else
@@ -114,7 +114,7 @@ Namespace My
                                 End If
                             Else
                                 If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, "OK", Windows.MessageBoxImage.Information)
+                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                                     e.Cancel = True
                                     Exit Sub
                                 Else
@@ -122,7 +122,7 @@ Namespace My
                                 End If
                             End If
                         Catch ex As Exception
-                            WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, messageBoxTitle, "OK", Windows.MessageBoxImage.Information)
+                            WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                         End Try
                     End If
 
@@ -138,7 +138,7 @@ Namespace My
                         remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
-                            WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version. Please try again.", messageBoxTitle, "OK", Windows.MessageBoxImage.Error)
+                            WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version. Please try again.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
                             e.Cancel = True
                             Exit Sub
                         End If
@@ -176,7 +176,7 @@ Namespace My
                                     streamWriter.Write(If(String.IsNullOrWhiteSpace(stringCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & stringCustomEntries & vbCrLf))
                                 End Using
                             Else
-                                WPFCustomMessageBox.CustomMessageBox.ShowOK("There was an error while downloading the WinApp2.ini file.", messageBoxTitle, "OK", Windows.MessageBoxImage.Information)
+                                WPFCustomMessageBox.CustomMessageBox.ShowOK("There was an error while downloading the WinApp2.ini file.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                                 e.Cancel = True
                                 Exit Sub
                             End If
@@ -186,7 +186,7 @@ Namespace My
                             programFunctions.TrimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
-                        If programVariables.boolNotifyAfterUpdateAtLogon AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp2.ini File Updated", "Yes", "Not", Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
+                        If programVariables.boolNotifyAfterUpdateAtLogon AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp2.ini File Updated", programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
                             Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If
