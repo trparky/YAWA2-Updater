@@ -1,6 +1,6 @@
 ﻿Namespace internetFunctions
     Module Internet_Functions
-        Public Function CreateNewHTTPHelperObject() As HttpHelper
+        Public Function CreateNewHTTPHelperObject(boolUseSSL As Boolean) As HttpHelper
             Dim httpHelper As New HttpHelper With {.SetUserAgent = CreateHTTPUserAgentHeaderString(), .UseHTTPCompression = True, .SetProxyMode = True}
             httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
 

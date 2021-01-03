@@ -1,12 +1,14 @@
 ﻿Imports Microsoft.Win32
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
+Imports System.Xml.Serialization
 
 Namespace programConstants
     Module programConstants
         Public Const errorRetrievingRemoteINIFileVersion As String = "Error Retrieving Remote INI File Version"
         Public Const customEntriesFile As String = "YAWA2 Updater Custom Entries.txt"
         Public Const configINIFile As String = "YAWA2 Updater Config.ini"
+        Public Const configXMLFile As String = "YAWA2 Updater Config.xml"
 
         Public Const WinApp2INIFileURL As String = "https://raw.githubusercontent.com/MoscaDotTo/Winapp2/master/Winapp2.ini"
 
@@ -23,19 +25,15 @@ Namespace programConstants
     End Module
 End Namespace
 
-Module globalVariables
-    Public boolUseSSL As Boolean = True
-End Module
-
-Namespace programVariables
-    Module variables
-        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
-    End Module
-End Namespace
+Public Structure AppSettings
+    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
+    Public strCustomEntries As String
+End Structure
 
 Namespace programFunctions
     Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
+        Private ReadOnly LockObject As New Object
 
         Public Function CanIWriteToTheCurrentDirectory() As Boolean
             Return Check_for_Update_Stuff.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
@@ -134,37 +132,54 @@ Namespace programFunctions
             unknown
         End Enum
 
-        Public Sub SaveSettingToINIFile(setting As String, value As Boolean)
-            SaveSettingToINIFile(setting, If(value, "True", "False"))
+        Public Sub SaveSettingToAppSettingsXMLFile(AppSettingType As AppSettingType, boolValue As Boolean)
+            SyncLock LockObject
+                Dim AppSettings As New AppSettings
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+
+                If AppSettingType = AppSettingType.boolMobileMode Then
+                    AppSettings.boolMobileMode = boolValue
+                ElseIf AppSettingType = AppSettingType.boolTrim Then
+                    AppSettings.boolTrim = boolValue
+                ElseIf AppSettingType = AppSettingType.boolNotifyAfterUpdateAtLogon Then
+                    AppSettings.boolNotifyAfterUpdateAtLogon = boolValue
+                ElseIf AppSettingType = AppSettingType.boolUseSSL Then
+                    AppSettings.boolUseSSL = boolValue
+                End If
+
+                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                End Using
+            End SyncLock
         End Sub
 
-        Public Sub SaveSettingToINIFile(setting As String, value As Integer)
-            SaveSettingToINIFile(setting, value.ToString)
+        Public Sub SaveCustomEntriesToAppSettingsXMLFile(strValue As String)
+            SyncLock LockObject
+                Dim AppSettings As New AppSettings
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+
+                AppSettings.strCustomEntries = strValue
+
+                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                End Using
+            End SyncLock
         End Sub
 
-        Public Sub SaveSettingToINIFile(setting As String, value As String)
-            ' Check if the INI file exists.
-            If IO.File.Exists(programConstants.configINIFile) Then
-                ' Yes, it does exist; now let's load the file into memory.
-
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-
-                ' Now, we have to load the existing data into memory or we're going to end up overwriting the existing INI file with just
-                ' the setting we're setting now. Essentially you'd end up with an INI file with only one entry in it and that's bad.
-                iniFile.LoadINIFileFromFile(programConstants.configINIFile)
-
-                iniFile.SetKeyValue(programConstants.configINISettingSection, setting, value) ' We now set the value.
-                iniFile.Save(programConstants.configINIFile) ' Save what's in memory to disk.
-                iniFile = Nothing ' And destroy the INIFile object.
-            Else
-                ' No, it doesn't exist so we just create a new INI object with no prior data to load.
-
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-                iniFile.SetKeyValue(programConstants.configINISettingSection, setting, value) ' We now set the value.
-                iniFile.Save(programConstants.configINIFile) ' Save what's in memory to disk.
-                iniFile = Nothing ' And destroy the INIFile object.
-            End If
-        End Sub
+        Public Enum AppSettingType As Byte
+            boolMobileMode
+            boolTrim
+            boolNotifyAfterUpdateAtLogon
+            boolUseSSL
+        End Enum
 
         Public Function LoadSettingFromINIFile(ByVal settingKey As String, ByRef settingKeyValue As String) As Boolean
             Try
@@ -194,9 +209,9 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function GetRemoteINIFileVersion() As String
+        Public Function GetRemoteINIFileVersion(boolUseSSL As Boolean) As String
             Try
-                Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
+                Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject(boolUseSSL)
                 Dim strINIFileData As String = Nothing
 
                 If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 2048, False) Then
@@ -323,8 +338,14 @@ Namespace programFunctions
             newINIFileContents = Nothing
             rawINIFileContents = Nothing
 
+            Dim AppSettings As New AppSettings
+            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                AppSettings = xmlSerializerObject.Deserialize(streamReader)
+            End Using
+
             If Not boolSilentMode Then
-                If Not programVariables.boolMobileMode AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp.ini Updater", "Yes", "Not", Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
+                If Not AppSettings.boolMobileMode AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp.ini Updater", "Yes", "Not", Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     WPFCustomMessageBox.CustomMessageBox.ShowOK("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", "WinApp.ini Updater", "OK", Windows.MessageBoxImage.Information)

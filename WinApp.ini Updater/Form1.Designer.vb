@@ -26,7 +26,7 @@ Partial Class Form1
         Me.lblWebSiteVersion = New System.Windows.Forms.Label()
         Me.lblYourVersion = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.txtCustomEntries = New System.Windows.Forms.TextBox()
+        Me.TxtCustomEntries = New System.Windows.Forms.TextBox()
         Me.chkTrim = New System.Windows.Forms.CheckBox()
         Me.chkLoadAtUserStartup = New System.Windows.Forms.CheckBox()
         Me.chkNotifyAfterUpdateatLogon = New System.Windows.Forms.CheckBox()
@@ -38,7 +38,6 @@ Partial Class Form1
         Me.btnReDownload = New System.Windows.Forms.Button()
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
-        Me.btnSaveCustomEntries = New System.Windows.Forms.Button()
         Me.chkUseSSL = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
@@ -69,13 +68,13 @@ Partial Class Form1
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "Your Custom Entries"
         '
-        'txtCustomEntries
+        'TxtCustomEntries
         '
-        Me.txtCustomEntries.Location = New System.Drawing.Point(7, 89)
-        Me.txtCustomEntries.Multiline = True
-        Me.txtCustomEntries.Name = "txtCustomEntries"
-        Me.txtCustomEntries.Size = New System.Drawing.Size(646, 291)
-        Me.txtCustomEntries.TabIndex = 1
+        Me.TxtCustomEntries.Location = New System.Drawing.Point(7, 89)
+        Me.TxtCustomEntries.Multiline = True
+        Me.TxtCustomEntries.Name = "TxtCustomEntries"
+        Me.TxtCustomEntries.Size = New System.Drawing.Size(646, 291)
+        Me.TxtCustomEntries.TabIndex = 1
         '
         'chkTrim
         '
@@ -101,7 +100,7 @@ Partial Class Form1
         'chkNotifyAfterUpdateatLogon
         '
         Me.chkNotifyAfterUpdateatLogon.AutoSize = True
-        Me.chkNotifyAfterUpdateatLogon.Location = New System.Drawing.Point(486, 419)
+        Me.chkNotifyAfterUpdateatLogon.Location = New System.Drawing.Point(391, 390)
         Me.chkNotifyAfterUpdateatLogon.Name = "chkNotifyAfterUpdateatLogon"
         Me.chkNotifyAfterUpdateatLogon.Size = New System.Drawing.Size(161, 17)
         Me.chkNotifyAfterUpdateatLogon.TabIndex = 9
@@ -120,7 +119,7 @@ Partial Class Form1
         'chkMobileMode
         '
         Me.chkMobileMode.AutoSize = True
-        Me.chkMobileMode.Location = New System.Drawing.Point(560, 390)
+        Me.chkMobileMode.Location = New System.Drawing.Point(298, 390)
         Me.chkMobileMode.Name = "chkMobileMode"
         Me.chkMobileMode.Size = New System.Drawing.Size(87, 17)
         Me.chkMobileMode.TabIndex = 11
@@ -199,21 +198,10 @@ Partial Class Form1
         Me.btnApplyNewINIFile.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         Me.btnApplyNewINIFile.UseVisualStyleBackColor = True
         '
-        'btnSaveCustomEntries
-        '
-        Me.btnSaveCustomEntries.Image = Global.YAWA2_Updater.My.Resources.Resources.save
-        Me.btnSaveCustomEntries.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
-        Me.btnSaveCustomEntries.Location = New System.Drawing.Point(7, 386)
-        Me.btnSaveCustomEntries.Name = "btnSaveCustomEntries"
-        Me.btnSaveCustomEntries.Size = New System.Drawing.Size(219, 23)
-        Me.btnSaveCustomEntries.TabIndex = 2
-        Me.btnSaveCustomEntries.Text = "Save Your Custom Entries"
-        Me.btnSaveCustomEntries.UseVisualStyleBackColor = True
-        '
         'chkUseSSL
         '
         Me.chkUseSSL.AutoSize = True
-        Me.chkUseSSL.Location = New System.Drawing.Point(232, 390)
+        Me.chkUseSSL.Location = New System.Drawing.Point(12, 390)
         Me.chkUseSSL.Name = "chkUseSSL"
         Me.chkUseSSL.Size = New System.Drawing.Size(280, 17)
         Me.chkUseSSL.TabIndex = 14
@@ -237,8 +225,7 @@ Partial Class Form1
         Me.Controls.Add(Me.btnReDownload)
         Me.Controls.Add(Me.btnTrim)
         Me.Controls.Add(Me.btnApplyNewINIFile)
-        Me.Controls.Add(Me.btnSaveCustomEntries)
-        Me.Controls.Add(Me.txtCustomEntries)
+        Me.Controls.Add(Me.TxtCustomEntries)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.lblYourVersion)
         Me.Controls.Add(Me.lblWebSiteVersion)
@@ -254,8 +241,7 @@ Partial Class Form1
     Friend WithEvents lblWebSiteVersion As System.Windows.Forms.Label
     Friend WithEvents lblYourVersion As System.Windows.Forms.Label
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents txtCustomEntries As System.Windows.Forms.TextBox
-    Friend WithEvents btnSaveCustomEntries As System.Windows.Forms.Button
+    Friend WithEvents TxtCustomEntries As System.Windows.Forms.TextBox
     Friend WithEvents btnApplyNewINIFile As System.Windows.Forms.Button
     Friend WithEvents btnTrim As System.Windows.Forms.Button
     Friend WithEvents btnReDownload As System.Windows.Forms.Button

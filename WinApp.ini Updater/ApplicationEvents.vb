@@ -1,4 +1,5 @@
 ﻿Imports System.Text.RegularExpressions
+Imports System.Xml.Serialization
 Imports Microsoft.Win32
 
 Namespace My
@@ -53,45 +54,85 @@ Namespace My
 
             Dim remoteINIFileVersion, localINIFileVersion As String
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
-            Dim stringCustomEntries As String = Nothing
+            Dim strCustomEntries As String = Nothing
+            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
 
-            If IO.File.Exists(programConstants.configINIFile) Then
-                Dim iniFile As New IniFile()
-                iniFile.LoadINIFileFromFile(programConstants.configINIFile)
+            If IO.File.Exists("winapp.ini updater custom entries.txt") Then
+                IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
+            End If
 
-                If programFunctions.GetINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.SettingType.bool Then
-                    programVariables.boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
-                    programVariables.boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
-                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                    programVariables.boolUseSSL = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
+            If IO.File.Exists(programConstants.configXMLFile) Then
+                Dim AppSettings As New AppSettings
 
-                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(programVariables.boolMobileMode, 1, 0))
-                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(programVariables.boolTrim, 1, 0))
-                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(programVariables.boolNotifyAfterUpdateAtLogon, 1, 0))
-                    iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(programVariables.boolUseSSL, 1, 0))
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
 
-                    iniFile.Save(programConstants.configINIFile)
-                Else
-                    programVariables.boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
-                    programVariables.boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
-                    programVariables.boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                    programVariables.boolUseSSL = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
-                End If
+                boolUseSSL = AppSettings.boolUseSSL
+                strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
             Else
-                Dim iniFile As New IniFile()
-                iniFile.AddSection(programConstants.configINISettingSection)
+                If IO.File.Exists(programConstants.configINIFile) Then
+                    Dim iniFile As New IniFile()
+                    iniFile.LoadINIFileFromFile(programConstants.configINIFile)
 
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, 0)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, 0)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, 0)
-                iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, 1)
+                    strCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
 
-                programVariables.boolMobileMode = False
-                programVariables.boolTrim = False
-                programVariables.boolNotifyAfterUpdateAtLogon = False
-                programVariables.boolUseSSL = True
+                    If Not String.IsNullOrWhiteSpace(strCustomEntries) Then
+                        If programFunctions.IsBase64(strCustomEntries) Then
+                            strCustomEntries = programFunctions.ConvertFromBase64(strCustomEntries)
+                        Else
+                            strCustomEntries = Nothing
+                        End If
+                    End If
 
-                iniFile.Save(programConstants.configINIFile)
+                    If programFunctions.GetINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.SettingType.bool Then
+                        boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                        boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                        boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                        boolUseSSL = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
+
+                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(boolMobileMode, 1, 0))
+                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(boolTrim, 1, 0))
+                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(boolNotifyAfterUpdateAtLogon, 1, 0))
+                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(boolUseSSL, 1, 0))
+
+                        iniFile.Save(programConstants.configINIFile)
+                    Else
+                        boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
+                        boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
+                        boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                        boolUseSSL = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
+                    End If
+
+                    Dim AppSettings As New AppSettings With {
+                        .boolMobileMode = boolMobileMode,
+                        .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
+                        .boolTrim = boolTrim,
+                        .strCustomEntries = strCustomEntries,
+                        .boolUseSSL = boolUseSSL
+                    }
+
+                    Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                        Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                        xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                    End Using
+
+                    IO.File.Delete(programConstants.configINIFile)
+                Else
+                    Dim AppSettings As New AppSettings With {
+                        .boolMobileMode = False,
+                        .boolNotifyAfterUpdateAtLogon = False,
+                        .boolTrim = False,
+                        .strCustomEntries = "",
+                        .boolUseSSL = True
+                    }
+
+                    Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                        Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                        xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                    End Using
+                End If
             End If
 
             If My.Application.CommandLineArgs.Count = 1 Then
@@ -100,7 +141,7 @@ Namespace My
                 If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
                     Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
 
-                    If programVariables.boolMobileMode Then
+                    If boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName
                     Else
                         Try
@@ -135,7 +176,7 @@ Namespace My
                             localINIFileVersion = "(Not Installed)"
                         End If
 
-                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
+                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(boolUseSSL)
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                             WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version. Please try again.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
@@ -145,23 +186,23 @@ Namespace My
 
                         If IO.File.Exists(programConstants.customEntriesFile) Then
                             Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                                stringCustomEntries = customEntriesFileReader.ReadToEnd.Trim
+                                strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
                             End Using
 
-                            programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.ConvertToBase64(stringCustomEntries))
-                            IO.File.Delete(programConstants.customEntriesFile)
-                        Else
-                            Dim iniFile As New IniFile()
-                            iniFile.LoadINIFileFromFile(programConstants.configINIFile)
-                            stringCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
+                            Dim AppSettings As New AppSettings
+                            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                                AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                            End Using
 
-                            If Not String.IsNullOrWhiteSpace(stringCustomEntries) Then
-                                If programFunctions.IsBase64(stringCustomEntries) Then
-                                    stringCustomEntries = programFunctions.ConvertFromBase64(stringCustomEntries)
-                                Else
-                                    stringCustomEntries = Nothing
-                                End If
-                            End If
+                            AppSettings.strCustomEntries = strCustomEntries
+
+                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                            End Using
+
+                            IO.File.Delete(programConstants.customEntriesFile)
                         End If
 
                         If remoteINIFileVersion.Trim.Equals(localINIFileVersion.Trim, StringComparison.OrdinalIgnoreCase) Then
@@ -169,11 +210,11 @@ Namespace My
                             Exit Sub
                         Else
                             Dim remoteINIFileData As String = Nothing
-                            Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
+                            Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject(boolUseSSL)
 
                             If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
-                                    streamWriter.Write(If(String.IsNullOrWhiteSpace(stringCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & stringCustomEntries & vbCrLf))
+                                    streamWriter.Write(If(String.IsNullOrWhiteSpace(strCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & strCustomEntries & vbCrLf))
                                 End Using
                             Else
                                 WPFCustomMessageBox.CustomMessageBox.ShowOK("There was an error while downloading the WinApp2.ini file.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
@@ -182,11 +223,11 @@ Namespace My
                             End If
                         End If
 
-                        If programVariables.boolTrim Then
+                        If boolTrim Then
                             programFunctions.TrimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
-                        If programVariables.boolNotifyAfterUpdateAtLogon AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp2.ini File Updated", programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
+                        If boolNotifyAfterUpdateAtLogon AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp2.ini File Updated", programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
                             Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If

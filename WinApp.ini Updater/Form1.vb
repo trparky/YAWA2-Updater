@@ -1,12 +1,14 @@
 ﻿Imports Microsoft.Win32
 Imports Microsoft.Win32.TaskScheduler
 Imports System.Text
+Imports System.Xml.Serialization
 
 Public Class Form1
     Private strLocationOfCCleaner, remoteINIFileVersion, localINIFileVersion As String
     Private Const updateNeeded As String = "Update Needed"
     Private Const updateNotNeeded As String = "Update NOT Needed"
     Private Const strMessageBoxTitle As String = "WinApp.ini Updater"
+    Private boolDoneLoading As Boolean = False
 
     Sub AddTask(taskName As String, taskDescription As String, taskEXEPath As String, taskParameters As String)
         taskName = taskName.Trim
@@ -61,10 +63,6 @@ Public Class Form1
 
             NewFileDeleter()
 
-            If IO.File.Exists("winapp.ini updater custom entries.txt") Then
-                IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
-            End If
-
             If programFunctions.AreWeAnAdministrator() Then
                 Dim taskService As New TaskService
                 Dim taskObject As Task = Nothing
@@ -85,9 +83,17 @@ Public Class Form1
             Else : chkLoadAtUserStartup.Visible = False
             End If
 
-            chkTrim.Checked = programVariables.boolTrim
-            chkNotifyAfterUpdateatLogon.Checked = programVariables.boolNotifyAfterUpdateAtLogon
-            chkMobileMode.Checked = programVariables.boolMobileMode
+            Dim AppSettings As New AppSettings
+            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                AppSettings = xmlSerializerObject.Deserialize(streamReader)
+            End Using
+
+            If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then TxtCustomEntries.Text = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
+            chkTrim.Checked = AppSettings.boolTrim
+            chkNotifyAfterUpdateatLogon.Checked = AppSettings.boolNotifyAfterUpdateAtLogon
+            chkMobileMode.Checked = AppSettings.boolMobileMode
+            chkUseSSL.Checked = AppSettings.boolUseSSL
 
             strLocationOfCCleaner = GetLocationOfCCleaner()
 
@@ -100,33 +106,8 @@ Public Class Form1
 
             lblYourVersion.Text &= " " & localINIFileVersion
 
-            If IO.File.Exists(programConstants.customEntriesFile) Then
-                Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                    txtCustomEntries.Text = customEntriesFileReader.ReadToEnd.Trim
-                End Using
-
-                programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, programFunctions.ConvertToBase64(txtCustomEntries.Text))
-                IO.File.Delete(programConstants.customEntriesFile)
-            Else
-                Dim customINIFileEntries As String = Nothing ' This variable is used in a ByRef method later in this routine.
-
-                ' Check if the setting in the INI file exists.
-                If programFunctions.LoadSettingFromINIFile(programConstants.configINICustomEntriesKey, customINIFileEntries) Then
-                    ' Yes, it does; let's work with it.
-                    If programFunctions.IsBase64(customINIFileEntries) Then ' Checks to see if the data from the INI file is valid Base64 encoded data.
-                        customINIFileEntries = programFunctions.ConvertFromBase64(customINIFileEntries) ' Yes it is... so let's decode the Base64 data back into human readable data.
-                        txtCustomEntries.Text = customINIFileEntries ' Put the data into the GUI.
-                        customINIFileEntries = Nothing ' Free up memory.
-                    Else
-                        programFunctions.RemoveSettingFromINIFile(programConstants.configINICustomEntriesKey) ' Remove the offending data from the INI file.
-                        WPFCustomMessageBox.CustomMessageBox.ShowOK("Invalid Base64 encoded data found in custom entries key in config INI file. The invalid data has been removed.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information) ' Tell the user that bad data was found and that it has been removed from the INI file.
-                    End If
-                End If
-            End If
-
-            chkUseSSL.Checked = globalVariables.boolUseSSL
-
             Threading.ThreadPool.QueueUserWorkItem(AddressOf GetINIVersion)
+            boolDoneLoading = True
         Catch ex As Exception
             WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, strMessageBoxTitle, programConstants.strOK)
         End Try
@@ -135,7 +116,7 @@ Public Class Form1
     Function GetLocationOfCCleaner() As String
         Dim msgBoxResult As Windows.MessageBoxResult
 
-        If programVariables.boolMobileMode Then
+        If chkMobileMode.Checked Then
             'strLocationOfCCleaner = New IO.FileInfo(Application.ExecutablePath).DirectoryName
             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
         Else
@@ -152,8 +133,7 @@ Public Class Form1
                         msgBoxResult = WPFCustomMessageBox.CustomMessageBox.ShowYesNo("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question)
 
                         If msgBoxResult = Windows.MessageBoxResult.Yes Then
-                            programVariables.boolMobileMode = True
-                            programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
+                            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -168,8 +148,7 @@ Public Class Form1
                         msgBoxResult = WPFCustomMessageBox.CustomMessageBox.ShowYesNo("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question)
 
                         If msgBoxResult = Windows.MessageBoxResult.Yes Then
-                            programVariables.boolMobileMode = True
-                            programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, 1)
+                            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -189,7 +168,7 @@ Public Class Form1
 
     Sub GetINIVersion()
         Try
-            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
+            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(chkUseSSL.Checked)
 
             If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                 WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version.  Please try again.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
@@ -230,22 +209,12 @@ Public Class Form1
         End Try
     End Sub
 
-    Private Sub BtnSaveCustomEntries_Click(sender As Object, e As EventArgs) Handles btnSaveCustomEntries.Click
-        If txtCustomEntries.Text.Trim = Nothing Then
-            programFunctions.RemoveSettingFromINIFile(programConstants.configINICustomEntriesKey)
-        Else
-            programFunctions.SaveSettingToINIFile(programConstants.configINICustomEntriesKey, Convert.ToBase64String(Encoding.UTF8.GetBytes(txtCustomEntries.Text)))
-        End If
-
-        WPFCustomMessageBox.CustomMessageBox.ShowOK("Your custom entries have been saved.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
-    End Sub
-
     Private Sub DownloadINIFileAndSaveIt(Optional boolUpdateLabelOnGUI As Boolean = False)
         Dim remoteINIFileData As String = Nothing
 
-        If internetFunctions.CreateNewHTTPHelperObject().GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
+        If internetFunctions.CreateNewHTTPHelperObject(chkUseSSL.Checked).GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                streamWriter.Write(If(String.IsNullOrEmpty(txtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & txtCustomEntries.Text & vbCrLf))
+                streamWriter.Write(If(String.IsNullOrEmpty(TxtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & TxtCustomEntries.Text & vbCrLf))
             End Using
 
             Me.Invoke(Sub()
@@ -260,7 +229,7 @@ Public Class Form1
                               WPFCustomMessageBox.CustomMessageBox.ShowOK("New CCleaner WinApp2.ini File Saved. Trimming of INI file will now commence.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                               programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
                           Else
-                              If programVariables.boolMobileMode Then
+                              If chkMobileMode.Checked Then
                                   WPFCustomMessageBox.CustomMessageBox.ShowOK("New CCleaner WinApp2.ini File Saved.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
                               Else
                                   If WPFCustomMessageBox.CustomMessageBox.ShowYesNo("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
@@ -326,22 +295,27 @@ Public Class Form1
     End Sub
 
     Private Sub ChkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
-        programFunctions.SaveSettingToINIFile(programConstants.configINInotifyAfterUpdateAtLogonKey, If(chkNotifyAfterUpdateatLogon.Checked, 1, 0))
+        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolNotifyAfterUpdateAtLogon, chkNotifyAfterUpdateatLogon.Checked)
     End Sub
 
     Private Sub ChkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
-        programFunctions.SaveSettingToINIFile(programConstants.configINIMobileModeKey, If(chkMobileMode.Checked, 1, 0))
-        programVariables.boolMobileMode = chkMobileMode.Checked
+        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, chkMobileMode.Checked)
         chkLoadAtUserStartup.Enabled = Not chkMobileMode.Checked
         GetLocationOfCCleaner()
     End Sub
 
     Private Sub ChkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
-        programFunctions.SaveSettingToINIFile(programConstants.configINITrimKey, If(chkTrim.Checked, 1, 0))
+        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolTrim, chkTrim.Checked)
     End Sub
 
     Private Sub ChkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        programFunctions.SaveSettingToINIFile(programConstants.configINIUseSSLKey, If(chkUseSSL.Checked, 1, 0))
-        globalVariables.boolUseSSL = chkUseSSL.Checked
+        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolUseSSL, chkUseSSL.Checked)
+    End Sub
+
+    Private Sub TxtCustomEntries_TextChanged(sender As Object, e As EventArgs) Handles TxtCustomEntries.TextChanged
+        If boolDoneLoading Then
+            TxtCustomEntries.Text = TxtCustomEntries.Text
+            programFunctions.SaveCustomEntriesToAppSettingsXMLFile(TxtCustomEntries.Text)
+        End If
     End Sub
 End Class
