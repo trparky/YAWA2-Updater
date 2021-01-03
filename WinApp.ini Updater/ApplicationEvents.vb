@@ -169,9 +169,9 @@ Namespace My
                             Exit Sub
                         Else
                             Dim remoteINIFileData As String = Nothing
-                            Dim httpHelper As httpHelper = internetFunctions.CreateNewHTTPHelperObject()
+                            Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
 
-                            If httpHelper.getWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
+                            If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
                                     streamWriter.Write(If(String.IsNullOrWhiteSpace(stringCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & stringCustomEntries & vbCrLf))
                                 End Using
