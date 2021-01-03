@@ -84,10 +84,12 @@ Public Class Form1
             End If
 
             Dim AppSettings As New AppSettings
-            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-            End Using
+            SyncLock programFunctions.LockObject
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+            End SyncLock
 
             If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then TxtCustomEntries.Text = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
             chkTrim.Checked = AppSettings.boolTrim

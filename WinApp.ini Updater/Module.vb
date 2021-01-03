@@ -33,7 +33,7 @@ End Structure
 Namespace programFunctions
     Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
-        Private ReadOnly LockObject As New Object
+        Public ReadOnly LockObject As New Object
 
         Public Function CanIWriteToTheCurrentDirectory() As Boolean
             Return Check_for_Update_Stuff.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
@@ -339,10 +339,12 @@ Namespace programFunctions
             rawINIFileContents = Nothing
 
             Dim AppSettings As New AppSettings
-            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-            End Using
+            SyncLock LockObject
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+            End SyncLock
 
             If Not boolSilentMode Then
                 If Not AppSettings.boolMobileMode AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp.ini Updater", "Yes", "Not", Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then

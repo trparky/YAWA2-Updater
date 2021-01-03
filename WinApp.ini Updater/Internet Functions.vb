@@ -7,11 +7,12 @@ Namespace internetFunctions
             httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
 
             Dim AppSettings As New AppSettings
-
-            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-            End Using
+            SyncLock programFunctions.LockObject
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+            End SyncLock
 
             httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try

@@ -64,10 +64,12 @@ Namespace My
             If IO.File.Exists(programConstants.configXMLFile) Then
                 Dim AppSettings As New AppSettings
 
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
+                SyncLock programFunctions.LockObject
+                    Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                        Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                        AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                    End Using
+                End SyncLock
 
                 boolUseSSL = AppSettings.boolUseSSL
                 strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
@@ -113,10 +115,12 @@ Namespace My
                         .boolUseSSL = boolUseSSL
                     }
 
-                    Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                        Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                        xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                    End Using
+                    SyncLock programFunctions.LockObject
+                        Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                            Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                            xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                        End Using
+                    End SyncLock
 
                     IO.File.Delete(programConstants.configINIFile)
                 Else
@@ -128,10 +132,12 @@ Namespace My
                         .boolUseSSL = True
                     }
 
-                    Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                        Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                        xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                    End Using
+                    SyncLock programFunctions.LockObject
+                        Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                            Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                            xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                        End Using
+                    End SyncLock
                 End If
             End If
 
@@ -185,24 +191,26 @@ Namespace My
                         End If
 
                         If IO.File.Exists(programConstants.customEntriesFile) Then
-                            Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                                strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
-                            End Using
+                            SyncLock programFunctions.LockObject
+                                Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
+                                    strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
+                                End Using
 
-                            Dim AppSettings As New AppSettings
-                            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                            End Using
+                                Dim AppSettings As New AppSettings
+                                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                                End Using
 
-                            AppSettings.strCustomEntries = strCustomEntries
+                                AppSettings.strCustomEntries = strCustomEntries
 
-                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                            End Using
+                                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                                End Using
 
-                            IO.File.Delete(programConstants.customEntriesFile)
+                                IO.File.Delete(programConstants.customEntriesFile)
+                            End SyncLock
                         End If
 
                         If remoteINIFileVersion.Trim.Equals(localINIFileVersion.Trim, StringComparison.OrdinalIgnoreCase) Then
