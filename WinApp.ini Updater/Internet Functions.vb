@@ -1,13 +1,22 @@
-﻿Namespace internetFunctions
+﻿Imports System.Xml.Serialization
+
+Namespace internetFunctions
     Module Internet_Functions
-        Public Function CreateNewHTTPHelperObject(boolUseSSL As Boolean) As HttpHelper
+        Public Function CreateNewHTTPHelperObject() As HttpHelper
             Dim httpHelper As New HttpHelper With {.SetUserAgent = CreateHTTPUserAgentHeaderString(), .UseHTTPCompression = True, .SetProxyMode = True}
             httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
+
+            Dim AppSettings As New AppSettings
+
+            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                AppSettings = xmlSerializerObject.Deserialize(streamReader)
+            End Using
 
             httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try
                                                     If Not strURLInput.Trim.ToLower.StartsWith("http") Then
-                                                        Return If(boolUseSSL, "https://", "http://") & strURLInput
+                                                        Return If(AppSettings.boolUseSSL, "https://", "http://") & strURLInput
                                                     Else
                                                         Return strURLInput
                                                     End If

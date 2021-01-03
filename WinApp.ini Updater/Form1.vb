@@ -168,7 +168,7 @@ Public Class Form1
 
     Sub GetINIVersion()
         Try
-            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(chkUseSSL.Checked)
+            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
             If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                 WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version.  Please try again.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
@@ -212,7 +212,7 @@ Public Class Form1
     Private Sub DownloadINIFileAndSaveIt(Optional boolUpdateLabelOnGUI As Boolean = False)
         Dim remoteINIFileData As String = Nothing
 
-        If internetFunctions.CreateNewHTTPHelperObject(chkUseSSL.Checked).GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
+        If internetFunctions.CreateNewHTTPHelperObject().GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 streamWriter.Write(If(String.IsNullOrEmpty(TxtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & TxtCustomEntries.Text & vbCrLf))
             End Using

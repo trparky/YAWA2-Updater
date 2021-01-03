@@ -176,7 +176,7 @@ Namespace My
                             localINIFileVersion = "(Not Installed)"
                         End If
 
-                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(boolUseSSL)
+                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                             WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version. Please try again.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
@@ -210,7 +210,7 @@ Namespace My
                             Exit Sub
                         Else
                             Dim remoteINIFileData As String = Nothing
-                            Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject(boolUseSSL)
+                            Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
 
                             If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))

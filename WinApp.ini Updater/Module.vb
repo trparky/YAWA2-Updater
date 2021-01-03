@@ -209,9 +209,9 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function GetRemoteINIFileVersion(boolUseSSL As Boolean) As String
+        Public Function GetRemoteINIFileVersion() As String
             Try
-                Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject(boolUseSSL)
+                Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
 
                 If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 2048, False) Then
