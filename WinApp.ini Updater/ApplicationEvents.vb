@@ -73,6 +73,8 @@ Namespace My
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
 
+            If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
+
             If IO.File.Exists(programConstants.configXMLFile) Then
                 Dim AppSettings As New AppSettings
 
