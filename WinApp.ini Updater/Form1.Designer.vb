@@ -39,7 +39,7 @@ Partial Class Form1
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
         Me.chkUseSSL = New System.Windows.Forms.CheckBox()
-        Me.chkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
+        Me.ChkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'lblWebSiteVersion
@@ -209,22 +209,22 @@ Partial Class Form1
         Me.chkUseSSL.Text = "Use SSL to check for and download program updates"
         Me.chkUseSSL.UseVisualStyleBackColor = True
         '
-        'chkSleepOnSilentStartup
+        'ChkSleepOnSilentStartup
         '
-        Me.chkSleepOnSilentStartup.AutoSize = True
-        Me.chkSleepOnSilentStartup.Location = New System.Drawing.Point(464, 412)
-        Me.chkSleepOnSilentStartup.Name = "chkSleepOnSilentStartup"
-        Me.chkSleepOnSilentStartup.Size = New System.Drawing.Size(159, 30)
-        Me.chkSleepOnSilentStartup.TabIndex = 15
-        Me.chkSleepOnSilentStartup.Text = "Sleep for 30 seconds before" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "processing at user logon"
-        Me.chkSleepOnSilentStartup.UseVisualStyleBackColor = True
+        Me.ChkSleepOnSilentStartup.AutoSize = True
+        Me.ChkSleepOnSilentStartup.Location = New System.Drawing.Point(464, 412)
+        Me.ChkSleepOnSilentStartup.Name = "ChkSleepOnSilentStartup"
+        Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(159, 30)
+        Me.ChkSleepOnSilentStartup.TabIndex = 15
+        Me.ChkSleepOnSilentStartup.Text = "Sleep for 30 seconds before" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "processing at user logon"
+        Me.ChkSleepOnSilentStartup.UseVisualStyleBackColor = True
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(659, 445)
-        Me.Controls.Add(Me.chkSleepOnSilentStartup)
+        Me.Controls.Add(Me.ChkSleepOnSilentStartup)
         Me.Controls.Add(Me.chkUseSSL)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
@@ -266,5 +266,5 @@ Partial Class Form1
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
     Friend WithEvents chkUseSSL As CheckBox
-    Friend WithEvents chkSleepOnSilentStartup As CheckBox
+    Friend WithEvents ChkSleepOnSilentStartup As CheckBox
 End Class
