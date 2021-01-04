@@ -68,7 +68,7 @@ Namespace My
             End Try
         End Function
 
-        Private Sub SettingsFileConversionCode(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef boolUseSSL As Boolean, ByRef strCustomEntries As String)
+        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef boolUseSSL As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
             If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
@@ -84,6 +84,7 @@ Namespace My
                 End SyncLock
 
                 boolUseSSL = AppSettings.boolUseSSL
+                boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
                 strCustomEntries = Nothing
                 If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
             Else
@@ -125,7 +126,8 @@ Namespace My
                         .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
                         .boolTrim = boolTrim,
                         .strCustomEntries = strCustomEntries,
-                        .boolUseSSL = boolUseSSL
+                        .boolUseSSL = boolUseSSL,
+                        .boolSleepOnSilentStartup = True
                     }
 
                     SyncLock programFunctions.LockObject
@@ -142,7 +144,8 @@ Namespace My
                         .boolNotifyAfterUpdateAtLogon = False,
                         .boolTrim = False,
                         .strCustomEntries = "",
-                        .boolUseSSL = True
+                        .boolUseSSL = True,
+                        .boolSleepOnSilentStartup = True
                     }
 
                     SyncLock programFunctions.LockObject
@@ -165,15 +168,15 @@ Namespace My
             Dim remoteINIFileVersion, localINIFileVersion As String
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim strCustomEntries As String = Nothing
-            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
+            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, boolSleepOnSilentStartup As Boolean
 
-            SettingsFileConversionCode(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, strCustomEntries)
+            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, strCustomEntries, boolSleepOnSilentStartup)
 
             If My.Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = My.Application.CommandLineArgs(0).Trim
 
                 If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
-                    Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
+                    If boolSleepOnSilentStartup Then Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
 
                     If boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName

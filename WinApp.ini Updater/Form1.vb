@@ -96,6 +96,7 @@ Public Class Form1
             chkNotifyAfterUpdateatLogon.Checked = AppSettings.boolNotifyAfterUpdateAtLogon
             chkMobileMode.Checked = AppSettings.boolMobileMode
             chkUseSSL.Checked = AppSettings.boolUseSSL
+            chkSleepOnSilentStartup.Checked = AppSettings.boolSleepOnSilentStartup
 
             strLocationOfCCleaner = GetLocationOfCCleaner()
 
@@ -319,5 +320,9 @@ Public Class Form1
             TxtCustomEntries.Text = TxtCustomEntries.Text
             programFunctions.SaveCustomEntriesToAppSettingsXMLFile(TxtCustomEntries.Text)
         End If
+    End Sub
+
+    Private Sub chkSleepOnSilentStartup_Click(sender As Object, e As EventArgs) Handles chkSleepOnSilentStartup.Click
+        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolSleepOnSilentStartup, chkSleepOnSilentStartup.Checked)
     End Sub
 End Class

@@ -26,7 +26,7 @@ Namespace programConstants
 End Namespace
 
 Public Structure AppSettings
-    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
+    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, boolSleepOnSilentStartup As Boolean
     Public strCustomEntries As String
 End Structure
 
@@ -148,6 +148,8 @@ Namespace programFunctions
                     AppSettings.boolNotifyAfterUpdateAtLogon = boolValue
                 ElseIf AppSettingType = AppSettingType.boolUseSSL Then
                     AppSettings.boolUseSSL = boolValue
+                ElseIf AppSettingType = AppSettingType.boolSleepOnSilentStartup Then
+                    AppSettings.boolSleepOnSilentStartup = boolValue
                 End If
 
                 Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
@@ -179,6 +181,7 @@ Namespace programFunctions
             boolTrim
             boolNotifyAfterUpdateAtLogon
             boolUseSSL
+            boolSleepOnSilentStartup
         End Enum
 
         Public Function LoadSettingFromINIFile(ByVal settingKey As String, ByRef settingKeyValue As String) As Boolean
