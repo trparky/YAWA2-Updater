@@ -72,7 +72,8 @@ Namespace My
                 End SyncLock
 
                 boolUseSSL = AppSettings.boolUseSSL
-                strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
+                strCustomEntries = Nothing
+                If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
             Else
                 If IO.File.Exists(programConstants.configINIFile) Then
                     Dim iniFile As New IniFile()
