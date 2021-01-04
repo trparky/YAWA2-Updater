@@ -45,18 +45,30 @@ Namespace My
             End Try
         End Sub
 
-        Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
-            If Environment.OSVersion.Version.Major = 5 And (Environment.OSVersion.Version.Minor = 1 Or Environment.OSVersion.Version.Minor = 2) Then
-                WPFCustomMessageBox.CustomMessageBox.ShowOK("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", "YAWA2 (Yet Another WinApp2.ini) Updater", programConstants.strOK, Windows.MessageBoxImage.Error)
-                e.Cancel = True
-                Exit Sub
-            End If
+        Private Function FindCCleaner() As String
+            Try
+                If Environment.Is64BitOperatingSystem Then
+                    If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
+                        WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                        Return Nothing
+                    Else
+                        Return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
+                    End If
+                Else
+                    If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
+                        WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                        Return Nothing
+                    Else
+                        Return Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
+                    End If
+                End If
+            Catch ex As Exception
+                WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                Return Nothing
+            End Try
+        End Function
 
-            Dim remoteINIFileVersion, localINIFileVersion As String
-            Dim strLocationToSaveWinAPP2INIFile As String = Nothing
-            Dim strCustomEntries As String = Nothing
-            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
-
+        Private Sub SettingsFileConversionCode(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef boolUseSSL As Boolean, ByRef strCustomEntries As String)
             If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
@@ -141,6 +153,21 @@ Namespace My
                     End SyncLock
                 End If
             End If
+        End Sub
+
+        Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
+            If Environment.OSVersion.Version.Major = 5 And (Environment.OSVersion.Version.Minor = 1 Or Environment.OSVersion.Version.Minor = 2) Then
+                WPFCustomMessageBox.CustomMessageBox.ShowOK("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", "YAWA2 (Yet Another WinApp2.ini) Updater", programConstants.strOK, Windows.MessageBoxImage.Error)
+                e.Cancel = True
+                Exit Sub
+            End If
+
+            Dim remoteINIFileVersion, localINIFileVersion As String
+            Dim strLocationToSaveWinAPP2INIFile As String = Nothing
+            Dim strCustomEntries As String = Nothing
+            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL As Boolean
+
+            SettingsFileConversionCode(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, strCustomEntries)
 
             If My.Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = My.Application.CommandLineArgs(0).Trim
@@ -151,27 +178,11 @@ Namespace My
                     If boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName
                     Else
-                        Try
-                            If Environment.Is64BitOperatingSystem Then
-                                If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
-                                    e.Cancel = True
-                                    Exit Sub
-                                Else
-                                    strLocationToSaveWinAPP2INIFile = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
-                                End If
-                            Else
-                                If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                                    WPFCustomMessageBox.CustomMessageBox.ShowOK("CCleaner doesn't appear to be installed on your machine.", messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
-                                    e.Cancel = True
-                                    Exit Sub
-                                Else
-                                    strLocationToSaveWinAPP2INIFile = Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False).GetValue(vbNullString, Nothing)
-                                End If
-                            End If
-                        Catch ex As Exception
-                            WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, messageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
-                        End Try
+                        strLocationToSaveWinAPP2INIFile = FindCCleaner()
+                        If String.IsNullOrWhiteSpace(strLocationToSaveWinAPP2INIFile) Then
+                            e.Cancel = True
+                            Exit Sub
+                        End If
                     End If
 
                     If strLocationToSaveWinAPP2INIFile <> Nothing Then
