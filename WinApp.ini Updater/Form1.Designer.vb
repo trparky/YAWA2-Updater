@@ -38,7 +38,6 @@ Partial Class Form1
         Me.btnReDownload = New System.Windows.Forms.Button()
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
-        Me.chkUseSSL = New System.Windows.Forms.CheckBox()
         Me.ChkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
@@ -74,7 +73,7 @@ Partial Class Form1
         Me.TxtCustomEntries.Location = New System.Drawing.Point(7, 89)
         Me.TxtCustomEntries.Multiline = True
         Me.TxtCustomEntries.Name = "TxtCustomEntries"
-        Me.TxtCustomEntries.Size = New System.Drawing.Size(646, 291)
+        Me.TxtCustomEntries.Size = New System.Drawing.Size(671, 291)
         Me.TxtCustomEntries.TabIndex = 1
         '
         'chkTrim
@@ -90,7 +89,7 @@ Partial Class Form1
         'chkLoadAtUserStartup
         '
         Me.chkLoadAtUserStartup.AutoSize = True
-        Me.chkLoadAtUserStartup.Location = New System.Drawing.Point(199, 412)
+        Me.chkLoadAtUserStartup.Location = New System.Drawing.Point(267, 383)
         Me.chkLoadAtUserStartup.Name = "chkLoadAtUserStartup"
         Me.chkLoadAtUserStartup.Size = New System.Drawing.Size(258, 30)
         Me.chkLoadAtUserStartup.TabIndex = 6
@@ -101,7 +100,7 @@ Partial Class Form1
         'chkNotifyAfterUpdateatLogon
         '
         Me.chkNotifyAfterUpdateatLogon.AutoSize = True
-        Me.chkNotifyAfterUpdateatLogon.Location = New System.Drawing.Point(391, 390)
+        Me.chkNotifyAfterUpdateatLogon.Location = New System.Drawing.Point(100, 389)
         Me.chkNotifyAfterUpdateatLogon.Name = "chkNotifyAfterUpdateatLogon"
         Me.chkNotifyAfterUpdateatLogon.Size = New System.Drawing.Size(161, 17)
         Me.chkNotifyAfterUpdateatLogon.TabIndex = 9
@@ -120,7 +119,7 @@ Partial Class Form1
         'chkMobileMode
         '
         Me.chkMobileMode.AutoSize = True
-        Me.chkMobileMode.Location = New System.Drawing.Point(298, 390)
+        Me.chkMobileMode.Location = New System.Drawing.Point(7, 390)
         Me.chkMobileMode.Name = "chkMobileMode"
         Me.chkMobileMode.Size = New System.Drawing.Size(87, 17)
         Me.chkMobileMode.TabIndex = 11
@@ -170,10 +169,9 @@ Partial Class Form1
         Me.btnReDownload.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
         Me.btnReDownload.Location = New System.Drawing.Point(492, 31)
         Me.btnReDownload.Name = "btnReDownload"
-        Me.btnReDownload.Size = New System.Drawing.Size(161, 23)
+        Me.btnReDownload.Size = New System.Drawing.Size(186, 23)
         Me.btnReDownload.TabIndex = 4
         Me.btnReDownload.Text = "Force Re-Download INI File"
-        Me.btnReDownload.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         Me.btnReDownload.UseVisualStyleBackColor = True
         '
         'btnTrim
@@ -182,7 +180,7 @@ Partial Class Form1
         Me.btnTrim.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
         Me.btnTrim.Location = New System.Drawing.Point(283, 60)
         Me.btnTrim.Name = "btnTrim"
-        Me.btnTrim.Size = New System.Drawing.Size(370, 23)
+        Me.btnTrim.Size = New System.Drawing.Size(395, 23)
         Me.btnTrim.TabIndex = 3
         Me.btnTrim.Text = "Trim INI File to your system's software configuration"
         Me.btnTrim.UseVisualStyleBackColor = True
@@ -199,20 +197,10 @@ Partial Class Form1
         Me.btnApplyNewINIFile.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         Me.btnApplyNewINIFile.UseVisualStyleBackColor = True
         '
-        'chkUseSSL
-        '
-        Me.chkUseSSL.AutoSize = True
-        Me.chkUseSSL.Location = New System.Drawing.Point(12, 390)
-        Me.chkUseSSL.Name = "chkUseSSL"
-        Me.chkUseSSL.Size = New System.Drawing.Size(280, 17)
-        Me.chkUseSSL.TabIndex = 14
-        Me.chkUseSSL.Text = "Use SSL to check for and download program updates"
-        Me.chkUseSSL.UseVisualStyleBackColor = True
-        '
         'ChkSleepOnSilentStartup
         '
         Me.ChkSleepOnSilentStartup.AutoSize = True
-        Me.ChkSleepOnSilentStartup.Location = New System.Drawing.Point(464, 412)
+        Me.ChkSleepOnSilentStartup.Location = New System.Drawing.Point(531, 382)
         Me.ChkSleepOnSilentStartup.Name = "ChkSleepOnSilentStartup"
         Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(159, 30)
         Me.ChkSleepOnSilentStartup.TabIndex = 15
@@ -223,9 +211,8 @@ Partial Class Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(659, 445)
+        Me.ClientSize = New System.Drawing.Size(690, 445)
         Me.Controls.Add(Me.ChkSleepOnSilentStartup)
-        Me.Controls.Add(Me.chkUseSSL)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
         Me.Controls.Add(Me.lblUpdateNeededOrNot)
@@ -265,6 +252,5 @@ Partial Class Form1
     Friend WithEvents lblUpdateNeededOrNot As System.Windows.Forms.Label
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
-    Friend WithEvents chkUseSSL As CheckBox
     Friend WithEvents ChkSleepOnSilentStartup As CheckBox
 End Class

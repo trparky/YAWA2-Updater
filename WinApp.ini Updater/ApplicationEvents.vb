@@ -68,7 +68,7 @@ Namespace My
             End Try
         End Function
 
-        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef boolUseSSL As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
+        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
             If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                 IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
             End If
@@ -85,7 +85,6 @@ Namespace My
                     End Using
                 End SyncLock
 
-                boolUseSSL = AppSettings.boolUseSSL
                 boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
                 strCustomEntries = Nothing
                 If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
@@ -108,19 +107,16 @@ Namespace My
                         boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
                         boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
                         boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                        boolUseSSL = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIUseSSLKey)
 
                         iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(boolMobileMode, 1, 0))
                         iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(boolTrim, 1, 0))
                         iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(boolNotifyAfterUpdateAtLogon, 1, 0))
-                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIUseSSLKey, If(boolUseSSL, 1, 0))
 
                         iniFile.Save(programConstants.configINIFile)
                     Else
                         boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
                         boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
                         boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                        boolUseSSL = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIUseSSLKey)
                     End If
 
                     Dim AppSettings As New AppSettings With {
@@ -128,7 +124,6 @@ Namespace My
                         .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
                         .boolTrim = boolTrim,
                         .strCustomEntries = strCustomEntries,
-                        .boolUseSSL = boolUseSSL,
                         .boolSleepOnSilentStartup = True
                     }
 
@@ -146,7 +141,6 @@ Namespace My
                         .boolNotifyAfterUpdateAtLogon = False,
                         .boolTrim = False,
                         .strCustomEntries = "",
-                        .boolUseSSL = True,
                         .boolSleepOnSilentStartup = True
                     }
 
@@ -170,9 +164,9 @@ Namespace My
             Dim remoteINIFileVersion, localINIFileVersion As String
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim strCustomEntries As String = Nothing
-            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, boolSleepOnSilentStartup As Boolean
+            Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
 
-            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, strCustomEntries, boolSleepOnSilentStartup)
+            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup)
 
             If My.Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = My.Application.CommandLineArgs(0).Trim

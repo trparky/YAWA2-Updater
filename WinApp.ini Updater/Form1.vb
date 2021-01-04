@@ -95,7 +95,6 @@ Public Class Form1
             chkTrim.Checked = AppSettings.boolTrim
             chkNotifyAfterUpdateatLogon.Checked = AppSettings.boolNotifyAfterUpdateAtLogon
             chkMobileMode.Checked = AppSettings.boolMobileMode
-            chkUseSSL.Checked = AppSettings.boolUseSSL
             ChkSleepOnSilentStartup.Checked = AppSettings.boolSleepOnSilentStartup
 
             strLocationOfCCleaner = GetLocationOfCCleaner()
@@ -309,10 +308,6 @@ Public Class Form1
 
     Private Sub ChkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
         programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolTrim, chkTrim.Checked)
-    End Sub
-
-    Private Sub ChkUseSSL_Click(sender As Object, e As EventArgs) Handles chkUseSSL.Click
-        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolUseSSL, chkUseSSL.Checked)
     End Sub
 
     Private Sub TxtCustomEntries_TextChanged(sender As Object, e As EventArgs) Handles TxtCustomEntries.TextChanged

@@ -6,18 +6,10 @@ Namespace internetFunctions
             Dim httpHelper As New HttpHelper With {.SetUserAgent = CreateHTTPUserAgentHeaderString(), .UseHTTPCompression = True, .SetProxyMode = True}
             httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
 
-            Dim AppSettings As New AppSettings
-            SyncLock programFunctions.LockObject
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-            End SyncLock
-
             httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
                                                 Try
-                                                    If Not strURLInput.Trim.ToLower.StartsWith("http") Then
-                                                        Return If(AppSettings.boolUseSSL, "https://", "http://") & strURLInput
+                                                    If Not strURLInput.Trim.StartsWith("http", StringComparison.OrdinalIgnoreCase) Then
+                                                        Return "https://" & strURLInput
                                                     Else
                                                         Return strURLInput
                                                     End If

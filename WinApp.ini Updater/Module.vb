@@ -26,7 +26,7 @@ Namespace programConstants
 End Namespace
 
 Public Structure AppSettings
-    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolUseSSL, boolSleepOnSilentStartup As Boolean
+    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
     Public strCustomEntries As String
 End Structure
 
@@ -146,8 +146,6 @@ Namespace programFunctions
                     AppSettings.boolTrim = boolValue
                 ElseIf AppSettingType = AppSettingType.boolNotifyAfterUpdateAtLogon Then
                     AppSettings.boolNotifyAfterUpdateAtLogon = boolValue
-                ElseIf AppSettingType = AppSettingType.boolUseSSL Then
-                    AppSettings.boolUseSSL = boolValue
                 ElseIf AppSettingType = AppSettingType.boolSleepOnSilentStartup Then
                     AppSettings.boolSleepOnSilentStartup = boolValue
                 End If
@@ -180,7 +178,6 @@ Namespace programFunctions
             boolMobileMode
             boolTrim
             boolNotifyAfterUpdateAtLogon
-            boolUseSSL
             boolSleepOnSilentStartup
         End Enum
 
