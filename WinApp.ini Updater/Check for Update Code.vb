@@ -414,7 +414,7 @@ Class Check_for_Update_Stuff
                     Dim response As ProcessUpdateXMLResponse = ProcessUpdateXMLData(xmlData, remoteVersion, remoteBuild)
 
                     If response = ProcessUpdateXMLResponse.newVersion Then
-                        If BackgroundThreadMessageBox(String.Format("An update to Hasher (version {0} Build {1}) is available to be downloaded, do you want to download and update to this new version?", remoteVersion, remoteBuild), strMessageBoxTitleText) = Windows.MessageBoxResult.Yes Then
+                        If BackgroundThreadMessageBox(String.Format("An update to Hasher (version {0} Build {1}) is available to be downloaded, do you want to download and update to this new version?", remoteVersion, remoteBuild), strMessageBoxTitleText) = MsgBoxResult.Yes Then
                             DownloadAndPerformUpdate()
                         Else
                             windowObject.Invoke(Sub() MsgBox("The update will not be downloaded.", MsgBoxStyle.Information, strMessageBoxTitleText))

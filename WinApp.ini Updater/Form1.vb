@@ -116,7 +116,7 @@ Public Class Form1
     End Sub
 
     Function GetLocationOfCCleaner() As String
-        Dim msgBoxResult As Windows.MessageBoxResult
+        Dim msgBoxResult2 As MsgBoxResult
 
         If chkMobileMode.Checked Then
             'strLocationOfCCleaner = New IO.FileInfo(Application.ExecutablePath).DirectoryName
@@ -132,9 +132,9 @@ Public Class Form1
             Try
                 If Environment.Is64BitOperatingSystem Then
                     If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
-                        If msgBoxResult = Windows.MessageBoxResult.Yes Then
+                        If msgBoxResult2 = MsgBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
@@ -147,9 +147,9 @@ Public Class Form1
                     End If
                 Else
                     If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
-                        If msgBoxResult = Windows.MessageBoxResult.Yes Then
+                        If msgBoxResult2 = MsgBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
@@ -234,7 +234,7 @@ Public Class Form1
                               If chkMobileMode.Checked Then
                                   MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
                               Else
-                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = Windows.MessageBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
+                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
                               End If
                           End If
                       End Sub)
