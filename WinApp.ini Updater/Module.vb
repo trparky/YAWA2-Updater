@@ -18,10 +18,6 @@ Namespace programConstants
         Public Const configINITrimKey As String = "trim"
         Public Const configINIUseSSLKey As String = "useSSL"
         Public Const configINInotifyAfterUpdateAtLogonKey As String = "notifyAfterUpdateAtLogon"
-
-        Public Const strNo As String = "No"
-        Public Const strYes As String = "Yes"
-        Public Const strOK As String = "OK"
     End Module
 End Namespace
 
@@ -347,10 +343,10 @@ Namespace programFunctions
             End SyncLock
 
             If Not boolSilentMode Then
-                If Not AppSettings.boolMobileMode AndAlso WPFCustomMessageBox.CustomMessageBox.ShowYesNo("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", "WinApp.ini Updater", "Yes", "Not", Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then
+                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
-                    WPFCustomMessageBox.CustomMessageBox.ShowOK("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", "WinApp.ini Updater", "OK", Windows.MessageBoxImage.Information)
+                    MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")
                 End If
             End If
         End Sub

@@ -17,7 +17,7 @@ Public Class Form1
         taskParameters = taskParameters.Trim
 
         If Not IO.File.Exists(taskEXEPath) Then
-            WPFCustomMessageBox.CustomMessageBox.ShowOK("Executable path not found.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
+            MsgBox("Executable path not found.", MsgBoxStyle.Critical, strMessageBoxTitle)
             Exit Sub
         End If
 
@@ -111,7 +111,7 @@ Public Class Form1
             Threading.ThreadPool.QueueUserWorkItem(AddressOf GetINIVersion)
             boolDoneLoading = True
         Catch ex As Exception
-            WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, strMessageBoxTitle, programConstants.strOK)
+            MsgBox(ex.Message, MsgBoxStyle.Information, strMessageBoxTitle)
         End Try
     End Sub
 
@@ -132,7 +132,7 @@ Public Class Form1
             Try
                 If Environment.Is64BitOperatingSystem Then
                     If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = WPFCustomMessageBox.CustomMessageBox.ShowYesNo("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question)
+                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult = Windows.MessageBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
@@ -147,7 +147,7 @@ Public Class Form1
                     End If
                 Else
                     If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult = WPFCustomMessageBox.CustomMessageBox.ShowYesNo("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question)
+                        msgBoxResult = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult = Windows.MessageBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
@@ -162,7 +162,7 @@ Public Class Form1
                     End If
                 End If
             Catch ex As Exception
-                WPFCustomMessageBox.CustomMessageBox.ShowOK(ex.Message, strMessageBoxTitle, programConstants.strOK)
+                MsgBox(ex.Message, MsgBoxStyle.Information, strMessageBoxTitle)
                 Return Nothing
             End Try
         End If
@@ -173,7 +173,7 @@ Public Class Form1
             remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
 
             If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
-                WPFCustomMessageBox.CustomMessageBox.ShowOK("Error Retrieving Remote INI File Version.  Please try again.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Error)
+                MsgBox("Error Retrieving Remote INI File Version.  Please try again.", MsgBoxStyle.Critical, strMessageBoxTitle)
                 Exit Sub
             End If
 
@@ -184,12 +184,12 @@ Public Class Form1
                               btnApplyNewINIFile.Enabled = True
                               lblUpdateNeededOrNot.Text = updateNeeded
                               lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                              WPFCustomMessageBox.CustomMessageBox.ShowOK("You don't have a CCleaner WinApp2.ini file installed." & vbCrLf & vbCrLf & "Remote INI File Version: " & remoteINIFileVersion, strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                              MsgBox("You don't have a CCleaner WinApp2.ini file installed." & vbCrLf & vbCrLf & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
                           Else
                               If remoteINIFileVersion = localINIFileVersion Then
                                   btnApplyNewINIFile.Enabled = False
                                   lblUpdateNeededOrNot.Text = updateNotNeeded
-                                  WPFCustomMessageBox.CustomMessageBox.ShowOK("You already have the latest CCleaner INI file version.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                                  MsgBox("You already have the latest CCleaner INI file version.", MsgBoxStyle.Information, strMessageBoxTitle)
                               Else
                                   btnApplyNewINIFile.Enabled = True
                                   lblUpdateNeededOrNot.Text = updateNeeded
@@ -201,13 +201,13 @@ Public Class Form1
                                   stringBuilder.AppendLine("Currently Installed INI File Version: " & localINIFileVersion)
                                   stringBuilder.AppendLine("New Remote INI File Version: " & remoteINIFileVersion)
 
-                                  WPFCustomMessageBox.CustomMessageBox.ShowOK(stringBuilder.ToString.Trim, strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                                  MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, strMessageBoxTitle)
                               End If
                           End If
                       End Sub)
         Catch ex As Threading.ThreadAbortException
         Catch ex2 As Exception
-            WPFCustomMessageBox.CustomMessageBox.ShowOK(ex2.Message, strMessageBoxTitle, programConstants.strOK)
+            MsgBox(ex2.Message, MsgBoxStyle.Information, strMessageBoxTitle)
         End Try
     End Sub
 
@@ -228,18 +228,18 @@ Public Class Form1
                           End If
 
                           If chkTrim.Checked Then
-                              WPFCustomMessageBox.CustomMessageBox.ShowOK("New CCleaner WinApp2.ini File Saved. Trimming of INI file will now commence.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                              MsgBox("New CCleaner WinApp2.ini File Saved. Trimming of INI file will now commence.", MsgBoxStyle.Information, strMessageBoxTitle)
                               programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
                           Else
                               If chkMobileMode.Checked Then
-                                  WPFCustomMessageBox.CustomMessageBox.ShowOK("New CCleaner WinApp2.ini File Saved.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+                                  MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
                               Else
-                                  If WPFCustomMessageBox.CustomMessageBox.ShowYesNo("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", strMessageBoxTitle, programConstants.strYes, programConstants.strNo, Windows.MessageBoxImage.Question) = Windows.MessageBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
+                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = Windows.MessageBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
                               End If
                           End If
                       End Sub)
         Else
-            WPFCustomMessageBox.CustomMessageBox.ShowOK("There was an error while downloading the WinApp2.ini file.", strMessageBoxTitle, programConstants.strOK, Windows.MessageBoxImage.Information)
+            MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, strMessageBoxTitle)
         End If
     End Sub
 
@@ -293,7 +293,7 @@ Public Class Form1
         stringBuilder.AppendLine()
         stringBuilder.AppendFormat("Version {0}.{1} Build {2}", version(0), version(1), version(2))
 
-        WPFCustomMessageBox.CustomMessageBox.ShowOK(stringBuilder.ToString.Trim, "About", programConstants.strOK, Windows.MessageBoxImage.Information)
+        MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, "About")
     End Sub
 
     Private Sub ChkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
