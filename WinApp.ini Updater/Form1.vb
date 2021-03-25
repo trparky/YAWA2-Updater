@@ -216,7 +216,11 @@ Public Class Form1
 
         If internetFunctions.CreateNewHTTPHelperObject().GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
-                streamWriter.Write(If(String.IsNullOrEmpty(TxtCustomEntries.Text), remoteINIFileData & vbCrLf, remoteINIFileData & vbCrLf & TxtCustomEntries.Text & vbCrLf))
+                If String.IsNullOrEmpty(TxtCustomEntries.Text) Then
+                    streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
+                Else
+                    streamWriter.Write(remoteINIFileData.Trim & vbCrLf & vbCrLf & TxtCustomEntries.Text & vbCrLf)
+                End If
             End Using
 
             Me.Invoke(Sub()

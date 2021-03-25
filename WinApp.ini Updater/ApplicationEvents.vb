@@ -229,7 +229,11 @@ Namespace My
 
                             If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
-                                    streamWriter.Write(If(String.IsNullOrWhiteSpace(strCustomEntries), remoteINIFileData, remoteINIFileData & vbCrLf & strCustomEntries & vbCrLf))
+                                    If String.IsNullOrWhiteSpace(strCustomEntries) Then
+                                        streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
+                                    Else
+                                        streamWriter.Write(remoteINIFileData.Trim & vbCrLf & vbCrLf & strCustomEntries & vbCrLf)
+                                    End If
                                 End Using
                             Else
                                 MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, messageBoxTitle)
