@@ -69,89 +69,85 @@ Namespace My
         End Function
 
         Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
-            If IO.File.Exists("winapp.ini updater custom entries.txt") Then
-                IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
-            End If
+            SyncLock programFunctions.LockObject
+                If IO.File.Exists("winapp.ini updater custom entries.txt") Then
+                    IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
+                End If
 
-            If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
+                If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
 
-            If IO.File.Exists(programConstants.configXMLFile) Then
-                Dim AppSettings As New AppSettings
+                If IO.File.Exists(programConstants.configXMLFile) Then
+                    Dim AppSettings As New AppSettings
 
-                SyncLock programFunctions.LockObject
                     Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
                         Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
                         AppSettings = xmlSerializerObject.Deserialize(streamReader)
                     End Using
-                End SyncLock
 
-                boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
-                strCustomEntries = Nothing
-                If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
-            Else
-                If IO.File.Exists(programConstants.configINIFile) Then
-                    Dim iniFile As New IniFile()
-                    iniFile.LoadINIFileFromFile(programConstants.configINIFile)
-
-                    strCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
-
-                    If Not String.IsNullOrWhiteSpace(strCustomEntries) Then
-                        If programFunctions.IsBase64(strCustomEntries) Then
-                            strCustomEntries = programFunctions.ConvertFromBase64(strCustomEntries)
-                        Else
-                            strCustomEntries = Nothing
-                        End If
-                    End If
-
-                    If programFunctions.GetINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.SettingType.bool Then
-                        boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
-                        boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
-                        boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-
-                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(boolMobileMode, 1, 0))
-                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(boolTrim, 1, 0))
-                        iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(boolNotifyAfterUpdateAtLogon, 1, 0))
-
-                        iniFile.Save(programConstants.configINIFile)
-                    Else
-                        boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
-                        boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
-                        boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
-                    End If
-
-                    Dim AppSettings As New AppSettings With {
-                        .boolMobileMode = boolMobileMode,
-                        .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
-                        .boolTrim = boolTrim,
-                        .strCustomEntries = strCustomEntries,
-                        .boolSleepOnSilentStartup = True
-                    }
-
-                    SyncLock programFunctions.LockObject
-                        Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                            Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                            xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                        End Using
-                    End SyncLock
-
-                    IO.File.Delete(programConstants.configINIFile)
+                    boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
+                    strCustomEntries = Nothing
+                    If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
                 Else
-                    Dim AppSettings As New AppSettings With {
-                        .boolMobileMode = False,
-                        .boolNotifyAfterUpdateAtLogon = False,
-                        .boolTrim = False,
-                        .strCustomEntries = "",
-                        .boolSleepOnSilentStartup = True
-                    }
+                    If IO.File.Exists(programConstants.configINIFile) Then
+                        Dim iniFile As New IniFile()
+                        iniFile.LoadINIFileFromFile(programConstants.configINIFile)
 
-                    SyncLock programFunctions.LockObject
+                        strCustomEntries = iniFile.GetKeyValue(programConstants.configINISettingSection, programConstants.configINICustomEntriesKey)
+
+                        If Not String.IsNullOrWhiteSpace(strCustomEntries) Then
+                            If programFunctions.IsBase64(strCustomEntries) Then
+                                strCustomEntries = programFunctions.ConvertFromBase64(strCustomEntries)
+                            Else
+                                strCustomEntries = Nothing
+                            End If
+                        End If
+
+                        If programFunctions.GetINISettingType(iniFile, programConstants.configINIUseSSLKey) = programFunctions.SettingType.bool Then
+                            boolMobileMode = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINIMobileModeKey)
+                            boolTrim = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINITrimKey)
+                            boolNotifyAfterUpdateAtLogon = programFunctions.GetBooleanSettingFromINIFile(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+
+                            iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINIMobileModeKey, If(boolMobileMode, 1, 0))
+                            iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINITrimKey, If(boolTrim, 1, 0))
+                            iniFile.SetKeyValue(programConstants.configINISettingSection, programConstants.configINInotifyAfterUpdateAtLogonKey, If(boolNotifyAfterUpdateAtLogon, 1, 0))
+
+                            iniFile.Save(programConstants.configINIFile)
+                        Else
+                            boolMobileMode = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINIMobileModeKey)
+                            boolTrim = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINITrimKey)
+                            boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
+                        End If
+
+                        Dim AppSettings As New AppSettings With {
+                            .boolMobileMode = boolMobileMode,
+                            .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
+                            .boolTrim = boolTrim,
+                            .strCustomEntries = strCustomEntries,
+                            .boolSleepOnSilentStartup = True
+                        }
+
                         Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
                             Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
                             xmlSerializerObject.Serialize(streamWriter, AppSettings)
                         End Using
-                    End SyncLock
+
+                        IO.File.Delete(programConstants.configINIFile)
+                    Else
+                        Dim AppSettings As New AppSettings With {
+                            .boolMobileMode = False,
+                            .boolNotifyAfterUpdateAtLogon = False,
+                            .boolTrim = False,
+                            .strCustomEntries = "",
+                            .boolSleepOnSilentStartup = True
+                        }
+
+                        Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                            Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                            xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                        End Using
+                    End If
                 End If
-            End If
+            End SyncLock
         End Sub
 
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
