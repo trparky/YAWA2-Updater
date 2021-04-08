@@ -149,7 +149,7 @@ Namespace My
                         End If
                     End If
 
-                    If strLocationToSaveWinAPP2INIFile <> Nothing Then
+                    If Not String.IsNullOrWhiteSpace(strLocationToSaveWinAPP2INIFile) Then
                         If IO.File.Exists(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini")) Then
                             Using streamReader As New IO.StreamReader(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
                                 localINIFileVersion = programFunctions.GetINIVersionFromString(streamReader.ReadLine)
