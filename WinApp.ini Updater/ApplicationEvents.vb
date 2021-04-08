@@ -14,37 +14,6 @@ Namespace My
     Partial Friend Class MyApplication
         Private Const messageBoxTitle As String = "YAWA2 Updater"
 
-        Private Function DoesPIDExist(PID As Integer) As Boolean
-            Try
-                Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", String.Format("Select * FROM Win32_Process WHERE ProcessId={0}", PID))
-                    Return searcher.Get.Count <> 0
-                End Using
-            Catch ex3 As Runtime.InteropServices.COMException
-                Return False
-            Catch ex As Exception
-                Return False
-            End Try
-        End Function
-
-        Private Sub KillProcess(PID As Integer)
-            If DoesPIDExist(PID) Then Process.GetProcessById(PID).Kill()
-            If DoesPIDExist(PID) Then KillProcess(PID)
-        End Sub
-
-        Private Sub SearchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
-            Dim fullFileName As String = If(boolFullFilePathPassed, strFileName, New IO.FileInfo(strFileName).FullName)
-            Dim wmiQuery As String = String.Format("Select ExecutablePath, ProcessId FROM Win32_Process WHERE ExecutablePath = '{0}'", fullFileName.AddSlashes())
-
-            Try
-                Using searcher As New Management.ManagementObjectSearcher("root\CIMV2", wmiQuery)
-                    For Each queryObj As Management.ManagementObject In searcher.Get()
-                        KillProcess(Integer.Parse(queryObj("ProcessId").ToString))
-                    Next
-                End Using
-            Catch err As Exception
-            End Try
-        End Sub
-
         Private Function FindCCleaner() As String
             Try
                 If Environment.Is64BitOperatingSystem Then
