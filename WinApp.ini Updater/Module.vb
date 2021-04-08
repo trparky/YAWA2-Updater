@@ -343,7 +343,7 @@ Namespace programFunctions
             End SyncLock
 
             If Not boolSilentMode Then
-                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
+                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")
