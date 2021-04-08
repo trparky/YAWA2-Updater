@@ -164,8 +164,8 @@ Namespace My
 
             LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup)
 
-            If My.Application.CommandLineArgs.Count = 1 Then
-                Dim commandLineArgument As String = My.Application.CommandLineArgs(0).Trim
+            If Application.CommandLineArgs.Count = 1 Then
+                Dim commandLineArgument As String = Application.CommandLineArgs(0).Trim
 
                 If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
                     If boolSleepOnSilentStartup Then Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
