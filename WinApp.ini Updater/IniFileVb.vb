@@ -123,6 +123,7 @@ Public Class IniFile
                     stringWriter.WriteLine(String.Format("{0}", k.Name))
                 End If
             Next
+            stringWriter.WriteLine()
         Next
 
         Dim iniText As String = stringWriter.ToString()

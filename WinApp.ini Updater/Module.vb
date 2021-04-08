@@ -311,7 +311,7 @@ Namespace programFunctions
                 iniFile.RemoveSection(sectionToRemove)
             Next
 
-            Dim rawINIFileContents As String = iniFile.GetRawINIText
+            Dim rawINIFileContents As String = iniFile.GetRawINIText.Trim
 
             iniFileNotes = iniFileNotes.Replace(entriesString, iniFile.Sections.Count.ToString("N0"))
             iniFile = Nothing
@@ -319,7 +319,7 @@ Namespace programFunctions
             Dim newINIFileContents As String = "; Version: " & remoteINIFileVersion & vbCrLf
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
             newINIFileContents &= iniFileNotes & vbCrLf & vbCrLf
-            newINIFileContents &= rawINIFileContents
+            newINIFileContents &= rawINIFileContents & vbCrLf
 
             If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
                 IO.File.Delete(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
