@@ -1,11 +1,12 @@
 '  Programmer: Ludvik Jerabek
 '        Date: 08\23\2010
 '     Purpose: Allow INI manipulation in .NET
+'
+'  Updated By: Thomas Parkison
+'  Updated On: 04/08/2021
 
 Imports System.IO
 Imports System.Text.RegularExpressions
-Imports System.Collections
-Imports System.Diagnostics
 
 ' IniFile class used to read and write ini files by loading the file into memory
 Public Class IniFile
@@ -40,22 +41,17 @@ Public Class IniFile
 
             If regexcomment.Match(line).Success Then
                 Dim unused As Match = regexcomment.Match(line)
-                'Trace.WriteLine(String.Format("Skipping Comment: {0}", m.Groups(0).Value))
             ElseIf regexsection.Match(line).Success Then
                 m = regexsection.Match(line)
-                'Trace.WriteLine(String.Format("Adding section [{0}]", m.Groups(1).Value))
                 tempsection = AddSection(m.Groups(1).Value)
             ElseIf regexkey.Match(line).Success AndAlso tempsection IsNot Nothing Then
                 m = regexkey.Match(line)
-                'Trace.WriteLine(String.Format("Adding Key [{0}]=[{1}]", m.Groups(1).Value, m.Groups(2).Value))
                 tempsection.AddKey(m.Groups(1).Value).Value = m.Groups(2).Value
             ElseIf tempsection IsNot Nothing Then
                 '  Handle Key without value
-                'Trace.WriteLine(String.Format("Adding Key [{0}]", line))
                 tempsection.AddKey(line)
             Else
                 '  This should not occur unless the tempsection is not created yet...
-                'Trace.WriteLine(String.Format("Skipping unknown type of data: {0}", line))
             End If
 
             line = rawINIText.ReadLine()
@@ -85,22 +81,15 @@ Public Class IniFile
                 Dim m As Match
                 If regexcomment.Match(line).Success Then
                     Dim unused As Match = regexcomment.Match(line)
-                    'Trace.WriteLine(String.Format("Skipping Comment: {0}", m.Groups(0).Value))
                 ElseIf regexsection.Match(line).Success Then
                     m = regexsection.Match(line)
-                    'Trace.WriteLine(String.Format("Adding section [{0}]", m.Groups(1).Value))
                     tempsection = AddSection(m.Groups(1).Value)
                 ElseIf regexkey.Match(line).Success AndAlso tempsection IsNot Nothing Then
                     m = regexkey.Match(line)
-                    'Trace.WriteLine(String.Format("Adding Key [{0}]=[{1}]", m.Groups(1).Value, m.Groups(2).Value))
                     tempsection.AddKey(m.Groups(1).Value).Value = m.Groups(2).Value
                 ElseIf tempsection IsNot Nothing Then
                     '  Handle Key without value
-                    'Trace.WriteLine(String.Format("Adding Key [{0}]", line))
                     tempsection.AddKey(line)
-                Else
-                    '  This should not occur unless the tempsection is not created yet...
-                    'Trace.WriteLine(String.Format("Skipping unknown type of data: {0}", line))
                 End If
             End If
         End While
@@ -110,15 +99,12 @@ Public Class IniFile
     Public Function GetRawINIText() As String
         Using stringWriter As New StringWriter
             For Each s As IniSection In Sections
-                'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
                 stringWriter.WriteLine(String.Format("[{0}]", s.Name))
 
                 For Each k As IniSection.IniKey In s.Keys
                     If k.Value <> String.Empty Then
-                        'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
                         stringWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
                     Else
-                        'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
                         stringWriter.WriteLine(String.Format("{0}", k.Name))
                     End If
                 Next
@@ -133,14 +119,11 @@ Public Class IniFile
     Public Sub Save(ByVal sFileName As String)
         Using oWriter As New StreamWriter(sFileName, False)
             For Each s As IniSection In Sections
-                'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
                 oWriter.WriteLine(String.Format("[{0}]", s.Name))
                 For Each k As IniSection.IniKey In s.Keys
                     If k.Value <> String.Empty Then
-                        'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
                         oWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
                     Else
-                        'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
                         oWriter.WriteLine(String.Format("{0}", k.Name))
                     End If
                 Next
@@ -182,7 +165,6 @@ Public Class IniFile
                 m_sections.Remove(Section.Name)
                 Return True
             Catch ex As Exception
-                'Trace.WriteLine(ex.Message)
             End Try
         End If
         Return False
@@ -429,7 +411,6 @@ Public Class IniFile
                         m_sKey = sKey
                         Return True
                     Catch ex As Exception
-                        'Trace.WriteLine(ex.Message)
                     End Try
                 End If
                 Return False
