@@ -108,49 +108,44 @@ Public Class IniFile
     End Sub
 
     Public Function GetRawINIText() As String
-        Dim stringWriter As New StringWriter
+        Using stringWriter As New StringWriter
+            For Each s As IniSection In Sections
+                'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
+                stringWriter.WriteLine(String.Format("[{0}]", s.Name))
 
-        For Each s As IniSection In Sections
-            'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
-            stringWriter.WriteLine(String.Format("[{0}]", s.Name))
-
-            For Each k As IniSection.IniKey In s.Keys
-                If k.Value <> String.Empty Then
-                    'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
-                    stringWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
-                Else
-                    'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
-                    stringWriter.WriteLine(String.Format("{0}", k.Name))
-                End If
+                For Each k As IniSection.IniKey In s.Keys
+                    If k.Value <> String.Empty Then
+                        'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
+                        stringWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
+                    Else
+                        'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
+                        stringWriter.WriteLine(String.Format("{0}", k.Name))
+                    End If
+                Next
+                stringWriter.WriteLine()
             Next
-            stringWriter.WriteLine()
-        Next
 
-        Dim iniText As String = stringWriter.ToString()
-        stringWriter.Close()
-        stringWriter.Dispose()
-
-        Return iniText
+            Return stringWriter.ToString()
+        End Using
     End Function
 
     ' Used to save the data back to the file or your choice
     Public Sub Save(ByVal sFileName As String)
-        Dim oWriter As New StreamWriter(sFileName, False)
-
-        For Each s As IniSection In Sections
-            'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
-            oWriter.WriteLine(String.Format("[{0}]", s.Name))
-            For Each k As IniSection.IniKey In s.Keys
-                If k.Value <> String.Empty Then
-                    'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
-                    oWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
-                Else
-                    'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
-                    oWriter.WriteLine(String.Format("{0}", k.Name))
-                End If
+        Using oWriter As New StreamWriter(sFileName, False)
+            For Each s As IniSection In Sections
+                'Trace.WriteLine(String.Format("Writing Section: [{0}]", s.Name))
+                oWriter.WriteLine(String.Format("[{0}]", s.Name))
+                For Each k As IniSection.IniKey In s.Keys
+                    If k.Value <> String.Empty Then
+                        'Trace.WriteLine(String.Format("Writing Key: {0}={1}", k.Name, k.Value))
+                        oWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
+                    Else
+                        'Trace.WriteLine(String.Format("Writing Key: {0}", k.Name))
+                        oWriter.WriteLine(String.Format("{0}", k.Name))
+                    End If
+                Next
             Next
-        Next
-        oWriter.Close()
+        End Using
     End Sub
 
     ' Gets all the sections
