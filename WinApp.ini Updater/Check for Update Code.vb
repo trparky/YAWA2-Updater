@@ -182,8 +182,14 @@ Class Check_for_Update_Stuff
             Else
                 ' First we do a check of the version, if it's not equal we simply return a newVersion value.
                 If Not remoteVersion.Equals(versionStringWithoutBuild) Then
-                    ' We return a newVersion value indicating that there is a new version to download and install.
-                    Return ProcessUpdateXMLResponse.newVersion
+                    ' Checks to see if the remote version is less than the current version.
+                    If remoteVersion < versionStringWithoutBuild Then
+                        ' This is weird, the remote build is less than the current build so we return a newerVersionThanWebSite value.
+                        Return ProcessUpdateXMLResponse.newerVersionThanWebSite
+                    Else
+                        ' We return a newVersion value indicating that there is a new version to download and install.
+                        Return ProcessUpdateXMLResponse.newVersion
+                    End If
                 Else
                     ' Now let's do some sanity checks here. 
                     If Short.TryParse(remoteBuild, shortRemoteBuild) Then
