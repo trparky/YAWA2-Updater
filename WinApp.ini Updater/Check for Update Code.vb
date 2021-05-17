@@ -51,21 +51,14 @@ Module checkForUpdateModules
     End Sub
 
     Private Sub KillProcess(processID As Integer)
-        Dim processObject As Process = Nothing
-
-        ' First we are going to check if the Process ID exists.
-        If DoesProcessIDExist(processID, processObject) Then
-            Try
-                processObject.Kill() ' Yes, it does so let's kill it.
-            Catch ex As Exception
-                ' Wow, it seems that even with double-checking if a process exists by it's PID number things can still go wrong.
-                ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
-            End Try
-        End If
-
+        KillProcessSubRoutine(processID)
         Threading.Thread.Sleep(250) ' We're going to sleep to give the system some time to kill the process.
+        KillProcessSubRoutine(processID)
+        Threading.Thread.Sleep(250) ' We're going to sleep (again) to give the system some time to kill the process.
+    End Sub
 
-        '' Now we are going to check again if the Process ID exists and if it does, we're going to attempt to kill it again.
+    Private Sub KillProcessSubRoutine(processID As Integer)
+        Dim processObject As Process = Nothing
         If DoesProcessIDExist(processID, processObject) Then
             Try
                 processObject.Kill()
@@ -74,8 +67,6 @@ Module checkForUpdateModules
                 ' So this Try-Catch block is here to trap any possible errors when trying to kill a process by it's PID number.
             End Try
         End If
-
-        Threading.Thread.Sleep(250) ' We're going to sleep (again) to give the system some time to kill the process.
     End Sub
 
     Private Function GetProcessExecutablePath(processID As Integer) As String
