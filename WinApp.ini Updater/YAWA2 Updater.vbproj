@@ -126,6 +126,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="NativeMethod.vb" />
+    <Compile Include="Search for Process and Kill it.vb" />
     <Compile Include="StringExtensions.vb" />
   </ItemGroup>
   <ItemGroup>
