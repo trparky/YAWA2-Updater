@@ -50,22 +50,26 @@
     End Sub
 
     Private Function GetProcessExecutablePath(processID As Integer) As String
-        Dim memoryBuffer As New Text.StringBuilder(1024)
-        Dim processHandle As IntPtr = NativeMethod.NativeMethods.OpenProcess(NativeMethod.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
+        Try
+            Dim memoryBuffer As New Text.StringBuilder(1024)
+            Dim processHandle As IntPtr = NativeMethod.NativeMethods.OpenProcess(NativeMethod.ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, False, processID)
 
-        If Not processHandle.Equals(IntPtr.Zero) Then
-            Try
-                Dim memoryBufferSize As Integer = memoryBuffer.Capacity
+            If Not processHandle.Equals(IntPtr.Zero) Then
+                Try
+                    Dim memoryBufferSize As Integer = memoryBuffer.Capacity
 
-                If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                    Return memoryBuffer.ToString()
-                End If
-            Finally
-                NativeMethod.NativeMethods.CloseHandle(processHandle)
-            End Try
-        End If
+                    If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
+                        Return memoryBuffer.ToString()
+                    End If
+                Finally
+                    NativeMethod.NativeMethods.CloseHandle(processHandle)
+                End Try
+            End If
 
-        NativeMethod.NativeMethods.CloseHandle(processHandle)
-        Return Nothing
+            NativeMethod.NativeMethods.CloseHandle(processHandle)
+            Return Nothing
+        Catch ex As Exception
+            Return Nothing
+        End Try
     End Function
 End Module
