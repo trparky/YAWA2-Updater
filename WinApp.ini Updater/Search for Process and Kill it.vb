@@ -41,16 +41,8 @@
             If Not String.IsNullOrWhiteSpace(processExecutablePath) Then
                 Try
                     processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
-
-                    If boolFullFilePathPassed Then
-                        If strFileName.Equals(processExecutablePathFileInfo.FullName, StringComparison.OrdinalIgnoreCase) Then
-                            KillProcess(process.Id)
-                        End If
-                    Else
-                        If strFileName.Equals(processExecutablePathFileInfo.Name, StringComparison.OrdinalIgnoreCase) Then
-                            KillProcess(process.Id)
-                        End If
-                    End If
+                    processExecutablePath = If(boolFullFilePathPassed, processExecutablePathFileInfo.FullName, processExecutablePathFileInfo.Name)
+                    If strFileName.Equals(processExecutablePath, StringComparison.OrdinalIgnoreCase) Then KillProcess(process.Id)
                 Catch ex As ArgumentException
                 End Try
             End If
