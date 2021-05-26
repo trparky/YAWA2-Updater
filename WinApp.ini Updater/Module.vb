@@ -318,7 +318,7 @@ Namespace programFunctions
 
             Dim newINIFileContents As String = "; Version: " & remoteINIFileVersion & vbCrLf
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
-            newINIFileContents &= iniFileNotes & vbCrLf & vbCrLf
+            newINIFileContents &= iniFileNotes & DoubleCRLF
             newINIFileContents &= rawINIFileContents & vbCrLf
 
             If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
@@ -343,7 +343,7 @@ Namespace programFunctions
             End SyncLock
 
             If Not boolSilentMode Then
-                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
+                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")

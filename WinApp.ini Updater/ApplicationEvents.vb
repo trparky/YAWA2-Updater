@@ -201,7 +201,7 @@ Namespace My
                                     If String.IsNullOrWhiteSpace(strCustomEntries) Then
                                         streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
                                     Else
-                                        streamWriter.Write(remoteINIFileData.Trim & vbCrLf & vbCrLf & strCustomEntries & vbCrLf)
+                                        streamWriter.Write(remoteINIFileData.Trim & DoubleCRLF & strCustomEntries & vbCrLf)
                                     End If
                                 End Using
                             Else
@@ -215,7 +215,7 @@ Namespace My
                             programFunctions.TrimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
-                        If boolNotifyAfterUpdateAtLogon AndAlso MsgBox("The CCleaner WinApp2.ini file has been updated." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
+                        If boolNotifyAfterUpdateAtLogon AndAlso MsgBox("The CCleaner WinApp2.ini file has been updated." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
                             Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If

@@ -132,7 +132,7 @@ Public Class Form1
             Try
                 If Environment.Is64BitOperatingSystem Then
                     If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
@@ -147,7 +147,7 @@ Public Class Form1
                     End If
                 Else
                     If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & vbCrLf & vbCrLf & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
                             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
@@ -184,7 +184,7 @@ Public Class Form1
                               btnApplyNewINIFile.Enabled = True
                               lblUpdateNeededOrNot.Text = updateNeeded
                               lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                              MsgBox("You don't have a CCleaner WinApp2.ini file installed." & vbCrLf & vbCrLf & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
+                              MsgBox("You don't have a CCleaner WinApp2.ini file installed." & DoubleCRLF & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
                           Else
                               If remoteINIFileVersion = localINIFileVersion Then
                                   btnApplyNewINIFile.Enabled = False
@@ -219,7 +219,7 @@ Public Class Form1
                 If String.IsNullOrEmpty(TxtCustomEntries.Text) Then
                     streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
                 Else
-                    streamWriter.Write(remoteINIFileData.Trim & vbCrLf & vbCrLf & TxtCustomEntries.Text & vbCrLf)
+                    streamWriter.Write(remoteINIFileData.Trim & DoubleCRLF & TxtCustomEntries.Text & vbCrLf)
                 End If
             End Using
 
@@ -238,7 +238,7 @@ Public Class Form1
                               If chkMobileMode.Checked Then
                                   MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
                               Else
-                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & vbCrLf & vbCrLf & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
+                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
                               End If
                           End If
                       End Sub)
