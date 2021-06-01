@@ -57,10 +57,7 @@
             If Not processHandle.Equals(IntPtr.Zero) Then
                 Try
                     Dim memoryBufferSize As Integer = memoryBuffer.Capacity
-
-                    If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then
-                        Return memoryBuffer.ToString()
-                    End If
+                    If NativeMethod.NativeMethods.QueryFullProcessImageName(processHandle, 0, memoryBuffer, memoryBufferSize) Then Return memoryBuffer.ToString()
                 Finally
                     NativeMethod.NativeMethods.CloseHandle(processHandle)
                 End Try
