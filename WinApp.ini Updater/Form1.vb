@@ -21,31 +21,30 @@ Public Class Form1
             Exit Sub
         End If
 
-        Dim taskService As New TaskService()
-        Dim newTask As TaskDefinition = taskService.NewTask
-        Dim exeFileInfo As New IO.FileInfo(taskEXEPath)
+        Using taskService As New TaskService()
+            Using newTask As TaskDefinition = taskService.NewTask
+                Dim exeFileInfo As New IO.FileInfo(taskEXEPath)
 
-        With newTask
-            .RegistrationInfo.Description = taskDescription
-            .Triggers.Add(New LogonTrigger)
-            .Actions.Add(New ExecAction(Chr(34) & taskEXEPath & Chr(34), taskParameters, exeFileInfo.DirectoryName))
+                With newTask
+                    .RegistrationInfo.Description = taskDescription
+                    .Triggers.Add(New LogonTrigger)
+                    .Actions.Add(New ExecAction(Chr(34) & taskEXEPath & Chr(34), taskParameters, exeFileInfo.DirectoryName))
 
-            .Principal.RunLevel = TaskRunLevel.Highest
-            .Settings.Compatibility = TaskCompatibility.V2_1
-            .Settings.AllowDemandStart = True
-            .Settings.DisallowStartIfOnBatteries = False
-            .Settings.RunOnlyIfIdle = False
-            .Settings.StopIfGoingOnBatteries = False
-            .Settings.AllowHardTerminate = False
-            .Settings.UseUnifiedSchedulingEngine = True
-            .Settings.ExecutionTimeLimit = Nothing
-            .Principal.LogonType = TaskLogonType.InteractiveToken
-        End With
+                    .Principal.RunLevel = TaskRunLevel.Highest
+                    .Settings.Compatibility = TaskCompatibility.V2_1
+                    .Settings.AllowDemandStart = True
+                    .Settings.DisallowStartIfOnBatteries = False
+                    .Settings.RunOnlyIfIdle = False
+                    .Settings.StopIfGoingOnBatteries = False
+                    .Settings.AllowHardTerminate = False
+                    .Settings.UseUnifiedSchedulingEngine = True
+                    .Settings.ExecutionTimeLimit = Nothing
+                    .Principal.LogonType = TaskLogonType.InteractiveToken
+                End With
 
-        taskService.RootFolder.RegisterTaskDefinition(taskName, newTask)
-
-        newTask.Dispose()
-        taskService.Dispose()
+                taskService.RootFolder.RegisterTaskDefinition(taskName, newTask)
+            End Using
+        End Using
     End Sub
 
     Function DoesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
