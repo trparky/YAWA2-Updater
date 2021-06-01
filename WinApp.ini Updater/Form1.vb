@@ -21,7 +21,7 @@ Public Class Form1
             Exit Sub
         End If
 
-        Dim taskService As TaskService = New TaskService()
+        Dim taskService As New TaskService()
         Dim newTask As TaskDefinition = taskService.NewTask
         Dim exeFileInfo As New IO.FileInfo(taskEXEPath)
 
@@ -49,7 +49,7 @@ Public Class Form1
     End Sub
 
     Function DoesTaskExist(nameOfTask As String, ByRef taskObject As Task) As Boolean
-        Using taskServiceObject As TaskService = New TaskService
+        Using taskServiceObject As New TaskService
             taskObject = taskServiceObject.GetTask(nameOfTask)
             Return taskObject IsNot Nothing
         End Using
