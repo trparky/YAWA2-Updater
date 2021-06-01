@@ -32,7 +32,7 @@ Namespace programFunctions
         Public ReadOnly LockObject As New Object
 
         Public Function CanIWriteToTheCurrentDirectory() As Boolean
-            Return Check_for_Update_Stuff.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
+            Return CheckForUpdatesClass.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
         End Function
 
         Public Function AreWeAnAdministrator() As Boolean

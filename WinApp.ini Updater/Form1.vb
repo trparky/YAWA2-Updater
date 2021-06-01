@@ -277,7 +277,7 @@ Public Class Form1
 
     Private Sub BtnCheckForUpdates_Click(sender As Object, e As EventArgs) Handles btnCheckForUpdates.Click
         Threading.ThreadPool.QueueUserWorkItem(Sub()
-                                                   Dim checkForUpdatesClassObject As New Check_for_Update_Stuff(Me)
+                                                   Dim checkForUpdatesClassObject As New CheckForUpdatesClass(Me)
                                                    checkForUpdatesClassObject.CheckForUpdates()
                                                End Sub)
         btnCheckForUpdates.Enabled = False

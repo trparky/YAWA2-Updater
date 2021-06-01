@@ -38,7 +38,7 @@ Module checkForUpdateModules
     End Sub
 End Module
 
-Class Check_for_Update_Stuff
+Class CheckForUpdatesClass
     Private Const programZipFileURL = "www.toms-world.org/download/YAWA2 Updater.zip"
     Private Const programZipFileSHA256URL = "www.toms-world.org/download/YAWA2 Updater.zip.sha2"
     Private Const programFileNameInZIP As String = "YAWA2 Updater.exe"
