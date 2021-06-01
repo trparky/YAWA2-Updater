@@ -201,7 +201,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.317"
+    Private Const classVersion As String = "1.318"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -210,7 +210,7 @@ Public Class HttpHelper
     Private httpResponseHeaders As Net.WebHeaderCollection = Nothing
     Private httpDownloadProgressPercentage As Short = 0
     Private remoteFileSizeInput, currentFileSize As Long
-    Private httpTimeOut As Long = 5000
+    Private httpTimeOut As Integer = 5000
     Private boolUseHTTPCompression As Boolean = True
     Private lastAccessedURL As String = Nothing
     Private lastException As Exception = Nothing
@@ -838,7 +838,7 @@ beginAgain:
             CaptureSSLInfo(fileDownloadURL, httpWebRequest)
 
             ' Gets the size of the remote file on the web server.
-            remoteFileSizeInput = CType(webResponse.ContentLength, Long)
+            remoteFileSizeInput = webResponse.ContentLength
 
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
 
@@ -856,7 +856,7 @@ beginAgain:
                 httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
                 DownloadStatusUpdateInvoker()
 
-                lngBytesReadFromInternet = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), Long) ' Reads more data into our data buffer.
+                lngBytesReadFromInternet = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
             End While
 
             ' Before we return the MemoryStream to the user we have to reset the position back to the beginning of the Stream. This is so that when the
@@ -962,7 +962,7 @@ beginAgain:
             CaptureSSLInfo(fileDownloadURL, httpWebRequest)
 
             ' Gets the size of the remote file on the web server.
-            remoteFileSizeInput = CType(webResponse.ContentLength, Long)
+            remoteFileSizeInput = webResponse.ContentLength
 
             Dim responseStream As Stream = webResponse.GetResponseStream() ' Gets the response stream.
             fileWriteStream = New FileStream(localFileName, FileMode.Create) ' Creates a file write stream.
@@ -981,7 +981,7 @@ beginAgain:
                 httpDownloadProgressPercentage = CType(Math.Round(amountDownloaded, 0), Short) ' Update the download percentage value.
                 DownloadStatusUpdateInvoker()
 
-                lngBytesReadFromInternet = CType(responseStream.Read(dataBuffer, 0, dataBuffer.Length), Long) ' Reads more data into our data buffer.
+                lngBytesReadFromInternet = responseStream.Read(dataBuffer, 0, dataBuffer.Length) ' Reads more data into our data buffer.
             End While
 
             fileWriteStream.Close() ' Closes the file stream.
@@ -1382,7 +1382,7 @@ beginAgain:
             httpWebRequest.AutomaticDecompression = Net.DecompressionMethods.GZip Or Net.DecompressionMethods.Deflate
         End If
 
-        httpWebRequest.Timeout = CType(httpTimeOut, Integer)
+        httpWebRequest.Timeout = httpTimeOut
         httpWebRequest.KeepAlive = True
     End Sub
 
