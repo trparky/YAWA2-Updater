@@ -131,6 +131,9 @@ Class Check_for_Update_Stuff
             ' Something went wrong so we return a exceptionError value.
             Return ProcessUpdateXMLResponse.exceptionError
         End Try
+
+        ' We return a noUpdateNeeded flag.
+        Return ProcessUpdateXMLResponse.noUpdateNeeded
     End Function
 
     Public Shared Function CheckFolderPermissionsByACLs(folderPath As String) As Boolean
