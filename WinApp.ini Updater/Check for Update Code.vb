@@ -166,7 +166,7 @@ Class CheckForUpdatesClass
         httpHelper.AddHTTPHeader("PROGRAM_NAME", strProgramName)
         httpHelper.AddHTTPHeader("PROGRAM_VERSION", versionString)
         httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
-        If File.Exists("tom") Then httpHelper.AddHTTPCookie("dontcount", "True", "www.toms-world.org", False)
+        If File.Exists("tom") Or File.Exists("thomas") Then httpHelper.AddHTTPCookie("dontcount", "True", "www.toms-world.org", False)
 
         httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
                                             Try
