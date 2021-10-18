@@ -38,8 +38,8 @@ Namespace My
         End Function
 
         Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
-startAgain:
             SyncLock programFunctions.LockObject
+startAgain:
                 Try
                     If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                         IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
