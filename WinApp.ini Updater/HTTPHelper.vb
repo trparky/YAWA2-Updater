@@ -201,7 +201,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.318"
+    Private Const classVersion As String = "1.319"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -229,6 +229,10 @@ Public Class HttpHelper
     Private sslCertificate As X509Certificates.X509Certificate2
     Private urlPreProcessor As Func(Of String, String)
     Private customErrorHandler As [Delegate]
+
+    Private Const strLF As String = vbLf
+    Private Const strCRLF As String = vbCrLf
+
     Private downloadStatusUpdater As [Delegate]
 
     ''' <summary>Retrieves the downloadStatusDetails data from within the Class instance.</summary>
@@ -1234,7 +1238,7 @@ beginAgain:
             If getData.Count <> 0 Then url &= "?" & GetGETDataString()
 
             Dim boundary As String = "---------------------------" & Now.Ticks.ToString("x")
-            Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes((Convert.ToString(vbCr & vbLf & "--") & boundary) & vbCr & vbLf)
+            Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes((Convert.ToString(strCRLF & "--") & boundary) & strCRLF)
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
 
@@ -1415,7 +1419,7 @@ beginAgain:
         If input.Contains(vbCrLf) Then
             Return input ' It's in Windows linefeed format so we return the output as is.
         Else
-            Return input.Replace(vbLf, vbCrLf) ' It's in UNIX linefeed format so we have to convert it to Windows before we return the output.
+            Return input.Replace(strLF, strCRLF) ' It's in UNIX linefeed format so we have to convert it to Windows before we return the output.
         End If
     End Function
 
