@@ -201,7 +201,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.319"
+    Private Const classVersion As String = "1.320"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -612,8 +612,11 @@ Public Class HttpHelper
     ''' <exception cref="DataAlreadyExistsException">If this function throws a dataAlreadyExistsException, it means that the cookie already exists in this Class instance.</exception>
     Public Sub AddHTTPCookie(strCookieName As String, strCookieValue As String, strDomainDomain As String, strCookiePath As String, Optional urlEncodeHeaderContent As Boolean = False)
         If Not DoesCookieExist(strCookieName) Then
-            Dim cookieDetails As New CookieDetails() With {.cookieDomain = strDomainDomain, .cookiePath = strCookiePath}
-            cookieDetails.CookieData = If(urlEncodeHeaderContent, Web.HttpUtility.UrlEncode(strCookieValue), strCookieValue)
+            Dim cookieDetails As New CookieDetails With {
+                .cookieDomain = strDomainDomain,
+                .cookiePath = strCookiePath,
+                .CookieData = If(urlEncodeHeaderContent, Web.HttpUtility.UrlEncode(strCookieValue), strCookieValue)
+            }
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
             lastException = New DataAlreadyExistsException(String.Format("The HTTP Cookie named {0}{1}{0} already exists in the settings for this Class instance.", Chr(34), strCookieName))
@@ -629,8 +632,11 @@ Public Class HttpHelper
     ''' <exception cref="DataAlreadyExistsException">If this function throws a dataAlreadyExistsException, it means that the cookie already exists in this Class instance.</exception>
     Public Sub AddHTTPCookie(strCookieName As String, strCookieValue As String, strCookieDomain As String, Optional urlEncodeHeaderContent As Boolean = False)
         If Not DoesCookieExist(strCookieName) Then
-            Dim cookieDetails As New CookieDetails() With {.cookieDomain = strCookieDomain, .cookiePath = "/"}
-            cookieDetails.CookieData = If(urlEncodeHeaderContent, Web.HttpUtility.UrlEncode(strCookieValue), strCookieValue)
+            Dim cookieDetails As New CookieDetails With {
+                .cookieDomain = strCookieDomain,
+                .cookiePath = "/",
+                .CookieData = If(urlEncodeHeaderContent, Web.HttpUtility.UrlEncode(strCookieValue), strCookieValue)
+            }
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
             lastException = New DataAlreadyExistsException(String.Format("The HTTP Cookie named {0}{1}{0} already exists in the settings for this Class instance.", Chr(34), strCookieName))
