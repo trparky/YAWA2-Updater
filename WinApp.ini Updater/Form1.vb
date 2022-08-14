@@ -138,7 +138,7 @@ Public Class Form1
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
-                            Me.Close()
+                            Close()
                             Return Nothing
                         End If
                     Else
@@ -153,7 +153,7 @@ Public Class Form1
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
-                            Me.Close()
+                            Close()
                             Return Nothing
                         End If
                     Else
@@ -176,34 +176,34 @@ Public Class Form1
                 Exit Sub
             End If
 
-            Me.Invoke(Sub()
-                          lblWebSiteVersion.Text = "Web Site WinApp2.ini Version: " & remoteINIFileVersion
+            Invoke(Sub()
+                       lblWebSiteVersion.Text = "Web Site WinApp2.ini Version: " & remoteINIFileVersion
 
-                          If localINIFileVersion = "(Not Installed)" Then
-                              btnApplyNewINIFile.Enabled = True
-                              lblUpdateNeededOrNot.Text = updateNeeded
-                              lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                              MsgBox("You don't have a CCleaner WinApp2.ini file installed." & DoubleCRLF & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
-                          Else
-                              If remoteINIFileVersion = localINIFileVersion Then
-                                  btnApplyNewINIFile.Enabled = False
-                                  lblUpdateNeededOrNot.Text = updateNotNeeded
-                                  MsgBox("You already have the latest CCleaner INI file version.", MsgBoxStyle.Information, strMessageBoxTitle)
-                              Else
-                                  btnApplyNewINIFile.Enabled = True
-                                  lblUpdateNeededOrNot.Text = updateNeeded
-                                  lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
+                       If localINIFileVersion = "(Not Installed)" Then
+                           btnApplyNewINIFile.Enabled = True
+                           lblUpdateNeededOrNot.Text = updateNeeded
+                           lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
+                           MsgBox("You don't have a CCleaner WinApp2.ini file installed." & DoubleCRLF & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
+                       Else
+                           If remoteINIFileVersion = localINIFileVersion Then
+                               btnApplyNewINIFile.Enabled = False
+                               lblUpdateNeededOrNot.Text = updateNotNeeded
+                               MsgBox("You already have the latest CCleaner INI file version.", MsgBoxStyle.Information, strMessageBoxTitle)
+                           Else
+                               btnApplyNewINIFile.Enabled = True
+                               lblUpdateNeededOrNot.Text = updateNeeded
+                               lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
 
-                                  Dim stringBuilder As New StringBuilder()
-                                  stringBuilder.AppendLine("There is a new version of the CCleaner WinApp2.ini file.")
-                                  stringBuilder.AppendLine()
-                                  stringBuilder.AppendLine("Currently Installed INI File Version: " & localINIFileVersion)
-                                  stringBuilder.AppendLine("New Remote INI File Version: " & remoteINIFileVersion)
+                               Dim stringBuilder As New StringBuilder()
+                               stringBuilder.AppendLine("There is a new version of the CCleaner WinApp2.ini file.")
+                               stringBuilder.AppendLine()
+                               stringBuilder.AppendLine("Currently Installed INI File Version: " & localINIFileVersion)
+                               stringBuilder.AppendLine("New Remote INI File Version: " & remoteINIFileVersion)
 
-                                  MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, strMessageBoxTitle)
-                              End If
-                          End If
-                      End Sub)
+                               MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, strMessageBoxTitle)
+                           End If
+                       End If
+                   End Sub)
         Catch ex As Threading.ThreadAbortException
         Catch ex2 As Exception
             MsgBox(ex2.Message, MsgBoxStyle.Information, strMessageBoxTitle)
@@ -222,25 +222,25 @@ Public Class Form1
                 End If
             End Using
 
-            Me.Invoke(Sub()
-                          lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
+            Invoke(Sub()
+                       lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
 
-                          If boolUpdateLabelOnGUI Then
-                              lblUpdateNeededOrNot.Text = updateNotNeeded
-                              lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
-                          End If
+                       If boolUpdateLabelOnGUI Then
+                           lblUpdateNeededOrNot.Text = updateNotNeeded
+                           lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Regular)
+                       End If
 
-                          If chkTrim.Checked Then
-                              MsgBox("New CCleaner WinApp2.ini File Saved. Trimming of INI file will now commence.", MsgBoxStyle.Information, strMessageBoxTitle)
-                              programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
-                          Else
-                              If chkMobileMode.Checked Then
-                                  MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
-                              Else
-                                  If MsgBox("New CCleaner WinApp2.ini File Saved." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
-                              End If
-                          End If
-                      End Sub)
+                       If chkTrim.Checked Then
+                           MsgBox("New CCleaner WinApp2.ini File Saved. Trimming of INI file will now commence.", MsgBoxStyle.Information, strMessageBoxTitle)
+                           programFunctions.TrimINIFile(strLocationOfCCleaner, remoteINIFileVersion, False)
+                       Else
+                           If chkMobileMode.Checked Then
+                               MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
+                           Else
+                               If MsgBox("New CCleaner WinApp2.ini File Saved." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
+                           End If
+                       End If
+                   End Sub)
         Else
             MsgBox("There was an error while downloading the WinApp2.ini file.", MsgBoxStyle.Information, strMessageBoxTitle)
         End If
