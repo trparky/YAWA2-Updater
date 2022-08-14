@@ -118,7 +118,6 @@ Public Class Form1
         Dim msgBoxResult2 As MsgBoxResult
 
         If chkMobileMode.Checked Then
-            'strLocationOfCCleaner = New IO.FileInfo(Application.ExecutablePath).DirectoryName
             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
         Else
             If Not programFunctions.AreWeAnAdministrator() And Short.Parse(Environment.OSVersion.Version.Major) >= 6 Then
