@@ -162,7 +162,7 @@ Public Class Form1
                 End If
             Catch ex As Exception
                 MsgBox(ex.Message, MsgBoxStyle.Information, strMessageBoxTitle)
-                Return Nothing
+                Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
             End Try
         End If
     End Function
