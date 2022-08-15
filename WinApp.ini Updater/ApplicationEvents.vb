@@ -133,7 +133,7 @@ startAgain:
             End SyncLock
         End Sub
 
-        Private Sub SelectFileInWindowsExplorer(ByVal strFullPath As String)
+        Private Sub SelectFileInWindowsExplorer(strFullPath As String)
             If Not String.IsNullOrEmpty(strFullPath) AndAlso IO.File.Exists(strFullPath) Then
                 Dim pidlList As IntPtr = NativeMethod.NativeMethods.ILCreateFromPathW(strFullPath)
 

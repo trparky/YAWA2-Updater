@@ -6,7 +6,7 @@ Namespace internetFunctions
             Dim httpHelper As New HttpHelper With {.SetUserAgent = CreateHTTPUserAgentHeaderString(), .UseHTTPCompression = True, .SetProxyMode = True}
             httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
 
-            httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
+            httpHelper.SetURLPreProcessor = Function(strURLInput As String) As String
                                                 Try
                                                     If Not strURLInput.Trim.StartsWith("http", StringComparison.OrdinalIgnoreCase) Then
                                                         Return "https://" & strURLInput

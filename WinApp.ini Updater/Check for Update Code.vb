@@ -79,7 +79,7 @@ Class CheckForUpdatesClass
     ''' <summary>This parses the XML updata data and determines if an update is needed.</summary>
     ''' <param name="xmlData">The XML data from the web site.</param>
     ''' <returns>A Boolean value indicating if the program has been updated or not.</returns>
-    Private Function ProcessUpdateXMLData(ByVal xmlData As String, ByRef remoteVersion As Double, ByRef remoteBuild As Short) As ProcessUpdateXMLResponse
+    Private Function ProcessUpdateXMLData(xmlData As String, ByRef remoteVersion As Double, ByRef remoteBuild As Short) As ProcessUpdateXMLResponse
         Try
             Dim xmlDocument As New XmlDocument() ' First we create an XML Document Object.
             xmlDocument.Load(New StringReader(xmlData)) ' Now we try and parse the XML data.
@@ -168,7 +168,7 @@ Class CheckForUpdatesClass
         httpHelper.AddHTTPHeader("OPERATING_SYSTEM", GetFullOSVersionString())
         If File.Exists("dontcount") Then httpHelper.AddHTTPCookie("dontcount", "True", "www.toms-world.org", False)
 
-        httpHelper.SetURLPreProcessor = Function(ByVal strURLInput As String) As String
+        httpHelper.SetURLPreProcessor = Function(strURLInput As String) As String
                                             Try
                                                 If Not strURLInput.Trim.StartsWith("http", StringComparison.OrdinalIgnoreCase) Then
                                                     Return "https://" & strURLInput
@@ -314,7 +314,7 @@ Class CheckForUpdatesClass
         End Try
     End Function
 
-    Private Function BackgroundThreadMessageBox(ByVal strMsgBoxPrompt As String, ByVal strMsgBoxTitle As String) As MsgBoxResult
+    Private Function BackgroundThreadMessageBox(strMsgBoxPrompt As String, strMsgBoxTitle As String) As MsgBoxResult
         If windowObject.InvokeRequired Then
             Return windowObject.Invoke(New Func(Of MsgBoxResult)(Function() MsgBox(strMsgBoxPrompt, MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMsgBoxTitle)))
         Else

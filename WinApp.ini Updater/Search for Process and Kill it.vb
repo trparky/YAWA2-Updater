@@ -3,7 +3,7 @@
     ''' <param name="PID">The PID of the process you are checking the existance of.</param>
     ''' <param name="processObject">If the PID does exist, the function writes back to this argument in a ByRef way a Process Object that can be interacted with outside of this function.</param>
     ''' <returns>Return a Boolean value. If the PID exists, it return a True value. If the PID doesn't exist, it returns a False value.</returns>
-    Private Function DoesProcessIDExist(ByVal PID As Integer, ByRef processObject As Process) As Boolean
+    Private Function DoesProcessIDExist(PID As Integer, ByRef processObject As Process) As Boolean
         Try
             processObject = Process.GetProcessById(PID)
             Return True

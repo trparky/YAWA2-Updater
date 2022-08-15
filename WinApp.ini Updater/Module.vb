@@ -177,7 +177,7 @@ Namespace programFunctions
             boolSleepOnSilentStartup
         End Enum
 
-        Public Function LoadSettingFromINIFile(ByVal settingKey As String, ByRef settingKeyValue As String) As Boolean
+        Public Function LoadSettingFromINIFile(settingKey As String, ByRef settingKeyValue As String) As Boolean
             Try
                 Dim iniFile As New IniFile() ' First we create an IniFile class object.
 
@@ -370,7 +370,7 @@ Namespace programFunctions
             Return Regex.Match(input, "; Version: ([0-9.A-Za-z]+)").Groups(1).Value
         End Function
 
-        Public Function ProcessFilePath(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function ProcessFilePath(tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Dim directory As String = tempString.Split("|")(0).Replace("*", "")
 
             If directory.CaseInsensitiveContains("%ProgramFiles%") Then
@@ -429,7 +429,7 @@ Namespace programFunctions
             Return False
         End Function
 
-        Public Function ProcessRegistryKey(ByVal tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
+        Public Function ProcessRegistryKey(tempString As String, ByRef sectionsToRemove As Specialized.StringCollection, ByRef iniFileSection As IniFile.IniSection) As Boolean
             Try
                 Dim regKey1, regKey2 As RegistryKey
                 If tempString.Contains(".NETFramework") Then Return True
