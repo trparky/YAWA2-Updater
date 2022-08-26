@@ -39,7 +39,7 @@ Partial Class Form1
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
         Me.ChkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
-        Me.Label2 = New System.Windows.Forms.Label()
+        Me.lblSeconds = New System.Windows.Forms.Label()
         Me.txtSeconds = New System.Windows.Forms.TextBox()
         Me.btnSaveSeconds = New System.Windows.Forms.Button()
         Me.SuspendLayout()
@@ -210,14 +210,14 @@ Partial Class Form1
         Me.ChkSleepOnSilentStartup.Text = "Sleep before processing" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "at user logon"
         Me.ChkSleepOnSilentStartup.UseVisualStyleBackColor = True
         '
-        'Label2
+        'lblSeconds
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(528, 415)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(55, 13)
-        Me.Label2.TabIndex = 16
-        Me.Label2.Text = "Seconds?"
+        Me.lblSeconds.AutoSize = True
+        Me.lblSeconds.Location = New System.Drawing.Point(528, 415)
+        Me.lblSeconds.Name = "lblSeconds"
+        Me.lblSeconds.Size = New System.Drawing.Size(55, 13)
+        Me.lblSeconds.TabIndex = 16
+        Me.lblSeconds.Text = "Seconds?"
         '
         'txtSeconds
         '
@@ -242,7 +242,7 @@ Partial Class Form1
         Me.ClientSize = New System.Drawing.Size(690, 445)
         Me.Controls.Add(Me.btnSaveSeconds)
         Me.Controls.Add(Me.txtSeconds)
-        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.lblSeconds)
         Me.Controls.Add(Me.ChkSleepOnSilentStartup)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
@@ -284,7 +284,7 @@ Partial Class Form1
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
     Friend WithEvents ChkSleepOnSilentStartup As CheckBox
-    Friend WithEvents Label2 As Label
+    Friend WithEvents lblSeconds As Label
     Friend WithEvents txtSeconds As TextBox
     Friend WithEvents btnSaveSeconds As Button
 End Class
