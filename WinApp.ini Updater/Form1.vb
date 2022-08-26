@@ -288,7 +288,7 @@ Public Class Form1
 
     Private Sub BtnAbout_Click(sender As Object, e As EventArgs) Handles btnAbout.Click
         Dim version() As String = Application.ProductVersion.Split(".".ToCharArray) ' Gets the program version
-        Dim stringBuilder As New Text.StringBuilder
+        Dim stringBuilder As New StringBuilder
 
         stringBuilder.AppendLine("WinApp.ini Updater")
         stringBuilder.AppendLine("Written By Tom Parkison")
