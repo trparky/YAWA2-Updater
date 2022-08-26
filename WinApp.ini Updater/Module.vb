@@ -31,10 +31,6 @@ Namespace programFunctions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
         Public ReadOnly LockObject As New Object
 
-        Public Function CanIWriteToTheCurrentDirectory() As Boolean
-            Return CheckForUpdatesClass.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
-        End Function
-
         Public Function AreWeAnAdministrator() As Boolean
             Try
                 Dim principal As New WindowsPrincipal(WindowsIdentity.GetCurrent())
@@ -54,31 +50,9 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function ConvertToBase64(input As String) As String
-            Return Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(input))
-        End Function
-
         Public Function ConvertFromBase64(input As String) As String
             Return Text.Encoding.UTF8.GetString(Convert.FromBase64String(input))
         End Function
-
-        Public Sub RemoveSettingFromINIFile(settingToRemove As String)
-            ' Check if the INI file exists.
-            If IO.File.Exists(programConstants.configINIFile) Then
-                ' Yes, it does exist; now let's load the file into memory.
-
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-                iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Now we load the data into memory.
-
-                Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingToRemove) ' Load the data from the INI object into local program memory.
-                If String.IsNullOrWhiteSpace(temp) Then
-                    iniFile.RemoveKey(programConstants.configINISettingSection, settingToRemove) ' Remove the setting from the INI file in memory.
-                End If
-
-                iniFile.Save(programConstants.configINIFile) ' Save the data to disk.
-                iniFile = Nothing ' And destroy the INIFile object.
-            End If
-        End Sub
 
         Public Function GetBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
             Dim boolValue As Boolean
@@ -196,34 +170,6 @@ Namespace programFunctions
             boolSleepOnSilentStartup
             shortSleepOnSilectStartup
         End Enum
-
-        Public Function LoadSettingFromINIFile(settingKey As String, ByRef settingKeyValue As String) As Boolean
-            Try
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-
-                ' Check if the INI file exists.
-                If IO.File.Exists(programConstants.configINIFile) Then
-                    iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Yes, it does exist; now let's load the file into memory.
-
-                    ' Load the data from the INI object into local program memory.
-                    Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingKey)
-                    iniFile = Nothing ' And destroy the INIFile object.
-
-                    If String.IsNullOrWhiteSpace(temp) Then
-                        Return False ' OK, the setting in the INI file doesn't exist so we return with a False Boolean value.
-                    Else
-                        settingKeyValue = temp ' Put the value into the ByRef settingKeyValue variable.
-                        Return True ' And return with a True Boolean value.
-                    End If
-                Else
-                    ' No, it doesn't exist so we simply return with a False Boolean value.
-                    Return False
-                End If
-            Catch ex As Exception
-                Debug.WriteLine(ex.Message & " -- " & ex.StackTrace.Trim)
-                Return False
-            End Try
-        End Function
 
         Public Function GetRemoteINIFileVersion() As String
             Try
