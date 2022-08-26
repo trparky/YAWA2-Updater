@@ -313,7 +313,7 @@ Public Class Form1
         programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolTrim, chkTrim.Checked)
     End Sub
 
-    Private Sub btnSaveSeconds_Click(sender As Object, e As EventArgs) Handles btnSaveSeconds.Click
+    Private Sub BtnSaveSeconds_Click(sender As Object, e As EventArgs) Handles btnSaveSeconds.Click
         Dim shortInput As Short
         If Short.TryParse(txtSeconds.Text, shortInput) Then
             programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.shortSleepOnSilectStartup, shortInput)
