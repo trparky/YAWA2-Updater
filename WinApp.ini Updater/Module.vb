@@ -4,7 +4,7 @@ Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
 
 Namespace programConstants
-    Module programConstants
+    Friend Module programConstants
         Public Const errorRetrievingRemoteINIFileVersion As String = "Error Retrieving Remote INI File Version"
         Public Const customEntriesFile As String = "YAWA2 Updater Custom Entries.txt"
         Public Const configINIFile As String = "YAWA2 Updater Config.ini"
@@ -27,7 +27,7 @@ Public Structure AppSettings
 End Structure
 
 Namespace programFunctions
-    Module functions
+    Friend Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
         Public ReadOnly LockObject As New Object
 
