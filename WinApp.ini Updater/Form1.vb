@@ -97,6 +97,12 @@ Public Class Form1
             ChkSleepOnSilentStartup.Checked = AppSettings.boolSleepOnSilentStartup
             txtSeconds.Text = AppSettings.shortSleepOnSilentStartup
 
+            If Not ChkSleepOnSilentStartup.Checked Then
+                btnSaveSeconds.Visible = False
+                lblSeconds.Visible = False
+                txtSeconds.Visible = False
+            End If
+
             strLocationOfCCleaner = GetLocationOfCCleaner()
 
             If IO.File.Exists(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini")) Then
@@ -331,6 +337,16 @@ Public Class Form1
     End Sub
 
     Private Sub ChkSleepOnSilentStartup_Click(sender As Object, e As EventArgs) Handles ChkSleepOnSilentStartup.Click
+        If ChkSleepOnSilentStartup.Checked Then
+            btnSaveSeconds.Visible = True
+            lblSeconds.Visible = True
+            txtSeconds.Visible = True
+        Else
+            btnSaveSeconds.Visible = False
+            lblSeconds.Visible = False
+            txtSeconds.Visible = False
+        End If
+
         programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolSleepOnSilentStartup, ChkSleepOnSilentStartup.Checked)
     End Sub
 End Class
