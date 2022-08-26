@@ -3,7 +3,7 @@
 '     Purpose: Allow INI manipulation in .NET
 '
 '  Updated By: Thomas Parkison
-'  Updated On: 04/08/2021
+'  Updated On: 08/26/2022
 
 Imports System.IO
 Imports System.Text.RegularExpressions
@@ -132,7 +132,7 @@ Public Class IniFile
     End Sub
 
     ' Gets all the sections
-    Public ReadOnly Property Sections() As System.Collections.ICollection
+    Public ReadOnly Property Sections() As ICollection
         Get
             Return m_sections.Values
         End Get
@@ -173,7 +173,7 @@ Public Class IniFile
     '  Removes all existing sections, returns trus on success
     Public Function RemoveAllSections() As Boolean
         m_sections.Clear()
-        Return (m_sections.Count = 0)
+        Return m_sections.Count = 0
     End Function
 
     ' Returns an IniSection to the section by name, NULL if it was not found
@@ -261,7 +261,7 @@ Public Class IniFile
         End Sub
 
         ' Returns all the keys in a section
-        Public ReadOnly Property Keys() As System.Collections.ICollection
+        Public ReadOnly Property Keys() As ICollection
             Get
                 Return m_keys.Values
             End Get
@@ -277,12 +277,12 @@ Public Class IniFile
         ' Adds a key to the IniSection object, returns a IniKey object to the new or existing object
         Public Function AddKey(sKey As String) As IniKey
             sKey = sKey.Trim()
-            Dim k As IniSection.IniKey = Nothing
+            Dim k As IniKey = Nothing
             If sKey.Length <> 0 Then
                 If m_keys.ContainsKey(sKey) Then
                     k = DirectCast(m_keys(sKey), IniKey)
                 Else
-                    k = New IniSection.IniKey(Me, sKey)
+                    k = New IniKey(Me, sKey)
                     m_keys(sKey) = k
                 End If
             End If
@@ -310,7 +310,7 @@ Public Class IniFile
         ' Removes all the keys in the section
         Public Function RemoveAllKeys() As Boolean
             m_keys.Clear()
-            Return (m_keys.Count = 0)
+            Return m_keys.Count = 0
         End Function
 
         ' Returns a IniKey object to the key by name, NULL if it was not found
