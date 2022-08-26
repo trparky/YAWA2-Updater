@@ -164,6 +164,11 @@ startAgain:
 
             LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup, shortSleepOnSilentStartup)
 
+            If shortSleepOnSilentStartup = 0 Then
+                shortSleepOnSilentStartup = 60
+                programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.shortSleepOnSilectStartup, CType(60, Short))
+            End If
+
             If Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = Application.CommandLineArgs(0).Trim
 
