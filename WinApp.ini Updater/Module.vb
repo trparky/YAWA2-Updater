@@ -23,7 +23,7 @@ End Namespace
 
 Public Structure AppSettings
     Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
-    Public strCustomEntries As String
+    Public strCustomEntries As String, shortSleepOnSilentStartup As Short
 End Structure
 
 Namespace programFunctions
@@ -153,6 +153,25 @@ Namespace programFunctions
             End SyncLock
         End Sub
 
+        Public Sub SaveSettingToAppSettingsXMLFile(AppSettingType As AppSettingType, shortValue As Short)
+            SyncLock LockObject
+                Dim AppSettings As New AppSettings
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+
+                If AppSettingType = AppSettingType.shortSleepOnSilectStartup Then
+                    AppSettings.shortSleepOnSilentStartup = shortValue
+                End If
+
+                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
+                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
+                End Using
+            End SyncLock
+        End Sub
+
         Public Sub SaveCustomEntriesToAppSettingsXMLFile(strValue As String)
             SyncLock LockObject
                 Dim AppSettings As New AppSettings
@@ -175,6 +194,7 @@ Namespace programFunctions
             boolTrim
             boolNotifyAfterUpdateAtLogon
             boolSleepOnSilentStartup
+            shortSleepOnSilectStartup
         End Enum
 
         Public Function LoadSettingFromINIFile(settingKey As String, ByRef settingKeyValue As String) As Boolean

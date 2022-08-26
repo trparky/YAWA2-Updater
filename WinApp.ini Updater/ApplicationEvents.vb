@@ -37,7 +37,7 @@ Namespace My
             End Try
         End Function
 
-        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
+        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean, ByRef shortSleepOnSilentStartup As Short)
             SyncLock programFunctions.LockObject
 startAgain:
                 Try
@@ -61,6 +61,7 @@ startAgain:
                         End Try
 
                         boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
+                        shortSleepOnSilentStartup = AppSettings.shortSleepOnSilentStartup
                         strCustomEntries = Nothing
                         If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
                     Else
@@ -114,7 +115,8 @@ startAgain:
                                 .boolNotifyAfterUpdateAtLogon = False,
                                 .boolTrim = False,
                                 .strCustomEntries = "",
-                                .boolSleepOnSilentStartup = True
+                                .boolSleepOnSilentStartup = True,
+                                .shortSleepOnSilentStartup = 30
                             }
 
                             Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
@@ -158,14 +160,15 @@ startAgain:
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim strCustomEntries As String = Nothing
             Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
+            Dim shortSleepOnSilentStartup As Short
 
-            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup)
+            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup, shortSleepOnSilentStartup)
 
             If Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = Application.CommandLineArgs(0).Trim
 
                 If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
-                    If boolSleepOnSilentStartup Then Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
+                    If boolSleepOnSilentStartup Then Threading.Thread.Sleep(shortSleepOnSilentStartup * 1000)
 
                     If boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName

@@ -39,6 +39,9 @@ Partial Class Form1
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
         Me.ChkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.txtSeconds = New System.Windows.Forms.TextBox()
+        Me.btnSaveSeconds = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'lblWebSiteVersion
@@ -202,16 +205,44 @@ Partial Class Form1
         Me.ChkSleepOnSilentStartup.AutoSize = True
         Me.ChkSleepOnSilentStartup.Location = New System.Drawing.Point(531, 382)
         Me.ChkSleepOnSilentStartup.Name = "ChkSleepOnSilentStartup"
-        Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(159, 30)
+        Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(140, 30)
         Me.ChkSleepOnSilentStartup.TabIndex = 15
-        Me.ChkSleepOnSilentStartup.Text = "Sleep for 30 seconds before" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "processing at user logon"
+        Me.ChkSleepOnSilentStartup.Text = "Sleep before processing" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "at user logon"
         Me.ChkSleepOnSilentStartup.UseVisualStyleBackColor = True
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(528, 415)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(55, 13)
+        Me.Label2.TabIndex = 16
+        Me.Label2.Text = "Seconds?"
+        '
+        'txtSeconds
+        '
+        Me.txtSeconds.Location = New System.Drawing.Point(589, 412)
+        Me.txtSeconds.Name = "txtSeconds"
+        Me.txtSeconds.Size = New System.Drawing.Size(44, 20)
+        Me.txtSeconds.TabIndex = 17
+        '
+        'btnSaveSeconds
+        '
+        Me.btnSaveSeconds.Location = New System.Drawing.Point(639, 410)
+        Me.btnSaveSeconds.Name = "btnSaveSeconds"
+        Me.btnSaveSeconds.Size = New System.Drawing.Size(38, 23)
+        Me.btnSaveSeconds.TabIndex = 18
+        Me.btnSaveSeconds.Text = "Set"
+        Me.btnSaveSeconds.UseVisualStyleBackColor = True
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(690, 445)
+        Me.Controls.Add(Me.btnSaveSeconds)
+        Me.Controls.Add(Me.txtSeconds)
+        Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.ChkSleepOnSilentStartup)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
@@ -253,4 +284,7 @@ Partial Class Form1
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
     Friend WithEvents ChkSleepOnSilentStartup As CheckBox
+    Friend WithEvents Label2 As Label
+    Friend WithEvents txtSeconds As TextBox
+    Friend WithEvents btnSaveSeconds As Button
 End Class

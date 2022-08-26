@@ -95,6 +95,7 @@ Public Class Form1
             chkNotifyAfterUpdateatLogon.Checked = AppSettings.boolNotifyAfterUpdateAtLogon
             chkMobileMode.Checked = AppSettings.boolMobileMode
             ChkSleepOnSilentStartup.Checked = AppSettings.boolSleepOnSilentStartup
+            txtSeconds.Text = AppSettings.shortSleepOnSilentStartup
 
             strLocationOfCCleaner = GetLocationOfCCleaner()
 
@@ -310,6 +311,16 @@ Public Class Form1
 
     Private Sub ChkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
         programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolTrim, chkTrim.Checked)
+    End Sub
+
+    Private Sub btnSaveSeconds_Click(sender As Object, e As EventArgs) Handles btnSaveSeconds.Click
+        Dim shortInput As Short
+        If Short.TryParse(txtSeconds.Text, shortInput) Then
+            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.shortSleepOnSilectStartup, shortInput)
+            MsgBox("Setting Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
+        Else
+            MsgBox("Invalid User Input! Please put a number into the text field.", MsgBoxStyle.Critical, strMessageBoxTitle)
+        End If
     End Sub
 
     Private Sub TxtCustomEntries_TextChanged(sender As Object, e As EventArgs) Handles TxtCustomEntries.TextChanged
