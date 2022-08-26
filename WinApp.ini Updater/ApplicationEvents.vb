@@ -1,5 +1,4 @@
-﻿Imports System.Text.RegularExpressions
-Imports System.Xml.Serialization
+﻿Imports System.Xml.Serialization
 Imports Microsoft.Win32
 
 Namespace My
@@ -116,7 +115,7 @@ startAgain:
                                 .boolTrim = False,
                                 .strCustomEntries = "",
                                 .boolSleepOnSilentStartup = True,
-                                .shortSleepOnSilentStartup = 30
+                                .shortSleepOnSilentStartup = 60
                             }
 
                             Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
