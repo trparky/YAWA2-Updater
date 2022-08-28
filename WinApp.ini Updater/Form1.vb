@@ -171,7 +171,8 @@ Public Class Form1
 
     Sub GetINIVersion()
         Try
-            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
+            Dim exceptionObject As Exception = Nothing
+            remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(exceptionObject)
 
             If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                 MsgBox("Error Retrieving Remote INI File Version.  Please try again.", MsgBoxStyle.Critical, strMessageBoxTitle)

@@ -185,10 +185,14 @@ startAgain:
                             localINIFileVersion = "(Not Installed)"
                         End If
 
-                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
+                        Dim exceptionObject As Exception = Nothing
+                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(exceptionObject)
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
-                            MsgBox("Error Retrieving Remote INI File Version. Please try again.", MsgBoxStyle.Critical, messageBoxTitle)
+                            Dim strExceptionMessage As String = Nothing
+                            If exceptionObject IsNot Nothing Then strExceptionMessage = DoubleCRLF & exceptionObject.Message
+
+                            MsgBox("Error Retrieving Remote INI File Version. Please try again." & strExceptionMessage, MsgBoxStyle.Critical, messageBoxTitle)
                             e.Cancel = True
                             Exit Sub
                         End If
