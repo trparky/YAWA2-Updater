@@ -82,20 +82,14 @@ Public Class Form1
             Else : chkLoadAtUserStartup.Visible = False
             End If
 
-            Dim AppSettings As New AppSettings
-            SyncLock programFunctions.LockObject
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-            End SyncLock
+            LoadSettingsFromXMLFileAppSettings()
 
-            If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then TxtCustomEntries.Text = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
-            chkTrim.Checked = AppSettings.boolTrim
-            chkNotifyAfterUpdateatLogon.Checked = AppSettings.boolNotifyAfterUpdateAtLogon
-            chkMobileMode.Checked = AppSettings.boolMobileMode
-            ChkSleepOnSilentStartup.Checked = AppSettings.boolSleepOnSilentStartup
-            txtSeconds.Text = AppSettings.shortSleepOnSilentStartup
+            If Not String.IsNullOrEmpty(AppSettingsObject.strCustomEntries) Then TxtCustomEntries.Text = AppSettingsObject.strCustomEntries.Replace(vbLf, vbCrLf)
+            chkTrim.Checked = AppSettingsObject.boolTrim
+            chkNotifyAfterUpdateatLogon.Checked = AppSettingsObject.boolNotifyAfterUpdateAtLogon
+            chkMobileMode.Checked = AppSettingsObject.boolMobileMode
+            ChkSleepOnSilentStartup.Checked = AppSettingsObject.boolSleepOnSilentStartup
+            txtSeconds.Text = AppSettingsObject.shortSleepOnSilentStartup
 
             If Not ChkSleepOnSilentStartup.Checked Then
                 btnSaveSeconds.Visible = False
@@ -140,7 +134,8 @@ Public Class Form1
                         msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
-                            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
+                            AppSettingsObject.boolMobileMode = True
+                            SaveSettingsToXMLFile()
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -155,7 +150,8 @@ Public Class Form1
                         msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
-                            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, True)
+                            AppSettingsObject.boolMobileMode = True
+                            SaveSettingsToXMLFile()
                             chkMobileMode.Checked = True
                             Return New IO.FileInfo(Application.ExecutablePath).DirectoryName
                         Else
@@ -306,23 +302,27 @@ Public Class Form1
     End Sub
 
     Private Sub ChkNotifyAfterUpdateatLogon_Click(sender As Object, e As EventArgs) Handles chkNotifyAfterUpdateatLogon.Click
-        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolNotifyAfterUpdateAtLogon, chkNotifyAfterUpdateatLogon.Checked)
+        AppSettingsObject.boolNotifyAfterUpdateAtLogon = chkNotifyAfterUpdateatLogon.Checked
+        SaveSettingsToXMLFile()
     End Sub
 
     Private Sub ChkMobileMode_Click(sender As Object, e As EventArgs) Handles chkMobileMode.Click
-        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolMobileMode, chkMobileMode.Checked)
+        AppSettingsObject.boolMobileMode = chkMobileMode.Checked
+        SaveSettingsToXMLFile()
         chkLoadAtUserStartup.Enabled = Not chkMobileMode.Checked
         GetLocationOfCCleaner()
     End Sub
 
     Private Sub ChkTrim_Click(sender As Object, e As EventArgs) Handles chkTrim.Click
-        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolTrim, chkTrim.Checked)
+        AppSettingsObject.boolTrim = chkTrim.Checked
+        SaveSettingsToXMLFile()
     End Sub
 
     Private Sub BtnSaveSeconds_Click(sender As Object, e As EventArgs) Handles btnSaveSeconds.Click
         Dim shortInput As Short
         If Short.TryParse(txtSeconds.Text, shortInput) Then
-            programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.shortSleepOnSilectStartup, shortInput)
+            AppSettingsObject.shortSleepOnSilentStartup = shortInput
+            SaveSettingsToXMLFile()
             MsgBox("Setting Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
         Else
             MsgBox("Invalid User Input! Please put a number into the text field.", MsgBoxStyle.Critical, strMessageBoxTitle)
@@ -332,7 +332,8 @@ Public Class Form1
     Private Sub TxtCustomEntries_TextChanged(sender As Object, e As EventArgs) Handles TxtCustomEntries.TextChanged
         If boolDoneLoading Then
             TxtCustomEntries.Text = TxtCustomEntries.Text
-            programFunctions.SaveCustomEntriesToAppSettingsXMLFile(TxtCustomEntries.Text)
+            AppSettingsObject.strCustomEntries = TxtCustomEntries.Text
+            SaveSettingsToXMLFile()
         End If
     End Sub
 
@@ -347,6 +348,7 @@ Public Class Form1
             txtSeconds.Visible = False
         End If
 
-        programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.boolSleepOnSilentStartup, ChkSleepOnSilentStartup.Checked)
+        AppSettingsObject.boolSleepOnSilentStartup = ChkSleepOnSilentStartup.Checked
+        SaveSettingsToXMLFile()
     End Sub
 End Class

@@ -2,6 +2,7 @@
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
+Imports YAWA2_Updater
 
 Namespace programConstants
     Friend Module programConstants
@@ -21,10 +22,38 @@ Namespace programConstants
     End Module
 End Namespace
 
-Public Structure AppSettings
-    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
-    Public strCustomEntries As String, shortSleepOnSilentStartup As Short
-End Structure
+Namespace Global
+    Public Structure AppSettings
+        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
+        Public strCustomEntries As String, shortSleepOnSilentStartup As Short
+    End Structure
+
+    Module Globals
+        Public AppSettingsObject As AppSettings
+
+        Public Function LoadSettingsFromXMLFileAppSettings() As AppSettings
+            SyncLock programFunctions.LockObject
+                AppSettingsObject = New AppSettings
+
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
+                    AppSettingsObject = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+
+                Return AppSettingsObject
+            End SyncLock
+        End Function
+
+        Public Sub SaveSettingsToXMLFile()
+            SyncLock programFunctions.LockObject
+                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
+                    xmlSerializerObject.Serialize(streamWriter, AppSettingsObject)
+                End Using
+            End SyncLock
+        End Sub
+    End Module
+End Namespace
 
 Namespace programFunctions
     Friend Module functions
@@ -102,76 +131,7 @@ Namespace programFunctions
             unknown
         End Enum
 
-        Public Sub SaveSettingToAppSettingsXMLFile(AppSettingType As AppSettingType, boolValue As Boolean)
-            SyncLock LockObject
-                Dim AppSettings As New AppSettings
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-
-                If AppSettingType = AppSettingType.boolMobileMode Then
-                    AppSettings.boolMobileMode = boolValue
-                ElseIf AppSettingType = AppSettingType.boolTrim Then
-                    AppSettings.boolTrim = boolValue
-                ElseIf AppSettingType = AppSettingType.boolNotifyAfterUpdateAtLogon Then
-                    AppSettings.boolNotifyAfterUpdateAtLogon = boolValue
-                ElseIf AppSettingType = AppSettingType.boolSleepOnSilentStartup Then
-                    AppSettings.boolSleepOnSilentStartup = boolValue
-                End If
-
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Sub SaveSettingToAppSettingsXMLFile(AppSettingType As AppSettingType, shortValue As Short)
-            SyncLock LockObject
-                Dim AppSettings As New AppSettings
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-
-                If AppSettingType = AppSettingType.shortSleepOnSilectStartup Then
-                    AppSettings.shortSleepOnSilentStartup = shortValue
-                End If
-
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Sub SaveCustomEntriesToAppSettingsXMLFile(strValue As String)
-            SyncLock LockObject
-                Dim AppSettings As New AppSettings
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-
-                AppSettings.strCustomEntries = strValue
-
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Enum AppSettingType As Byte
-            boolMobileMode
-            boolTrim
-            boolNotifyAfterUpdateAtLogon
-            boolSleepOnSilentStartup
-            shortSleepOnSilectStartup
-        End Enum
-
-        Public Function GetRemoteINIFileVersion() As String
+        Public Function GetRemoteINIFileVersion(ByRef exceptionObject As Exception) As String
             Try
                 Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
@@ -207,7 +167,6 @@ Namespace programFunctions
             Dim matchData As Match = Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers)", RegexOptions.Singleline Or RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
-            matchData = Nothing
 
             Dim iniFile As New IniFile()
             iniFile.LoadINIFileFromFile(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
@@ -280,7 +239,6 @@ Namespace programFunctions
             Dim rawINIFileContents As String = iniFile.GetRawINIText.Trim
 
             iniFileNotes = iniFileNotes.Replace(entriesString, iniFile.Sections.Count.ToString("N0"))
-            iniFile = Nothing
 
             Dim newINIFileContents As String = "; Version: " & remoteINIFileVersion & vbCrLf
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
@@ -295,21 +253,10 @@ Namespace programFunctions
                 streamWriter.Write(newINIFileContents)
             End Using
 
-            ' These are potentially large variables, we need to trash them to free up memory.
-            oldINIFileContents = Nothing
-            newINIFileContents = Nothing
-            rawINIFileContents = Nothing
-
-            Dim AppSettings As New AppSettings
-            SyncLock LockObject
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-            End SyncLock
+            LoadSettingsFromXMLFileAppSettings()
 
             If Not boolSilentMode Then
-                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
+                If Not AppSettingsObject.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")

@@ -47,22 +47,19 @@ startAgain:
                     If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
 
                     If IO.File.Exists(programConstants.configXMLFile) Then
-                        Dim AppSettings As New AppSettings
+                        AppSettingsObject = New AppSettings
 
                         Try
-                            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                            End Using
+                            AppSettingsObject = LoadSettingsFromXMLFileAppSettings()
                         Catch ex As Exception
                             IO.File.Delete(programConstants.configXMLFile)
                             GoTo startAgain
                         End Try
 
-                        boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
-                        shortSleepOnSilentStartup = AppSettings.shortSleepOnSilentStartup
+                        boolSleepOnSilentStartup = AppSettingsObject.boolSleepOnSilentStartup
+                        shortSleepOnSilentStartup = AppSettingsObject.shortSleepOnSilentStartup
                         strCustomEntries = Nothing
-                        If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
+                        If Not String.IsNullOrEmpty(AppSettingsObject.strCustomEntries) Then strCustomEntries = AppSettingsObject.strCustomEntries.Replace(vbLf, vbCrLf)
                     Else
                         If IO.File.Exists(programConstants.configINIFile) Then
                             Dim iniFile As New IniFile()
@@ -94,7 +91,7 @@ startAgain:
                                 boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
                             End If
 
-                            Dim AppSettings As New AppSettings With {
+                            AppSettingsObject = New AppSettings With {
                                 .boolMobileMode = boolMobileMode,
                                 .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
                                 .boolTrim = boolTrim,
@@ -102,14 +99,11 @@ startAgain:
                                 .boolSleepOnSilentStartup = True
                             }
 
-                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                            End Using
+                            SaveSettingsToXMLFile()
 
                             IO.File.Delete(programConstants.configINIFile)
                         Else
-                            Dim AppSettings As New AppSettings With {
+                            AppSettingsObject = New AppSettings With {
                                 .boolMobileMode = False,
                                 .boolNotifyAfterUpdateAtLogon = False,
                                 .boolTrim = False,
@@ -118,10 +112,7 @@ startAgain:
                                 .shortSleepOnSilentStartup = 60
                             }
 
-                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                            End Using
+                            SaveSettingsToXMLFile()
                         End If
                     End If
                 Catch ex As UnauthorizedAccessException
@@ -165,7 +156,8 @@ startAgain:
 
             If shortSleepOnSilentStartup = 0 Then
                 shortSleepOnSilentStartup = 60
-                programFunctions.SaveSettingToAppSettingsXMLFile(programFunctions.AppSettingType.shortSleepOnSilectStartup, CType(60, Short))
+                AppSettingsObject.shortSleepOnSilentStartup = 60
+                SaveSettingsToXMLFile()
             End If
 
             If Application.CommandLineArgs.Count = 1 Then
@@ -202,26 +194,15 @@ startAgain:
                         End If
 
                         If IO.File.Exists(programConstants.customEntriesFile) Then
-                            SyncLock programFunctions.LockObject
-                                Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                                    strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
-                                End Using
+                            Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
+                                strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
+                            End Using
 
-                                Dim AppSettings As New AppSettings
-                                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                                End Using
+                            LoadSettingsFromXMLFileAppSettings()
+                            AppSettingsObject.strCustomEntries = strCustomEntries
+                            SaveSettingsToXMLFile()
 
-                                AppSettings.strCustomEntries = strCustomEntries
-
-                                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                                End Using
-
-                                IO.File.Delete(programConstants.customEntriesFile)
-                            End SyncLock
+                            IO.File.Delete(programConstants.customEntriesFile)
                         End If
 
                         If remoteINIFileVersion.Trim.Equals(localINIFileVersion.Trim, StringComparison.OrdinalIgnoreCase) Then
