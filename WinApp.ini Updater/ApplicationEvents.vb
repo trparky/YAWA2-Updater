@@ -50,7 +50,7 @@ startAgain:
                         AppSettingsObject = New AppSettings
 
                         Try
-                            AppSettingsObject = LoadSettingsFromXMLFileAppSettings()
+                            LoadSettingsFromXMLFileAppSettings()
                         Catch ex As Exception
                             IO.File.Delete(programConstants.configXMLFile)
                             GoTo startAgain
@@ -202,7 +202,6 @@ startAgain:
                                 strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
                             End Using
 
-                            LoadSettingsFromXMLFileAppSettings()
                             AppSettingsObject.strCustomEntries = strCustomEntries
                             SaveSettingsToXMLFile()
 

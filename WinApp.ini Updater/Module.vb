@@ -31,7 +31,7 @@ Namespace Global
     Module Globals
         Public AppSettingsObject As AppSettings
 
-        Public Function LoadSettingsFromXMLFileAppSettings() As AppSettings
+        Public Sub LoadSettingsFromXMLFileAppSettings()
             SyncLock programFunctions.LockObject
                 AppSettingsObject = New AppSettings
 
@@ -39,10 +39,8 @@ Namespace Global
                     Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
                     AppSettingsObject = xmlSerializerObject.Deserialize(streamReader)
                 End Using
-
-                Return AppSettingsObject
             End SyncLock
-        End Function
+        End Sub
 
         Public Sub SaveSettingsToXMLFile()
             SyncLock programFunctions.LockObject
@@ -253,8 +251,6 @@ Namespace programFunctions
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 streamWriter.Write(newINIFileContents)
             End Using
-
-            LoadSettingsFromXMLFileAppSettings()
 
             If Not boolSilentMode Then
                 If Not AppSettingsObject.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
