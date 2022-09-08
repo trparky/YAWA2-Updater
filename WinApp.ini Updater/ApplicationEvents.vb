@@ -47,19 +47,19 @@ startAgain:
                     If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
 
                     If IO.File.Exists(programConstants.configXMLFile) Then
-                        AppSettingsObject = New AppSettings
+                        AppSettings.AppSettingsObject = New AppSettings.AppSettings
 
                         Try
-                            LoadSettingsFromXMLFileAppSettings()
+                            AppSettings.LoadSettingsFromXMLFileAppSettings()
                         Catch ex As Exception
                             IO.File.Delete(programConstants.configXMLFile)
                             GoTo startAgain
                         End Try
 
-                        boolSleepOnSilentStartup = AppSettingsObject.boolSleepOnSilentStartup
-                        shortSleepOnSilentStartup = AppSettingsObject.shortSleepOnSilentStartup
+                        boolSleepOnSilentStartup = AppSettings.AppSettingsObject.boolSleepOnSilentStartup
+                        shortSleepOnSilentStartup = AppSettings.AppSettingsObject.shortSleepOnSilentStartup
                         strCustomEntries = Nothing
-                        If Not String.IsNullOrEmpty(AppSettingsObject.strCustomEntries) Then strCustomEntries = AppSettingsObject.strCustomEntries.Replace(vbLf, vbCrLf)
+                        If Not String.IsNullOrEmpty(AppSettings.AppSettingsObject.strCustomEntries) Then strCustomEntries = AppSettings.AppSettingsObject.strCustomEntries.Replace(vbLf, vbCrLf)
                     Else
                         If IO.File.Exists(programConstants.configINIFile) Then
                             Dim iniFile As New IniFile()
@@ -91,7 +91,7 @@ startAgain:
                                 boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
                             End If
 
-                            AppSettingsObject = New AppSettings With {
+                            AppSettings.AppSettingsObject = New AppSettings.AppSettings With {
                                 .boolMobileMode = boolMobileMode,
                                 .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
                                 .boolTrim = boolTrim,
@@ -99,11 +99,11 @@ startAgain:
                                 .boolSleepOnSilentStartup = True
                             }
 
-                            SaveSettingsToXMLFile()
+                            AppSettings.SaveSettingsToXMLFile()
 
                             IO.File.Delete(programConstants.configINIFile)
                         Else
-                            AppSettingsObject = New AppSettings With {
+                            AppSettings.AppSettingsObject = New AppSettings.AppSettings With {
                                 .boolMobileMode = False,
                                 .boolNotifyAfterUpdateAtLogon = False,
                                 .boolTrim = False,
@@ -112,7 +112,7 @@ startAgain:
                                 .shortSleepOnSilentStartup = 60
                             }
 
-                            SaveSettingsToXMLFile()
+                            AppSettings.SaveSettingsToXMLFile()
                         End If
                     End If
                 Catch ex As UnauthorizedAccessException
@@ -156,8 +156,8 @@ startAgain:
 
             If shortSleepOnSilentStartup = 0 Then
                 shortSleepOnSilentStartup = 60
-                AppSettingsObject.shortSleepOnSilentStartup = 60
-                SaveSettingsToXMLFile()
+                AppSettings.AppSettingsObject.shortSleepOnSilentStartup = 60
+                AppSettings.SaveSettingsToXMLFile()
             End If
 
             If Application.CommandLineArgs.Count = 1 Then
@@ -202,8 +202,8 @@ startAgain:
                                 strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
                             End Using
 
-                            AppSettingsObject.strCustomEntries = strCustomEntries
-                            SaveSettingsToXMLFile()
+                            AppSettings.AppSettingsObject.strCustomEntries = strCustomEntries
+                            AppSettings.SaveSettingsToXMLFile()
 
                             IO.File.Delete(programConstants.customEntriesFile)
                         End If

@@ -1,57 +1,7 @@
 ﻿Imports Microsoft.Win32
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
-Imports System.Xml.Serialization
 Imports YAWA2_Updater
-
-Namespace programConstants
-    Friend Module programConstants
-        Public Const errorRetrievingRemoteINIFileVersion As String = "Error Retrieving Remote INI File Version"
-        Public Const customEntriesFile As String = "YAWA2 Updater Custom Entries.txt"
-        Public Const configINIFile As String = "YAWA2 Updater Config.ini"
-        Public Const configXMLFile As String = "YAWA2 Updater Config.xml"
-
-        Public Const WinApp2INIFileURL As String = "https://raw.githubusercontent.com/MoscaDotTo/Winapp2/master/Winapp2.ini"
-
-        Public Const configINISettingSection As String = "Configuration"
-        Public Const configINICustomEntriesKey As String = "customEntries"
-        Public Const configINIMobileModeKey As String = "MobileMode"
-        Public Const configINITrimKey As String = "trim"
-        Public Const configINIUseSSLKey As String = "useSSL"
-        Public Const configINInotifyAfterUpdateAtLogonKey As String = "notifyAfterUpdateAtLogon"
-    End Module
-End Namespace
-
-Namespace Global
-    Public Structure AppSettings
-        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
-        Public strCustomEntries As String, shortSleepOnSilentStartup As Short
-    End Structure
-
-    Module Globals
-        Public AppSettingsObject As AppSettings
-
-        Public Sub LoadSettingsFromXMLFileAppSettings()
-            SyncLock programFunctions.LockObject
-                AppSettingsObject = New AppSettings
-
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
-                    AppSettingsObject = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Sub SaveSettingsToXMLFile()
-            SyncLock programFunctions.LockObject
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettingsObject)
-                End Using
-            End SyncLock
-        End Sub
-    End Module
-End Namespace
 
 Namespace programFunctions
     Friend Module functions
@@ -253,7 +203,7 @@ Namespace programFunctions
             End Using
 
             If Not boolSilentMode Then
-                If Not AppSettingsObject.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
+                If Not AppSettings.AppSettingsObject.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")
