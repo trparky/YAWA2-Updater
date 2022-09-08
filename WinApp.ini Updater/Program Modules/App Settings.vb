@@ -1,7 +1,6 @@
 ﻿Imports System.Xml.Serialization
-Imports YAWA2_Updater
 
-Namespace Global
+Namespace AppSettings
     Public Structure AppSettings
         Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
         Public strCustomEntries As String, shortSleepOnSilentStartup As Short
