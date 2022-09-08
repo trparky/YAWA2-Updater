@@ -2,9 +2,10 @@
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
+Imports YAWA2_Updater
 
 Namespace programConstants
-    Module programConstants
+    Friend Module programConstants
         Public Const errorRetrievingRemoteINIFileVersion As String = "Error Retrieving Remote INI File Version"
         Public Const customEntriesFile As String = "YAWA2 Updater Custom Entries.txt"
         Public Const configINIFile As String = "YAWA2 Updater Config.ini"
@@ -21,19 +22,41 @@ Namespace programConstants
     End Module
 End Namespace
 
-Public Structure AppSettings
-    Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
-    Public strCustomEntries As String
-End Structure
+Namespace Global
+    Public Structure AppSettings
+        Public boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
+        Public strCustomEntries As String, shortSleepOnSilentStartup As Short
+    End Structure
+
+    Module Globals
+        Public AppSettingsObject As AppSettings
+
+        Public Sub LoadSettingsFromXMLFileAppSettings()
+            SyncLock programFunctions.LockObject
+                AppSettingsObject = New AppSettings
+
+                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
+                    AppSettingsObject = xmlSerializerObject.Deserialize(streamReader)
+                End Using
+            End SyncLock
+        End Sub
+
+        Public Sub SaveSettingsToXMLFile()
+            SyncLock programFunctions.LockObject
+                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
+                    Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
+                    xmlSerializerObject.Serialize(streamWriter, AppSettingsObject)
+                End Using
+            End SyncLock
+        End Sub
+    End Module
+End Namespace
 
 Namespace programFunctions
-    Module functions
+    Friend Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
         Public ReadOnly LockObject As New Object
-
-        Public Function CanIWriteToTheCurrentDirectory() As Boolean
-            Return CheckForUpdatesClass.CheckFolderPermissionsByACLs(New IO.FileInfo(Application.ExecutablePath).DirectoryName)
-        End Function
 
         Public Function AreWeAnAdministrator() As Boolean
             Try
@@ -54,31 +77,9 @@ Namespace programFunctions
             End Try
         End Function
 
-        Public Function ConvertToBase64(input As String) As String
-            Return Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(input))
-        End Function
-
         Public Function ConvertFromBase64(input As String) As String
             Return Text.Encoding.UTF8.GetString(Convert.FromBase64String(input))
         End Function
-
-        Public Sub RemoveSettingFromINIFile(settingToRemove As String)
-            ' Check if the INI file exists.
-            If IO.File.Exists(programConstants.configINIFile) Then
-                ' Yes, it does exist; now let's load the file into memory.
-
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-                iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Now we load the data into memory.
-
-                Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingToRemove) ' Load the data from the INI object into local program memory.
-                If String.IsNullOrWhiteSpace(temp) Then
-                    iniFile.RemoveKey(programConstants.configINISettingSection, settingToRemove) ' Remove the setting from the INI file in memory.
-                End If
-
-                iniFile.Save(programConstants.configINIFile) ' Save the data to disk.
-                iniFile = Nothing ' And destroy the INIFile object.
-            End If
-        End Sub
 
         Public Function GetBooleanSettingFromINIFile(ByRef iniFile As IniFile, strSetting As String) As Boolean
             Dim boolValue As Boolean
@@ -128,94 +129,18 @@ Namespace programFunctions
             unknown
         End Enum
 
-        Public Sub SaveSettingToAppSettingsXMLFile(AppSettingType As AppSettingType, boolValue As Boolean)
-            SyncLock LockObject
-                Dim AppSettings As New AppSettings
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-
-                If AppSettingType = AppSettingType.boolMobileMode Then
-                    AppSettings.boolMobileMode = boolValue
-                ElseIf AppSettingType = AppSettingType.boolTrim Then
-                    AppSettings.boolTrim = boolValue
-                ElseIf AppSettingType = AppSettingType.boolNotifyAfterUpdateAtLogon Then
-                    AppSettings.boolNotifyAfterUpdateAtLogon = boolValue
-                ElseIf AppSettingType = AppSettingType.boolSleepOnSilentStartup Then
-                    AppSettings.boolSleepOnSilentStartup = boolValue
-                End If
-
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Sub SaveCustomEntriesToAppSettingsXMLFile(strValue As String)
-            SyncLock LockObject
-                Dim AppSettings As New AppSettings
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-
-                AppSettings.strCustomEntries = strValue
-
-                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                End Using
-            End SyncLock
-        End Sub
-
-        Public Enum AppSettingType As Byte
-            boolMobileMode
-            boolTrim
-            boolNotifyAfterUpdateAtLogon
-            boolSleepOnSilentStartup
-        End Enum
-
-        Public Function LoadSettingFromINIFile(settingKey As String, ByRef settingKeyValue As String) As Boolean
-            Try
-                Dim iniFile As New IniFile() ' First we create an IniFile class object.
-
-                ' Check if the INI file exists.
-                If IO.File.Exists(programConstants.configINIFile) Then
-                    iniFile.LoadINIFileFromFile(programConstants.configINIFile) ' Yes, it does exist; now let's load the file into memory.
-
-                    ' Load the data from the INI object into local program memory.
-                    Dim temp As String = iniFile.GetKeyValue(programConstants.configINISettingSection, settingKey)
-                    iniFile = Nothing ' And destroy the INIFile object.
-
-                    If String.IsNullOrWhiteSpace(temp) Then
-                        Return False ' OK, the setting in the INI file doesn't exist so we return with a False Boolean value.
-                    Else
-                        settingKeyValue = temp ' Put the value into the ByRef settingKeyValue variable.
-                        Return True ' And return with a True Boolean value.
-                    End If
-                Else
-                    ' No, it doesn't exist so we simply return with a False Boolean value.
-                    Return False
-                End If
-            Catch ex As Exception
-                Debug.WriteLine(ex.Message & " -- " & ex.StackTrace.Trim)
-                Return False
-            End Try
-        End Function
-
-        Public Function GetRemoteINIFileVersion() As String
+        Public Function GetRemoteINIFileVersion(ByRef exceptionObject As Exception) As String
             Try
                 Dim httpHelper As HttpHelper = internetFunctions.CreateNewHTTPHelperObject()
                 Dim strINIFileData As String = Nothing
 
-                If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 2048, False) Then
+                If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, strINIFileData, 0, 2048, True) Then
                     Return GetINIVersionFromString(strINIFileData)
                 Else
                     Return programConstants.errorRetrievingRemoteINIFileVersion
                 End If
             Catch ex As Exception
+                exceptionObject = ex
                 Return programConstants.errorRetrievingRemoteINIFileVersion
             End Try
         End Function
@@ -241,7 +166,6 @@ Namespace programFunctions
             Dim matchData As Match = Regex.Match(oldINIFileContents, "(; # of entries: ([0-9,]*).*; Chrome/Chromium based browsers)", RegexOptions.Singleline Or RegexOptions.IgnoreCase)
             Dim iniFileNotes As String = matchData.Groups(1).Value()
             Dim entriesString As String = matchData.Groups(2).Value()
-            matchData = Nothing
 
             Dim iniFile As New IniFile()
             iniFile.LoadINIFileFromFile(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
@@ -314,7 +238,6 @@ Namespace programFunctions
             Dim rawINIFileContents As String = iniFile.GetRawINIText.Trim
 
             iniFileNotes = iniFileNotes.Replace(entriesString, iniFile.Sections.Count.ToString("N0"))
-            iniFile = Nothing
 
             Dim newINIFileContents As String = "; Version: " & remoteINIFileVersion & vbCrLf
             newINIFileContents &= "; Last Updated On: " & Now.Date.ToLongDateString & vbCrLf
@@ -329,21 +252,8 @@ Namespace programFunctions
                 streamWriter.Write(newINIFileContents)
             End Using
 
-            ' These are potentially large variables, we need to trash them to free up memory.
-            oldINIFileContents = Nothing
-            newINIFileContents = Nothing
-            rawINIFileContents = Nothing
-
-            Dim AppSettings As New AppSettings
-            SyncLock LockObject
-                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                End Using
-            End SyncLock
-
             If Not boolSilentMode Then
-                If Not AppSettings.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
+                If Not AppSettingsObject.boolMobileMode AndAlso MsgBox("INI File Trim Complete. A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp.ini Updater") = MsgBoxResult.Yes Then
                     RunCCleaner(strLocationOfCCleaner)
                 Else
                     MsgBox("INI File Trim Complete.  A total of " & sectionsToRemove.Count.ToString("N0", Globalization.CultureInfo.CreateSpecificCulture("en-US")) & " sections were removed.", MsgBoxStyle.Information, "WinApp.ini Updater")

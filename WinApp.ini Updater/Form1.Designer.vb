@@ -25,7 +25,7 @@ Partial Class Form1
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
         Me.lblWebSiteVersion = New System.Windows.Forms.Label()
         Me.lblYourVersion = New System.Windows.Forms.Label()
-        Me.Label1 = New System.Windows.Forms.Label()
+        Me.lblYourCustomEntries = New System.Windows.Forms.Label()
         Me.TxtCustomEntries = New System.Windows.Forms.TextBox()
         Me.chkTrim = New System.Windows.Forms.CheckBox()
         Me.chkLoadAtUserStartup = New System.Windows.Forms.CheckBox()
@@ -39,6 +39,9 @@ Partial Class Form1
         Me.btnTrim = New System.Windows.Forms.Button()
         Me.btnApplyNewINIFile = New System.Windows.Forms.Button()
         Me.ChkSleepOnSilentStartup = New System.Windows.Forms.CheckBox()
+        Me.lblSeconds = New System.Windows.Forms.Label()
+        Me.txtSeconds = New System.Windows.Forms.TextBox()
+        Me.btnSaveSeconds = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'lblWebSiteVersion
@@ -59,14 +62,14 @@ Partial Class Form1
         Me.lblYourVersion.TabIndex = 1
         Me.lblYourVersion.Text = "Your WinApp2.ini Version:"
         '
-        'Label1
+        'lblYourCustomEntries
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(4, 73)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(102, 13)
-        Me.Label1.TabIndex = 2
-        Me.Label1.Text = "Your Custom Entries"
+        Me.lblYourCustomEntries.AutoSize = True
+        Me.lblYourCustomEntries.Location = New System.Drawing.Point(4, 73)
+        Me.lblYourCustomEntries.Name = "lblYourCustomEntries"
+        Me.lblYourCustomEntries.Size = New System.Drawing.Size(102, 13)
+        Me.lblYourCustomEntries.TabIndex = 2
+        Me.lblYourCustomEntries.Text = "Your Custom Entries"
         '
         'TxtCustomEntries
         '
@@ -202,16 +205,44 @@ Partial Class Form1
         Me.ChkSleepOnSilentStartup.AutoSize = True
         Me.ChkSleepOnSilentStartup.Location = New System.Drawing.Point(531, 382)
         Me.ChkSleepOnSilentStartup.Name = "ChkSleepOnSilentStartup"
-        Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(159, 30)
+        Me.ChkSleepOnSilentStartup.Size = New System.Drawing.Size(140, 30)
         Me.ChkSleepOnSilentStartup.TabIndex = 15
-        Me.ChkSleepOnSilentStartup.Text = "Sleep for 30 seconds before" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "processing at user logon"
+        Me.ChkSleepOnSilentStartup.Text = "Sleep before processing" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "at user logon"
         Me.ChkSleepOnSilentStartup.UseVisualStyleBackColor = True
+        '
+        'lblSeconds
+        '
+        Me.lblSeconds.AutoSize = True
+        Me.lblSeconds.Location = New System.Drawing.Point(528, 415)
+        Me.lblSeconds.Name = "lblSeconds"
+        Me.lblSeconds.Size = New System.Drawing.Size(55, 13)
+        Me.lblSeconds.TabIndex = 16
+        Me.lblSeconds.Text = "Seconds?"
+        '
+        'txtSeconds
+        '
+        Me.txtSeconds.Location = New System.Drawing.Point(589, 412)
+        Me.txtSeconds.Name = "txtSeconds"
+        Me.txtSeconds.Size = New System.Drawing.Size(44, 20)
+        Me.txtSeconds.TabIndex = 17
+        '
+        'btnSaveSeconds
+        '
+        Me.btnSaveSeconds.Location = New System.Drawing.Point(639, 410)
+        Me.btnSaveSeconds.Name = "btnSaveSeconds"
+        Me.btnSaveSeconds.Size = New System.Drawing.Size(38, 23)
+        Me.btnSaveSeconds.TabIndex = 18
+        Me.btnSaveSeconds.Text = "Set"
+        Me.btnSaveSeconds.UseVisualStyleBackColor = True
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(690, 445)
+        Me.Controls.Add(Me.btnSaveSeconds)
+        Me.Controls.Add(Me.txtSeconds)
+        Me.Controls.Add(Me.lblSeconds)
         Me.Controls.Add(Me.ChkSleepOnSilentStartup)
         Me.Controls.Add(Me.lblAdmin)
         Me.Controls.Add(Me.chkMobileMode)
@@ -225,7 +256,7 @@ Partial Class Form1
         Me.Controls.Add(Me.btnTrim)
         Me.Controls.Add(Me.btnApplyNewINIFile)
         Me.Controls.Add(Me.TxtCustomEntries)
-        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.lblYourCustomEntries)
         Me.Controls.Add(Me.lblYourVersion)
         Me.Controls.Add(Me.lblWebSiteVersion)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
@@ -239,7 +270,7 @@ Partial Class Form1
     End Sub
     Friend WithEvents lblWebSiteVersion As System.Windows.Forms.Label
     Friend WithEvents lblYourVersion As System.Windows.Forms.Label
-    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents lblYourCustomEntries As System.Windows.Forms.Label
     Friend WithEvents TxtCustomEntries As System.Windows.Forms.TextBox
     Friend WithEvents btnApplyNewINIFile As System.Windows.Forms.Button
     Friend WithEvents btnTrim As System.Windows.Forms.Button
@@ -253,4 +284,7 @@ Partial Class Form1
     Friend WithEvents chkMobileMode As System.Windows.Forms.CheckBox
     Friend WithEvents lblAdmin As System.Windows.Forms.Label
     Friend WithEvents ChkSleepOnSilentStartup As CheckBox
+    Friend WithEvents lblSeconds As Label
+    Friend WithEvents txtSeconds As TextBox
+    Friend WithEvents btnSaveSeconds As Button
 End Class

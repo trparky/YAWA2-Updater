@@ -1,5 +1,4 @@
-﻿Imports System.Text.RegularExpressions
-Imports System.Xml.Serialization
+﻿Imports System.Xml.Serialization
 Imports Microsoft.Win32
 
 Namespace My
@@ -37,7 +36,7 @@ Namespace My
             End Try
         End Function
 
-        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean)
+        Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean, ByRef shortSleepOnSilentStartup As Short)
             SyncLock programFunctions.LockObject
 startAgain:
                 Try
@@ -48,21 +47,19 @@ startAgain:
                     If IO.File.Exists(programConstants.configXMLFile) And IO.File.Exists(programConstants.configINIFile) Then IO.File.Delete(programConstants.configINIFile)
 
                     If IO.File.Exists(programConstants.configXMLFile) Then
-                        Dim AppSettings As New AppSettings
+                        AppSettingsObject = New AppSettings
 
                         Try
-                            Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                            End Using
+                            LoadSettingsFromXMLFileAppSettings()
                         Catch ex As Exception
                             IO.File.Delete(programConstants.configXMLFile)
                             GoTo startAgain
                         End Try
 
-                        boolSleepOnSilentStartup = AppSettings.boolSleepOnSilentStartup
+                        boolSleepOnSilentStartup = AppSettingsObject.boolSleepOnSilentStartup
+                        shortSleepOnSilentStartup = AppSettingsObject.shortSleepOnSilentStartup
                         strCustomEntries = Nothing
-                        If Not String.IsNullOrEmpty(AppSettings.strCustomEntries) Then strCustomEntries = AppSettings.strCustomEntries.Replace(vbLf, vbCrLf)
+                        If Not String.IsNullOrEmpty(AppSettingsObject.strCustomEntries) Then strCustomEntries = AppSettingsObject.strCustomEntries.Replace(vbLf, vbCrLf)
                     Else
                         If IO.File.Exists(programConstants.configINIFile) Then
                             Dim iniFile As New IniFile()
@@ -94,7 +91,7 @@ startAgain:
                                 boolNotifyAfterUpdateAtLogon = programFunctions.GetIntegerSettingFromINIFileAsBoolean(iniFile, programConstants.configINInotifyAfterUpdateAtLogonKey)
                             End If
 
-                            Dim AppSettings As New AppSettings With {
+                            AppSettingsObject = New AppSettings With {
                                 .boolMobileMode = boolMobileMode,
                                 .boolNotifyAfterUpdateAtLogon = boolNotifyAfterUpdateAtLogon,
                                 .boolTrim = boolTrim,
@@ -102,25 +99,20 @@ startAgain:
                                 .boolSleepOnSilentStartup = True
                             }
 
-                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                            End Using
+                            SaveSettingsToXMLFile()
 
                             IO.File.Delete(programConstants.configINIFile)
                         Else
-                            Dim AppSettings As New AppSettings With {
+                            AppSettingsObject = New AppSettings With {
                                 .boolMobileMode = False,
                                 .boolNotifyAfterUpdateAtLogon = False,
                                 .boolTrim = False,
                                 .strCustomEntries = "",
-                                .boolSleepOnSilentStartup = True
+                                .boolSleepOnSilentStartup = True,
+                                .shortSleepOnSilentStartup = 60
                             }
 
-                            Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                            End Using
+                            SaveSettingsToXMLFile()
                         End If
                     End If
                 Catch ex As UnauthorizedAccessException
@@ -158,14 +150,21 @@ startAgain:
             Dim strLocationToSaveWinAPP2INIFile As String = Nothing
             Dim strCustomEntries As String = Nothing
             Dim boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, boolSleepOnSilentStartup As Boolean
+            Dim shortSleepOnSilentStartup As Short
 
-            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup)
+            LoadAppSettings(boolMobileMode, boolTrim, boolNotifyAfterUpdateAtLogon, strCustomEntries, boolSleepOnSilentStartup, shortSleepOnSilentStartup)
+
+            If shortSleepOnSilentStartup = 0 Then
+                shortSleepOnSilentStartup = 60
+                AppSettingsObject.shortSleepOnSilentStartup = 60
+                SaveSettingsToXMLFile()
+            End If
 
             If Application.CommandLineArgs.Count = 1 Then
                 Dim commandLineArgument As String = Application.CommandLineArgs(0).Trim
 
                 If commandLineArgument.Equals("-silent", StringComparison.OrdinalIgnoreCase) Or commandLineArgument.Equals("/silent", StringComparison.OrdinalIgnoreCase) Then
-                    If boolSleepOnSilentStartup Then Threading.Thread.Sleep(30000) ' Sleeps for thirty seconds
+                    If boolSleepOnSilentStartup Then Threading.Thread.Sleep(shortSleepOnSilentStartup * 1000)
 
                     If boolMobileMode Then
                         strLocationToSaveWinAPP2INIFile = New IO.FileInfo(Windows.Forms.Application.ExecutablePath).DirectoryName
@@ -186,35 +185,27 @@ startAgain:
                             localINIFileVersion = "(Not Installed)"
                         End If
 
-                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion()
+                        Dim exceptionObject As Exception = Nothing
+                        remoteINIFileVersion = programFunctions.GetRemoteINIFileVersion(exceptionObject)
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
-                            MsgBox("Error Retrieving Remote INI File Version. Please try again.", MsgBoxStyle.Critical, messageBoxTitle)
+                            Dim strExceptionMessage As String = Nothing
+                            If exceptionObject IsNot Nothing Then strExceptionMessage = DoubleCRLF & exceptionObject.Message
+
+                            MsgBox("Error Retrieving Remote INI File Version. Please try again." & strExceptionMessage, MsgBoxStyle.Critical, messageBoxTitle)
                             e.Cancel = True
                             Exit Sub
                         End If
 
                         If IO.File.Exists(programConstants.customEntriesFile) Then
-                            SyncLock programFunctions.LockObject
-                                Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
-                                    strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
-                                End Using
+                            Using customEntriesFileReader As New IO.StreamReader(programConstants.customEntriesFile)
+                                strCustomEntries = customEntriesFileReader.ReadToEnd.Trim
+                            End Using
 
-                                Dim AppSettings As New AppSettings
-                                Using streamReader As New IO.StreamReader(programConstants.configXMLFile)
-                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                    AppSettings = xmlSerializerObject.Deserialize(streamReader)
-                                End Using
+                            AppSettingsObject.strCustomEntries = strCustomEntries
+                            SaveSettingsToXMLFile()
 
-                                AppSettings.strCustomEntries = strCustomEntries
-
-                                Using streamWriter As New IO.StreamWriter(programConstants.configXMLFile)
-                                    Dim xmlSerializerObject As New XmlSerializer(AppSettings.GetType)
-                                    xmlSerializerObject.Serialize(streamWriter, AppSettings)
-                                End Using
-
-                                IO.File.Delete(programConstants.customEntriesFile)
-                            End SyncLock
+                            IO.File.Delete(programConstants.customEntriesFile)
                         End If
 
                         If remoteINIFileVersion.Trim.Equals(localINIFileVersion.Trim, StringComparison.OrdinalIgnoreCase) Then
