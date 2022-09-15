@@ -9,9 +9,10 @@ Namespace AppSettings
 
     Module Globals
         Public AppSettingsObject As AppSettings
+        Private ReadOnly LockObject As New Object
 
         Public Sub LoadSettingsFromXMLFileAppSettings()
-            SyncLock programFunctions.LockObject
+            SyncLock LockObject
                 AppSettingsObject = New AppSettings
 
                 Using streamReader As New StreamReader(programConstants.configXMLFile)
@@ -22,7 +23,7 @@ Namespace AppSettings
         End Sub
 
         Public Sub SaveSettingsToXMLFile()
-            SyncLock programFunctions.LockObject
+            SyncLock LockObject
                 Dim boolSuccessfulWriteToDisk As Boolean = False
 
                 Using memoryStream As New MemoryStream()
