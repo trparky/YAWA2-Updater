@@ -6,7 +6,6 @@ Imports YAWA2_Updater
 Namespace programFunctions
     Friend Module functions
         Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
-        Public ReadOnly LockObject As New Object
 
         Public Function AreWeAnAdministrator() As Boolean
             Try
