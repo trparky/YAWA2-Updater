@@ -37,7 +37,6 @@ Namespace My
         End Function
 
         Private Sub LoadAppSettings(ByRef boolMobileMode As Boolean, ByRef boolTrim As Boolean, ByRef boolNotifyAfterUpdateAtLogon As Boolean, ByRef strCustomEntries As String, ByRef boolSleepOnSilentStartup As Boolean, ByRef shortSleepOnSilentStartup As Short)
-startAgain:
             Try
                 If IO.File.Exists("winapp.ini updater custom entries.txt") Then
                     IO.File.Move("winapp.ini updater custom entries.txt", programConstants.customEntriesFile)
@@ -52,7 +51,15 @@ startAgain:
                         AppSettings.LoadSettingsFromXMLFileAppSettings()
                     Catch ex As Exception
                         IO.File.Delete(programConstants.configXMLFile)
-                        GoTo startAgain
+
+                        With AppSettings.AppSettingsObject
+                            .boolMobileMode = False
+                            .boolNotifyAfterUpdateAtLogon = False
+                            .boolTrim = False
+                            .strCustomEntries = ""
+                            .boolSleepOnSilentStartup = True
+                            .shortSleepOnSilentStartup = 60
+                        End With
                     End Try
 
                     boolSleepOnSilentStartup = AppSettings.AppSettingsObject.boolSleepOnSilentStartup
