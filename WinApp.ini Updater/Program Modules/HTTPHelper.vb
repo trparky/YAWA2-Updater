@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports System.Security.Cryptography
+Imports System.Runtime.CompilerServices
 
 Public Class FormFile
 
@@ -201,7 +202,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.320"
+    Private Const classVersion As String = "1.321"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -560,7 +561,7 @@ Public Class HttpHelper
             Throw lastException
         End If
 
-        If postData.ContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
+        If postData.MyContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
             lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strName))
             Throw lastException
         Else
@@ -579,7 +580,7 @@ Public Class HttpHelper
             Throw lastException
         End If
 
-        If getData.ContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
+        If getData.myContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
             lastException = New DataAlreadyExistsException(String.Format("The GET data key named {0}{1}{0} already exists in the GET data.", Chr(34), strName))
             Throw lastException
         Else
@@ -648,28 +649,28 @@ Public Class HttpHelper
     ''' <param name="strName">The name of the GET data variable you are checking the existance of.</param>
     ''' <returns></returns>
     Public Function DoesGETDataExist(strName As String) As Boolean
-        Return getData.ContainsKey(strName)
+        Return getData.myContainsKey(strName)
     End Function
 
     ''' <summary>Checks to see if the POST data key exists in this POST data.</summary>
     ''' <param name="strName">The name of the POST data variable you are checking the existance of.</param>
     ''' <returns></returns>
     Public Function DoesPOSTDataExist(strName As String) As Boolean
-        Return postData.ContainsKey(strName)
+        Return postData.MyContainsKey(strName)
     End Function
 
     ''' <summary>Checks to see if an additional HTTP Request Header has been added to the Class.</summary>
     ''' <param name="strHeaderName">The name of the HTTP Request Header to check the existance of.</param>
     ''' <returns>Boolean value; True if found, False if not found.</returns>
     Public Function DoesAdditionalHeaderExist(strHeaderName As String) As Boolean
-        Return additionalHTTPHeaders.ContainsKey(strHeaderName.ToLower)
+        Return additionalHTTPHeaders.myContainsKey(strHeaderName.ToLower)
     End Function
 
     ''' <summary>Checks to see if a cookie has been added to the Class.</summary>
     ''' <param name="strCookieName">The name of the cookie to check the existance of.</param>
     ''' <returns>Boolean value; True if found, False if not found.</returns>
     Public Function DoesCookieExist(strCookieName As String) As Boolean
-        Return httpCookies.ContainsKey(strCookieName.ToLower)
+        Return httpCookies.myContainsKey(strCookieName.ToLower)
     End Function
 
     ''' <summary>This adds a file to be uploaded to your POST data.</summary>
@@ -689,7 +690,7 @@ Public Class HttpHelper
         If Not fileInfo.Exists Then
             lastException = New FileNotFoundException("Local file not found.", strLocalFilePath)
             Throw lastException
-        ElseIf postData.ContainsKey(strFormName) Then
+        ElseIf postData.myContainsKey(strFormName) Then
             If throwExceptionIfItemAlreadyExists Then
                 lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strFormName))
                 Throw lastException
@@ -827,7 +828,7 @@ beginAgain:
     ''' <exception cref="HttpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="SslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
-    Public Function DownloadFile(fileDownloadURL As String, ByRef memStream As MemoryStream, Optional throwExceptionIfError As Boolean = True) As Boolean
+    Public Function DownloadFile(ByVal fileDownloadURL As String, ByRef memStream As MemoryStream, Optional ByVal throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
         currentFileSize = 0
         Dim amountDownloaded As Double
@@ -1068,7 +1069,7 @@ beginAgain:
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
     ''' <param name="shortRangeTo">This controls how much data is downloaded from the server.</param>
     ''' <param name="shortRangeFrom">This controls how much data is downloaded from the server.</param>
-    Public Function GetWebData(url As String, ByRef httpResponseText As String, shortRangeFrom As Short, shortRangeTo As Short, Optional throwExceptionIfError As Boolean = True) As Boolean
+    Public Function GetWebData(ByVal url As String, ByRef httpResponseText As String, shortRangeFrom As Short, shortRangeTo As Short, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1149,7 +1150,7 @@ beginAgain:
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.getWebData("http://www.myserver.com/mywebpage", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
-    Public Function GetWebData(url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = True) As Boolean
+    Public Function GetWebData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1230,7 +1231,7 @@ beginAgain:
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.uploadData("http://www.myserver.com/myscript", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
-    Public Function UploadData(url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = False) As Boolean
+    Public Function UploadData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = False) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1355,7 +1356,7 @@ beginAgain:
         End Try
     End Function
 
-    Private Sub CaptureSSLInfo(url As String, ByRef httpWebRequest As Net.HttpWebRequest)
+    Private Sub CaptureSSLInfo(ByVal url As String, ByRef httpWebRequest As Net.HttpWebRequest)
         sslCertificate = If(url.StartsWith("https://", StringComparison.OrdinalIgnoreCase), New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate), Nothing)
     End Sub
 
@@ -1477,7 +1478,7 @@ beginAgain:
         Return CType(lastException, HttpProtocolException)
     End Function
 
-    Public Function FileSizeToHumanReadableFormat(size As Long, Optional roundToNearestWholeNumber As Boolean = False) As String
+    Public Function FileSizeToHumanReadableFormat(ByVal size As Long, Optional roundToNearestWholeNumber As Boolean = False) As String
         Dim result As String
         Dim shortRoundNumber As Short = If(roundToNearestWholeNumber, 0, 2)
 
@@ -1500,3 +1501,44 @@ beginAgain:
         Return result
     End Function
 End Class
+
+Module DictionaryExtensions
+    ''' <summary>This function uses an IndexOf call to do a case-insensitive search. This function operates a lot like Contains().</summary>
+    ''' <param name="needle">The String containing what you want to search for.</param>
+    ''' <return>Returns a Boolean value.</return>
+    <Extension()>
+    Public Function MyContainsKey(haystack As Dictionary(Of String, String), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
+        If boolCaseInsensitiveSearch Then
+            For Each item As KeyValuePair(Of String, String) In haystack
+                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
+            Next
+            Return False
+        Else
+            Return haystack.ContainsKey(needle)
+        End If
+    End Function
+
+    <Extension()>
+    Public Function MyContainsKey(haystack As Dictionary(Of String, Object), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
+        If boolCaseInsensitiveSearch Then
+            For Each item As KeyValuePair(Of String, Object) In haystack
+                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
+            Next
+            Return False
+        Else
+            Return haystack.ContainsKey(needle)
+        End If
+    End Function
+
+    <Extension()>
+    Public Function MyContainsKey(haystack As Dictionary(Of String, CookieDetails), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
+        If boolCaseInsensitiveSearch Then
+            For Each item As KeyValuePair(Of String, CookieDetails) In haystack
+                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
+            Next
+            Return False
+        Else
+            Return haystack.ContainsKey(needle)
+        End If
+    End Function
+End Module
