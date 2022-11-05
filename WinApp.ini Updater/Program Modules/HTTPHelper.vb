@@ -201,7 +201,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.322"
+    Private Const classVersion As String = "1.323"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -219,10 +219,10 @@ Public Class HttpHelper
     Private _intDownloadThreadSleepTime As Integer = 1000
     Private intDownloadBufferSize As Integer = 8191 ' The default is 8192 bytes or 8 KBs.
 
-    Private ReadOnly additionalHTTPHeaders As New Dictionary(Of String, String)(StringComparer.InvariantCultureIgnoreCase)
-    Private ReadOnly httpCookies As New Dictionary(Of String, CookieDetails)(StringComparer.InvariantCultureIgnoreCase)
-    Private ReadOnly postData As New Dictionary(Of String, Object)(StringComparer.InvariantCultureIgnoreCase)
-    Private ReadOnly getData As New Dictionary(Of String, String)(StringComparer.InvariantCultureIgnoreCase)
+    Private ReadOnly additionalHTTPHeaders As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+    Private ReadOnly httpCookies As New Dictionary(Of String, CookieDetails)(StringComparer.OrdinalIgnoreCase)
+    Private ReadOnly postData As New Dictionary(Of String, Object)(StringComparer.OrdinalIgnoreCase)
+    Private ReadOnly getData As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
     Private downloadStatusDetails As DownloadStatusDetails
     Private credentials As Credentials
 
@@ -1498,5 +1498,13 @@ beginAgain:
         End If
 
         Return result
+    End Function
+
+    ''' <summary>This function uses an IndexOf call to do a case-insensitive search. This function operates a lot like Contains().</summary>
+    ''' <param name="needle">The String containing what you want to search for.</param>
+    ''' <return>Returns a Boolean value.</return>
+    Public Function CaseInsensitiveContains(haystack As String, needle As String) As Boolean
+        If String.IsNullOrWhiteSpace(haystack) Or String.IsNullOrWhiteSpace(needle) Then Return False
+        Return haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase) <> -1
     End Function
 End Class
