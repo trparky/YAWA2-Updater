@@ -1,6 +1,5 @@
 ﻿Imports System.IO
 Imports System.Security.Cryptography
-Imports System.Runtime.CompilerServices
 
 Public Class FormFile
 
@@ -202,7 +201,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.321"
+    Private Const classVersion As String = "1.322"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -220,10 +219,10 @@ Public Class HttpHelper
     Private _intDownloadThreadSleepTime As Integer = 1000
     Private intDownloadBufferSize As Integer = 8191 ' The default is 8192 bytes or 8 KBs.
 
-    Private ReadOnly additionalHTTPHeaders As New Dictionary(Of String, String)
-    Private ReadOnly httpCookies As New Dictionary(Of String, CookieDetails)
-    Private ReadOnly postData As New Dictionary(Of String, Object)
-    Private ReadOnly getData As New Dictionary(Of String, String)
+    Private ReadOnly additionalHTTPHeaders As New Dictionary(Of String, String)(StringComparer.InvariantCultureIgnoreCase)
+    Private ReadOnly httpCookies As New Dictionary(Of String, CookieDetails)(StringComparer.InvariantCultureIgnoreCase)
+    Private ReadOnly postData As New Dictionary(Of String, Object)(StringComparer.InvariantCultureIgnoreCase)
+    Private ReadOnly getData As New Dictionary(Of String, String)(StringComparer.InvariantCultureIgnoreCase)
     Private downloadStatusDetails As DownloadStatusDetails
     Private credentials As Credentials
 
@@ -561,7 +560,7 @@ Public Class HttpHelper
             Throw lastException
         End If
 
-        If postData.MyContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
+        If postData.ContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
             lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strName))
             Throw lastException
         Else
@@ -580,7 +579,7 @@ Public Class HttpHelper
             Throw lastException
         End If
 
-        If getData.myContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
+        If getData.ContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
             lastException = New DataAlreadyExistsException(String.Format("The GET data key named {0}{1}{0} already exists in the GET data.", Chr(34), strName))
             Throw lastException
         Else
@@ -649,28 +648,28 @@ Public Class HttpHelper
     ''' <param name="strName">The name of the GET data variable you are checking the existance of.</param>
     ''' <returns></returns>
     Public Function DoesGETDataExist(strName As String) As Boolean
-        Return getData.myContainsKey(strName)
+        Return getData.ContainsKey(strName)
     End Function
 
     ''' <summary>Checks to see if the POST data key exists in this POST data.</summary>
     ''' <param name="strName">The name of the POST data variable you are checking the existance of.</param>
     ''' <returns></returns>
     Public Function DoesPOSTDataExist(strName As String) As Boolean
-        Return postData.MyContainsKey(strName)
+        Return postData.ContainsKey(strName)
     End Function
 
     ''' <summary>Checks to see if an additional HTTP Request Header has been added to the Class.</summary>
     ''' <param name="strHeaderName">The name of the HTTP Request Header to check the existance of.</param>
     ''' <returns>Boolean value; True if found, False if not found.</returns>
     Public Function DoesAdditionalHeaderExist(strHeaderName As String) As Boolean
-        Return additionalHTTPHeaders.myContainsKey(strHeaderName.ToLower)
+        Return additionalHTTPHeaders.ContainsKey(strHeaderName.ToLower)
     End Function
 
     ''' <summary>Checks to see if a cookie has been added to the Class.</summary>
     ''' <param name="strCookieName">The name of the cookie to check the existance of.</param>
     ''' <returns>Boolean value; True if found, False if not found.</returns>
     Public Function DoesCookieExist(strCookieName As String) As Boolean
-        Return httpCookies.myContainsKey(strCookieName.ToLower)
+        Return httpCookies.ContainsKey(strCookieName.ToLower)
     End Function
 
     ''' <summary>This adds a file to be uploaded to your POST data.</summary>
@@ -690,7 +689,7 @@ Public Class HttpHelper
         If Not fileInfo.Exists Then
             lastException = New FileNotFoundException("Local file not found.", strLocalFilePath)
             Throw lastException
-        ElseIf postData.myContainsKey(strFormName) Then
+        ElseIf postData.ContainsKey(strFormName) Then
             If throwExceptionIfItemAlreadyExists Then
                 lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strFormName))
                 Throw lastException
@@ -1501,44 +1500,3 @@ beginAgain:
         Return result
     End Function
 End Class
-
-Module DictionaryExtensions
-    ''' <summary>This function uses an IndexOf call to do a case-insensitive search. This function operates a lot like Contains().</summary>
-    ''' <param name="needle">The String containing what you want to search for.</param>
-    ''' <return>Returns a Boolean value.</return>
-    <Extension()>
-    Public Function MyContainsKey(haystack As Dictionary(Of String, String), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
-        If boolCaseInsensitiveSearch Then
-            For Each item As KeyValuePair(Of String, String) In haystack
-                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
-            Next
-            Return False
-        Else
-            Return haystack.ContainsKey(needle)
-        End If
-    End Function
-
-    <Extension()>
-    Public Function MyContainsKey(haystack As Dictionary(Of String, Object), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
-        If boolCaseInsensitiveSearch Then
-            For Each item As KeyValuePair(Of String, Object) In haystack
-                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
-            Next
-            Return False
-        Else
-            Return haystack.ContainsKey(needle)
-        End If
-    End Function
-
-    <Extension()>
-    Public Function MyContainsKey(haystack As Dictionary(Of String, CookieDetails), needle As String, Optional boolCaseInsensitiveSearch As Boolean = True) As Boolean
-        If boolCaseInsensitiveSearch Then
-            For Each item As KeyValuePair(Of String, CookieDetails) In haystack
-                If item.Key.Trim.Equals(needle.Trim, StringComparison.OrdinalIgnoreCase) Then Return True
-            Next
-            Return False
-        Else
-            Return haystack.ContainsKey(needle)
-        End If
-    End Function
-End Module
