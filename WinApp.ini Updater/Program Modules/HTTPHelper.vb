@@ -202,7 +202,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.327"
+    Private Const classVersion As String = "1.328"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -828,7 +828,7 @@ beginAgain:
     ''' <exception cref="HttpProtocolException">This exception is thrown if the server responds with an HTTP Error.</exception>
     ''' <exception cref="SslErrorException">If this function throws an sslErrorException, an error occurred while negotiating an SSL connection.</exception>
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
-    Public Function DownloadFile(ByVal fileDownloadURL As String, ByRef memStream As MemoryStream, Optional ByVal throwExceptionIfError As Boolean = True) As Boolean
+    Public Function DownloadFile(fileDownloadURL As String, ByRef memStream As MemoryStream, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
         currentFileSize = 0
         Dim amountDownloaded As Double
@@ -1069,7 +1069,7 @@ beginAgain:
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
     ''' <param name="shortRangeTo">This controls how much data is downloaded from the server.</param>
     ''' <param name="shortRangeFrom">This controls how much data is downloaded from the server.</param>
-    Public Function GetWebData(ByVal url As String, ByRef httpResponseText As String, shortRangeFrom As Short, shortRangeTo As Short, Optional throwExceptionIfError As Boolean = True) As Boolean
+    Public Function GetWebData(url As String, ByRef httpResponseText As String, shortRangeFrom As Short, shortRangeTo As Short, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1150,7 +1150,7 @@ beginAgain:
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.getWebData("http://www.myserver.com/mywebpage", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
-    Public Function GetWebData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = True) As Boolean
+    Public Function GetWebData(url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = True) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1231,7 +1231,7 @@ beginAgain:
     ''' <exception cref="DnsLookupError">If this function throws a dnsLookupError exception it means that the domain name wasn't able to be resolved properly.</exception>
     ''' <example>httpPostObject.uploadData("http://www.myserver.com/myscript", httpResponseText)</example>
     ''' <param name="throwExceptionIfError">Normally True. If True this function will throw an exception if an error occurs. If set to False, the function simply returns False if an error occurs; this is a much more simpler way to handle errors.</param>
-    Public Function UploadData(ByVal url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = False) As Boolean
+    Public Function UploadData(url As String, ByRef httpResponseText As String, Optional throwExceptionIfError As Boolean = False) As Boolean
         Dim httpWebRequest As Net.HttpWebRequest = Nothing
 
         Try
@@ -1356,7 +1356,7 @@ beginAgain:
         End Try
     End Function
 
-    Private Sub CaptureSSLInfo(ByVal url As String, ByRef httpWebRequest As Net.HttpWebRequest)
+    Private Sub CaptureSSLInfo(url As String, ByRef httpWebRequest As Net.HttpWebRequest)
         sslCertificate = If(url.StartsWith("https://", StringComparison.OrdinalIgnoreCase), New X509Certificates.X509Certificate2(httpWebRequest.ServicePoint.Certificate), Nothing)
     End Sub
 
@@ -1478,7 +1478,7 @@ beginAgain:
         Return CType(lastException, HttpProtocolException)
     End Function
 
-    Public Function FileSizeToHumanReadableFormat(ByVal size As Long, Optional roundToNearestWholeNumber As Boolean = False) As String
+    Public Function FileSizeToHumanReadableFormat(size As Long, Optional roundToNearestWholeNumber As Boolean = False) As String
         Dim result As String
         Dim shortRoundNumber As Short = If(roundToNearestWholeNumber, 0, 2)
 
@@ -1500,14 +1500,6 @@ beginAgain:
 
         Return result
     End Function
-
-    ''' <summary>This function uses an IndexOf call to do a case-insensitive search. This function operates a lot like Contains().</summary>
-    ''' <param name="needle">The String containing what you want to search for.</param>
-    ''' <return>Returns a Boolean value.</return>
-    Public Function CaseInsensitiveContains(haystack As String, needle As String) As Boolean
-        If String.IsNullOrWhiteSpace(haystack) Or String.IsNullOrWhiteSpace(needle) Then Return False
-        Return haystack.IndexOf(needle, StringComparison.OrdinalIgnoreCase) <> -1
-    End Function
 End Class
 
 Module DictionaryExtensions
@@ -1517,6 +1509,13 @@ Module DictionaryExtensions
     ''' <return>Returns a String value.</return>
     <Extension()>
     Function MyContainsKey(haystack As Dictionary(Of String, String), needle As String) As Boolean
+        If String.IsNullOrEmpty(needle) Then
+            Throw New ArgumentException($"'{NameOf(needle)}' cannot be null or empty.", NameOf(needle))
+        End If
+        If haystack Is Nothing Then
+            Throw New ArgumentNullException(NameOf(haystack))
+        End If
+
         Dim KeyValuePair As KeyValuePair(Of String, String) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, String)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
         Return KeyValuePair.Value IsNot Nothing
     End Function
@@ -1527,6 +1526,13 @@ Module DictionaryExtensions
     ''' <return>Returns a String value.</return>
     <Extension()>
     Function MyContainsKey(haystack As Dictionary(Of String, Object), needle As String) As Boolean
+        If String.IsNullOrEmpty(needle) Then
+            Throw New ArgumentException($"'{NameOf(needle)}' cannot be null or empty.", NameOf(needle))
+        End If
+        If haystack Is Nothing Then
+            Throw New ArgumentNullException(NameOf(haystack))
+        End If
+
         Dim KeyValuePair As KeyValuePair(Of String, Object) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, Object)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
         Return KeyValuePair.Value IsNot Nothing
     End Function
@@ -1537,6 +1543,13 @@ Module DictionaryExtensions
     ''' <return>Returns a String value.</return>
     <Extension()>
     Function MyContainsKey(haystack As Dictionary(Of String, CookieDetails), needle As String) As Boolean
+        If String.IsNullOrEmpty(needle) Then
+            Throw New ArgumentException($"'{NameOf(needle)}' cannot be null or empty.", NameOf(needle))
+        End If
+        If haystack Is Nothing Then
+            Throw New ArgumentNullException(NameOf(haystack))
+        End If
+
         Dim KeyValuePair As KeyValuePair(Of String, CookieDetails) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, CookieDetails)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
         Return KeyValuePair.Value IsNot Nothing
     End Function
