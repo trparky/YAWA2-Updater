@@ -202,7 +202,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.328"
+    Private Const classVersion As String = "1.329"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -287,7 +287,7 @@ Public Class HttpHelper
     ''' <exception cref="ProxyConfigurationErrorException">If this function throws a proxyConfigurationError, it means that something went wrong while setting up the proxy configuration for this class instance.</exception>
     Public Sub SetProxy(strServer As String, intPort As Integer, strUsername As String, strPassword As String, Optional boolByPassOnLocal As Boolean = True)
         Try
-            customProxy = New Net.WebProxy(String.Format("{0}:{1}", strServer, intPort.ToString), boolByPassOnLocal) With {.Credentials = New Net.NetworkCredential(strUsername, strPassword)}
+            customProxy = New Net.WebProxy($"{strServer}:{intPort}", boolByPassOnLocal) With {.Credentials = New Net.NetworkCredential(strUsername, strPassword)}
         Catch ex As UriFormatException
             Throw New ProxyConfigurationErrorException("There was an error setting up the proxy for this class instance.", ex)
         End Try
@@ -300,7 +300,7 @@ Public Class HttpHelper
     ''' <exception cref="ProxyConfigurationErrorException">If this function throws a proxyConfigurationError, it means that something went wrong while setting up the proxy configuration for this class instance.</exception>
     Public Sub SetProxy(strServer As String, intPort As Integer, Optional boolByPassOnLocal As Boolean = True)
         Try
-            customProxy = New Net.WebProxy(String.Format("{0}:{1}", strServer, intPort.ToString), boolByPassOnLocal)
+            customProxy = New Net.WebProxy($"{strServer}:{intPort}", boolByPassOnLocal)
         Catch ex As UriFormatException
             Throw New ProxyConfigurationErrorException("There was an error setting up the proxy for this class instance.", ex)
         End Try
@@ -408,47 +408,47 @@ Public Class HttpHelper
     Public Overrides Function toString() As String
         Dim stringBuilder As New Text.StringBuilder()
         stringBuilder.AppendLine("--== HTTPHelper Class Object ==--")
-        stringBuilder.AppendLine("--== Version: " & classVersion & " ==--")
+        stringBuilder.AppendLine($"--== Version: {classVersion} ==--")
         stringBuilder.AppendLine()
-        stringBuilder.AppendLine("Last Accessed URL: " & lastAccessedURL)
+        stringBuilder.AppendLine($"Last Accessed URL: {lastAccessedURL}")
         stringBuilder.AppendLine()
 
         If getData.Count <> 0 Then
             For Each item In getData
-                stringBuilder.AppendLine("GET Data | " & item.Key & "=" & item.Value)
+                stringBuilder.AppendLine($"GET Data | {item.Key}={item.Value}")
             Next
         End If
 
         If postData.Count <> 0 Then
             For Each item In postData
-                stringBuilder.AppendLine("POST Data | " & item.Key & "=" & item.Value.ToString())
+                stringBuilder.AppendLine($"POST Data | {item.Key}={item.Value}")
             Next
         End If
 
         If httpCookies.Count <> 0 Then
             For Each item In httpCookies
-                stringBuilder.AppendLine("COOKIES | " & item.Key & "=" & item.Value.CookieData)
+                stringBuilder.AppendLine($"COOKIES | {item.Key}={item.Value.CookieData}")
             Next
         End If
 
         If additionalHTTPHeaders.Count <> 0 Then
             For Each item In additionalHTTPHeaders
-                stringBuilder.AppendLine("Additional HTTP Header | " & item.Key & "=" & item.Value)
+                stringBuilder.AppendLine($"Additional HTTP Header | {item.Key}={item.Value}")
             Next
         End If
 
         stringBuilder.AppendLine()
 
-        stringBuilder.AppendLine("User Agent String: " & strUserAgentString)
-        stringBuilder.AppendLine("Use HTTP Compression: " & boolUseHTTPCompression.ToString)
-        stringBuilder.AppendLine("HTTP Time Out: " & httpTimeOut)
-        stringBuilder.AppendLine("Use Proxy: " & boolUseProxy.ToString)
+        stringBuilder.AppendLine($"User Agent String: {strUserAgentString}")
+        stringBuilder.AppendLine($"Use HTTP Compression: {boolUseHTTPCompression}")
+        stringBuilder.AppendLine($"HTTP Time Out: {httpTimeOut}")
+        stringBuilder.AppendLine($"Use Proxy: {boolUseProxy}")
 
         If credentials Is Nothing Then
             stringBuilder.AppendLine("HTTP Authentication Enabled: False")
         Else
             stringBuilder.AppendLine("HTTP Authentication Enabled: True")
-            stringBuilder.AppendLine("HTTP Authentication Details: " & credentials.StrUser & "|" & credentials.StrPasswordInput)
+            stringBuilder.AppendLine($"HTTP Authentication Details: {credentials.StrUser}|{credentials.StrPasswordInput}")
         End If
 
         If lastException IsNot Nothing Then
@@ -457,7 +457,7 @@ Public Class HttpHelper
             stringBuilder.AppendLine(lastException.ToString)
 
             If lastException.GetType.Equals(GetType(Net.WebException)) Then
-                stringBuilder.AppendLine("Raw Exception Status Code: " & DirectCast(lastException, Net.WebException).Status.ToString)
+                stringBuilder.AppendLine($"Raw Exception Status Code: {DirectCast(lastException, Net.WebException).Status}")
             End If
         End If
 
@@ -557,12 +557,12 @@ Public Class HttpHelper
     ''' <exception cref="DataAlreadyExistsException">If this function throws a dataAlreadyExistsException, you forgot to add some data for your POST variable.</exception>
     Public Sub AddPOSTData(strName As String, strValue As String, Optional throwExceptionIfDataAlreadyExists As Boolean = False)
         If String.IsNullOrEmpty(strValue.Trim) Then
-            lastException = New DataMissingException(String.Format("Data was missing for the {0}{1}{0} POST variable.", Chr(34), strName))
+            lastException = New DataMissingException($"Data was missing for the ""{strName}"" POST variable.")
             Throw lastException
         End If
 
         If postData.MyContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
-            lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strName))
+            lastException = New DataAlreadyExistsException($"The POST data key named ""{strName}"" already exists in the POST data.")
             Throw lastException
         Else
             postData.Remove(strName)
@@ -576,12 +576,12 @@ Public Class HttpHelper
     ''' <exception cref="DataAlreadyExistsException">If this function throws a dataAlreadyExistsException, you forgot to add some data for your POST variable.</exception>
     Public Sub AddGETData(strName As String, strValue As String, Optional throwExceptionIfDataAlreadyExists As Boolean = False)
         If String.IsNullOrEmpty(strValue.Trim) Then
-            lastException = New DataMissingException(String.Format("Data was missing for the {0}{1}{0} GET variable.", Chr(34), strName))
+            lastException = New DataMissingException($"Data was missing for the ""{strName}"" GET variable.")
             Throw lastException
         End If
 
         If getData.MyContainsKey(strName) And throwExceptionIfDataAlreadyExists Then
-            lastException = New DataAlreadyExistsException(String.Format("The GET data key named {0}{1}{0} already exists in the GET data.", Chr(34), strName))
+            lastException = New DataAlreadyExistsException($"The GET data key named ""{strName}"" already exists in the GET data.")
             Throw lastException
         Else
             getData.Remove(strName)
@@ -599,7 +599,7 @@ Public Class HttpHelper
         If Not DoesAdditionalHeaderExist(strHeaderName) Then
             additionalHTTPHeaders.Add(strHeaderName.ToLower, If(urlEncodeHeaderContent, Web.HttpUtility.UrlEncode(strHeaderContents), strHeaderContents))
         Else
-            lastException = New DataAlreadyExistsException(String.Format("The additional HTTP Header named {0}{1}{0} already exists in the Additional HTTP Headers settings for this Class instance.", Chr(34), strHeaderName))
+            lastException = New DataAlreadyExistsException($"The additional HTTP Header named ""{strHeaderName}"" already exists in the Additional HTTP Headers settings for this Class instance.")
             Throw lastException
         End If
     End Sub
@@ -620,7 +620,7 @@ Public Class HttpHelper
             }
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
-            lastException = New DataAlreadyExistsException(String.Format("The HTTP Cookie named {0}{1}{0} already exists in the settings for this Class instance.", Chr(34), strCookieName))
+            lastException = New DataAlreadyExistsException($"The HTTP Cookie named ""{strCookieName}"" already exists in the settings for this Class instance.")
             Throw lastException
         End If
     End Sub
@@ -640,7 +640,7 @@ Public Class HttpHelper
             }
             httpCookies.Add(strCookieName.ToLower, cookieDetails)
         Else
-            lastException = New DataAlreadyExistsException(String.Format("The HTTP Cookie named {0}{1}{0} already exists in the settings for this Class instance.", Chr(34), strCookieName))
+            lastException = New DataAlreadyExistsException($"The HTTP Cookie named ""{strCookieName}"" already exists in the settings for this Class instance.")
             Throw lastException
         End If
     End Sub
@@ -692,7 +692,7 @@ Public Class HttpHelper
             Throw lastException
         ElseIf postData.MyContainsKey(strFormName) Then
             If throwExceptionIfItemAlreadyExists Then
-                lastException = New DataAlreadyExistsException(String.Format("The POST data key named {0}{1}{0} already exists in the POST data.", Chr(34), strFormName))
+                lastException = New DataAlreadyExistsException($"The POST data key named ""{strFormName}"" already exists in the POST data.")
                 Throw lastException
             Else
                 Exit Sub
@@ -709,14 +709,14 @@ Public Class HttpHelper
                 Dim regPath As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(fileInfo.Extension.ToLower, False)
 
                 If regPath Is Nothing Then
-                    lastException = New NoMimeTypeFoundException("No MIME Type found for " & fileInfo.Extension.ToLower)
+                    lastException = New NoMimeTypeFoundException($"No MIME Type found for {fileInfo.Extension.ToLower}")
                     Throw lastException
                 Else
                     contentType = regPath.GetValue("Content Type", Nothing).ToString
                 End If
 
                 If String.IsNullOrEmpty(contentType) Then
-                    lastException = New NoMimeTypeFoundException("No MIME Type found for " & fileInfo.Extension.ToLower)
+                    lastException = New NoMimeTypeFoundException($"No MIME Type found for {fileInfo.Extension.ToLower}")
                     Throw lastException
                 Else
                     formFileInstance.ContentType = contentType
@@ -919,7 +919,7 @@ beginAgain:
                     Throw lastException
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
-                    lastException = New DnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    lastException = New DnsLookupError($"There was an error while looking up the DNS records for the domain name ""{strDomainName}"".", ex2)
                     Throw lastException
                 End If
 
@@ -954,7 +954,7 @@ beginAgain:
 
             If File.Exists(localFileName) Then
                 If throwExceptionIfLocalFileExists Then
-                    lastException = New LocalFileAlreadyExistsException(String.Format("The local file found at {0}{1}{0} already exists.", Chr(34), localFileName))
+                    lastException = New LocalFileAlreadyExistsException($"The local file found at ""{localFileName}"" already exists.")
                     Throw lastException
                 Else
                     File.Delete(localFileName)
@@ -1044,7 +1044,7 @@ beginAgain:
                     Throw lastException
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
-                    lastException = New DnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    lastException = New DnsLookupError($"There was an error while looking up the DNS records for the domain name ""{strDomainName}"".", ex2)
                     Throw lastException
                 End If
 
@@ -1076,7 +1076,7 @@ beginAgain:
             If urlPreProcessor IsNot Nothing Then url = urlPreProcessor(url)
             lastAccessedURL = url
 
-            If getData.Count <> 0 Then url &= "?" & GetGETDataString()
+            If getData.Count <> 0 Then url &= $"?{GetGETDataString()}"
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
             httpWebRequest.AddRange(shortRangeFrom, shortRangeTo)
@@ -1126,7 +1126,7 @@ beginAgain:
                     Throw lastException
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
-                    lastException = New DnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    lastException = New DnsLookupError($"There was an error while looking up the DNS records for the domain name ""{strDomainName}"".", ex2)
                     Throw lastException
                 End If
 
@@ -1157,7 +1157,7 @@ beginAgain:
             If urlPreProcessor IsNot Nothing Then url = urlPreProcessor(url)
             lastAccessedURL = url
 
-            If getData.Count <> 0 Then url &= "?" & GetGETDataString()
+            If getData.Count <> 0 Then url &= $"?{GetGETDataString()}"
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
 
@@ -1206,7 +1206,7 @@ beginAgain:
                     Throw lastException
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
-                    lastException = New DnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    lastException = New DnsLookupError($"There was an error while looking up the DNS records for the domain name ""{strDomainName}"".", ex2)
                     Throw lastException
                 End If
 
@@ -1242,10 +1242,10 @@ beginAgain:
                 lastException = New DataMissingException("Your HTTP Request contains no POST data. Please add some data to POST before calling this function.")
                 Throw lastException
             End If
-            If getData.Count <> 0 Then url &= "?" & GetGETDataString()
+            If getData.Count <> 0 Then url &= $"?{GetGETDataString()}"
 
-            Dim boundary As String = "---------------------------" & Now.Ticks.ToString("x")
-            Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes((Convert.ToString(strCRLF & "--") & boundary) & strCRLF)
+            Dim boundary As String = $"---------------------------{Now.Ticks:x}"
+            Dim boundaryBytes As Byte() = Text.Encoding.ASCII.GetBytes($"{Convert.ToString($"{strCRLF}--")}{boundary}{strCRLF}")
 
             httpWebRequest = DirectCast(Net.WebRequest.Create(url), Net.HttpWebRequest)
 
@@ -1253,7 +1253,7 @@ beginAgain:
             AddParametersToWebRequest(httpWebRequest)
 
             httpWebRequest.KeepAlive = True
-            httpWebRequest.ContentType = "multipart/form-data; boundary=" & boundary
+            httpWebRequest.ContentType = $"multipart/form-data; boundary={boundary}"
             httpWebRequest.Method = "POST"
 
             If postData.Count <> 0 Then
@@ -1270,11 +1270,11 @@ beginAgain:
                         If String.IsNullOrEmpty(formFileObjectInstance.RemoteFileName) Then
                             fileInfo = New FileInfo(formFileObjectInstance.LocalFilePath)
 
-                            header = String.Format("Content-Disposition: form-data; name={0}{1}{0}; filename={0}{2}{0}", Chr(34), entry.Key, fileInfo.Name)
-                            header &= vbCrLf & "Content-Type: " & formFileObjectInstance.ContentType & vbCrLf & vbCrLf
+                            header = $"Content-Disposition: form-data; name=""{entry.Key}""; filename=""{fileInfo.Name}"""
+                            header &= $"{vbCrLf}Content-Type: {formFileObjectInstance.ContentType}{vbCrLf}{vbCrLf}"
                         Else
-                            header = String.Format("Content-Disposition: form-data; name={0}{1}{0}; filename={0}{2}{0}", Chr(34), entry.Key, formFileObjectInstance.RemoteFileName)
-                            header &= vbCrLf & "Content-Type: " & formFileObjectInstance.ContentType & vbCrLf & vbCrLf
+                            header = $"Content-Disposition: form-data; name=""{entry.Key}""; filename=""{formFileObjectInstance.RemoteFileName}"""
+                            header &= $"{vbCrLf}Content-Type: {formFileObjectInstance.ContentType}{vbCrLf}{vbCrLf}"
                         End If
 
                         bytes = Text.Encoding.UTF8.GetBytes(header)
@@ -1291,13 +1291,13 @@ beginAgain:
                         fileStream.Dispose()
                         fileStream = Nothing
                     Else
-                        data = String.Format("Content-Disposition: form-data; name={0}{1}{0}{2}{2}{3}", Chr(34), entry.Key, vbCrLf, entry.Value)
+                        data = $"Content-Disposition: form-data; name=""{entry.Key}""{vbCrLf}{vbCrLf}{entry.Value}"
                         bytes = Text.Encoding.UTF8.GetBytes(data)
                         httpRequestWriter.Write(bytes, 0, bytes.Length)
                     End If
                 Next
 
-                Dim trailer As Byte() = Text.Encoding.ASCII.GetBytes(vbCrLf & "--" & boundary & "--" & vbCrLf)
+                Dim trailer As Byte() = Text.Encoding.ASCII.GetBytes($"{vbCrLf}--{boundary}--{vbCrLf}")
                 httpRequestWriter.Write(trailer, 0, trailer.Length)
                 httpRequestWriter.Close()
                 httpRequestWriter.Dispose()
@@ -1343,7 +1343,7 @@ beginAgain:
                     Throw lastException
                 ElseIf ex2.Status = Net.WebExceptionStatus.NameResolutionFailure Then
                     Dim strDomainName As String = Text.RegularExpressions.Regex.Match(lastAccessedURL, "(?:http(?:s){0,1}://){0,1}(.*)/", Text.RegularExpressions.RegexOptions.Singleline).Groups(1).Value
-                    lastException = New DnsLookupError(String.Format("There was an error while looking up the DNS records for the domain name {0}{1}{0}.", Chr(34), strDomainName), ex2)
+                    lastException = New DnsLookupError($"There was an error while looking up the DNS records for the domain name ""{strDomainName}"".", ex2)
                     Throw lastException
                 End If
 
@@ -1379,7 +1379,7 @@ beginAgain:
     Private Sub AddParametersToWebRequest(ByRef httpWebRequest As Net.HttpWebRequest)
         If credentials IsNot Nothing Then
             httpWebRequest.PreAuthenticate = True
-            AddHTTPHeader("Authorization", "Basic " & Convert.ToBase64String(Text.Encoding.Default.GetBytes(credentials.StrUser & ":" & credentials.StrPasswordInput)))
+            AddHTTPHeader("Authorization", $"Basic {Convert.ToBase64String(Text.Encoding.Default.GetBytes($"{credentials.StrUser}:{credentials.StrPasswordInput}"))}")
         End If
 
         If Not String.IsNullOrWhiteSpace(strUserAgentString) Then httpWebRequest.UserAgent = strUserAgentString
@@ -1434,7 +1434,7 @@ beginAgain:
         Dim postDataString As String = ""
         For Each entry As KeyValuePair(Of String, Object) In postData
             If Not entry.Value.GetType.Equals(GetType(FormFile)) Then
-                postDataString &= entry.Key.Trim & "=" & Web.HttpUtility.UrlEncode(entry.Value.ToString.Trim) & "&"
+                postDataString &= $"{entry.Key.Trim}={Web.HttpUtility.UrlEncode(entry.Value.ToString.Trim)}&"
             End If
         Next
 
@@ -1446,7 +1446,7 @@ beginAgain:
     Private Function GetGETDataString() As String
         Dim getDataString As String = ""
         For Each entry As KeyValuePair(Of String, String) In getData
-            getDataString &= entry.Key.Trim & "=" & Web.HttpUtility.UrlEncode(entry.Value.Trim) & "&"
+            getDataString &= $"{entry.Key.Trim}={Web.HttpUtility.UrlEncode(entry.Value.Trim)}&"
         Next
 
         If getDataString.EndsWith("&") Then getDataString = getDataString.Substring(0, getDataString.Length - 1)
@@ -1459,20 +1459,20 @@ beginAgain:
 
         If httpErrorResponse IsNot Nothing Then
             If httpErrorResponse.StatusCode = Net.HttpStatusCode.InternalServerError Then
-                lastException = New HttpProtocolException("HTTP Protocol Error (Server 500 Error) while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error (Server 500 Error) while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             ElseIf httpErrorResponse.StatusCode = Net.HttpStatusCode.NotFound Then
-                lastException = New HttpProtocolException("HTTP Protocol Error (404 File Not Found) while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error (404 File Not Found) while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             ElseIf httpErrorResponse.StatusCode = Net.HttpStatusCode.Unauthorized Then
-                lastException = New HttpProtocolException("HTTP Protocol Error (401 Unauthorized) while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error (401 Unauthorized) while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             ElseIf httpErrorResponse.StatusCode = Net.HttpStatusCode.ServiceUnavailable Then
-                lastException = New HttpProtocolException("HTTP Protocol Error (503 Service Unavailable) while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error (503 Service Unavailable) while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             ElseIf httpErrorResponse.StatusCode = Net.HttpStatusCode.Forbidden Then
-                lastException = New HttpProtocolException("HTTP Protocol Error (403 Forbidden) while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error (403 Forbidden) while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             Else
-                lastException = New HttpProtocolException("HTTP Protocol Error while accessing " & url, ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
+                lastException = New HttpProtocolException($"HTTP Protocol Error while accessing {url}", ex) With {.HttpStatusCode = httpErrorResponse.StatusCode}
             End If
         Else
-            lastException = New HttpProtocolException("HTTP Protocol Error while accessing " & url, ex)
+            lastException = New HttpProtocolException($"HTTP Protocol Error while accessing {url}", ex)
         End If
 
         Return CType(lastException, HttpProtocolException)
@@ -1483,17 +1483,17 @@ beginAgain:
         Dim shortRoundNumber As Short = If(roundToNearestWholeNumber, 0, 2)
 
         If size <= (2 ^ 10) Then
-            result = size & " Bytes"
+            result = $"{size} Bytes"
         ElseIf size > (2 ^ 10) And size <= (2 ^ 20) Then
-            result = Math.Round(size / (2 ^ 10), shortRoundNumber) & " KBs"
+            result = $"{Math.Round(size / (2 ^ 10), shortRoundNumber)} KBs"
         ElseIf size > (2 ^ 20) And size <= (2 ^ 30) Then
-            result = Math.Round(size / (2 ^ 20), shortRoundNumber) & " MBs"
+            result = $"{Math.Round(size / (2 ^ 20), shortRoundNumber)} MBs"
         ElseIf size > (2 ^ 30) And size <= (2 ^ 40) Then
-            result = Math.Round(size / (2 ^ 30), shortRoundNumber) & " GBs"
+            result = $"{Math.Round(size / (2 ^ 30), shortRoundNumber)} GBs"
         ElseIf size > (2 ^ 40) And size <= (2 ^ 50) Then
-            result = Math.Round(size / (2 ^ 40), shortRoundNumber) & " TBs"
+            result = $"{Math.Round(size / (2 ^ 40), shortRoundNumber)} TBs"
         ElseIf size > (2 ^ 50) And size <= (2 ^ 60) Then
-            result = Math.Round(size / (2 ^ 50), shortRoundNumber) & " PBs"
+            result = $"{Math.Round(size / (2 ^ 50), shortRoundNumber)} PBs"
         Else
             result = "(None)"
         End If
