@@ -27,7 +27,7 @@ Public Class Form1
                 With newTask
                     .RegistrationInfo.Description = taskDescription
                     .Triggers.Add(New LogonTrigger)
-                    .Actions.Add(New ExecAction(Chr(34) & taskEXEPath & Chr(34), taskParameters, exeFileInfo.DirectoryName))
+                    .Actions.Add(New ExecAction($"""{taskEXEPath}""", taskParameters, exeFileInfo.DirectoryName))
 
                     .Principal.RunLevel = TaskRunLevel.Highest
                     .Settings.Compatibility = TaskCompatibility.V2_1
@@ -68,10 +68,10 @@ Public Class Form1
                 chkLoadAtUserStartup.Enabled = True
 
                 If DoesTaskExist("WinApp.ini Updater", taskObject) Then
-                    AddTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
+                    AddTask($"YAWA2 Updater (User {Environment.UserName})", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
                     taskService.RootFolder.DeleteTask("WinApp.ini Updater")
                     chkLoadAtUserStartup.Checked = True
-                ElseIf DoesTaskExist("YAWA2 Updater (User " & Environment.UserName & ")", taskObject) Then
+                ElseIf DoesTaskExist($"YAWA2 Updater (User {Environment.UserName})", taskObject) Then
                     chkLoadAtUserStartup.Checked = True
                 End If
 
@@ -105,7 +105,7 @@ Public Class Form1
             Else : localINIFileVersion = "(Not Installed)"
             End If
 
-            lblYourVersion.Text &= " " & localINIFileVersion
+            lblYourVersion.Text &= $" {localINIFileVersion}"
 
             Threading.ThreadPool.QueueUserWorkItem(AddressOf GetINIVersion)
             boolDoneLoading = True
@@ -130,7 +130,7 @@ Public Class Form1
             Try
                 If Environment.Is64BitOperatingSystem Then
                     If RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox($"CCleaner doesn't appear to be installed on your machine.{DoubleCRLF}Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
                             AppSettings.AppSettingsObject.boolMobileMode = True
@@ -146,7 +146,7 @@ Public Class Form1
                     End If
                 Else
                     If Registry.LocalMachine.OpenSubKey("SOFTWARE\Piriform\CCleaner", False) Is Nothing Then
-                        msgBoxResult2 = MsgBox("CCleaner doesn't appear to be installed on your machine." & DoubleCRLF & "Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
+                        msgBoxResult2 = MsgBox($"CCleaner doesn't appear to be installed on your machine.{DoubleCRLF}Should mobile mode be enabled?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle)
 
                         If msgBoxResult2 = MsgBoxResult.Yes Then
                             AppSettings.AppSettingsObject.boolMobileMode = True
@@ -179,13 +179,13 @@ Public Class Form1
             End If
 
             Invoke(Sub()
-                       lblWebSiteVersion.Text = "Web Site WinApp2.ini Version: " & remoteINIFileVersion
+                       lblWebSiteVersion.Text = $"Web Site WinApp2.ini Version: {remoteINIFileVersion}"
 
                        If localINIFileVersion = "(Not Installed)" Then
                            btnApplyNewINIFile.Enabled = True
                            lblUpdateNeededOrNot.Text = updateNeeded
                            lblUpdateNeededOrNot.Font = New Font(lblUpdateNeededOrNot.Font.FontFamily, lblUpdateNeededOrNot.Font.SizeInPoints, FontStyle.Bold)
-                           MsgBox("You don't have a CCleaner WinApp2.ini file installed." & DoubleCRLF & "Remote INI File Version: " & remoteINIFileVersion, MsgBoxStyle.Information, strMessageBoxTitle)
+                           MsgBox($"You don't have a CCleaner WinApp2.ini file installed.{DoubleCRLF}Remote INI File Version: {remoteINIFileVersion}", MsgBoxStyle.Information, strMessageBoxTitle)
                        Else
                            If remoteINIFileVersion = localINIFileVersion Then
                                btnApplyNewINIFile.Enabled = False
@@ -199,8 +199,8 @@ Public Class Form1
                                Dim stringBuilder As New StringBuilder()
                                stringBuilder.AppendLine("There is a new version of the CCleaner WinApp2.ini file.")
                                stringBuilder.AppendLine()
-                               stringBuilder.AppendLine("Currently Installed INI File Version: " & localINIFileVersion)
-                               stringBuilder.AppendLine("New Remote INI File Version: " & remoteINIFileVersion)
+                               stringBuilder.AppendLine($"Currently Installed INI File Version: {localINIFileVersion}")
+                               stringBuilder.AppendLine($"New Remote INI File Version: {remoteINIFileVersion}")
 
                                MsgBox(stringBuilder.ToString.Trim, MsgBoxStyle.Information, strMessageBoxTitle)
                            End If
@@ -218,14 +218,14 @@ Public Class Form1
         If internetFunctions.CreateNewHTTPHelperObject().GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
             Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationOfCCleaner, "winapp2.ini"))
                 If String.IsNullOrEmpty(TxtCustomEntries.Text) Then
-                    streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
+                    streamWriter.Write($"{remoteINIFileData.Trim}{vbCrLf}")
                 Else
-                    streamWriter.Write(remoteINIFileData.Trim & DoubleCRLF & TxtCustomEntries.Text & vbCrLf)
+                    streamWriter.Write($"{remoteINIFileData.Trim}{DoubleCRLF}{TxtCustomEntries.Text}{vbCrLf}")
                 End If
             End Using
 
             Invoke(Sub()
-                       lblYourVersion.Text = "Your WinApp2.ini Version: " & remoteINIFileVersion
+                       lblYourVersion.Text = $"Your WinApp2.ini Version: {remoteINIFileVersion}"
 
                        If boolUpdateLabelOnGUI Then
                            lblUpdateNeededOrNot.Text = updateNotNeeded
@@ -239,7 +239,7 @@ Public Class Form1
                            If chkMobileMode.Checked Then
                                MsgBox("New CCleaner WinApp2.ini File Saved.", MsgBoxStyle.Information, strMessageBoxTitle)
                            Else
-                               If MsgBox("New CCleaner WinApp2.ini File Saved." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
+                               If MsgBox($"New CCleaner WinApp2.ini File Saved.{DoubleCRLF}Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, strMessageBoxTitle) = MsgBoxResult.Yes Then programFunctions.RunCCleaner(strLocationOfCCleaner)
                            End If
                        End If
                    End Sub)
@@ -264,7 +264,7 @@ Public Class Form1
 
     Private Sub ChkLoadAtUserStartup_Click(sender As Object, e As EventArgs) Handles chkLoadAtUserStartup.Click
         If chkLoadAtUserStartup.Checked Then
-            AddTask("YAWA2 Updater (User " & Environment.UserName & ")", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
+            AddTask($"YAWA2 Updater (User {Environment.UserName})", "Updates the WinApp2.ini file for CCleaner at User Logon in Silent Mode", Application.ExecutablePath, "-silent")
         Else
             Using taskService As New TaskService
                 taskService.RootFolder.DeleteTask("YAWA2 Updater")

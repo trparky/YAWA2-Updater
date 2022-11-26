@@ -29,15 +29,15 @@ Namespace AppSettings
                 Using memoryStream As New MemoryStream()
                     Dim xmlSerializerObject As New XmlSerializer(AppSettingsObject.GetType)
                     xmlSerializerObject.Serialize(memoryStream, AppSettingsObject)
-                    File.WriteAllBytes(programConstants.configXMLFile & ".temp", memoryStream.ToArray())
-                    boolSuccessfulWriteToDisk = VerifyDataOnDisk(memoryStream, programConstants.configXMLFile & ".temp")
+                    File.WriteAllBytes($"{programConstants.configXMLFile}.temp", memoryStream.ToArray())
+                    boolSuccessfulWriteToDisk = VerifyDataOnDisk(memoryStream, $"{programConstants.configXMLFile}.temp")
                 End Using
 
                 If boolSuccessfulWriteToDisk Then
                     DeleteFileWithNoException(programConstants.configXMLFile)
-                    File.Move(programConstants.configXMLFile & ".temp", programConstants.configXMLFile)
+                    File.Move($"{programConstants.configXMLFile}.temp", programConstants.configXMLFile)
                 Else
-                    DeleteFileWithNoException(programConstants.configXMLFile & ".temp")
+                    DeleteFileWithNoException($"{programConstants.configXMLFile}.temp")
                     MsgBox("There was an error while writing the settings file to disk, the original settings file has been preserved to prevent data corruption.", MsgBoxStyle.Critical, "WinApp.ini Updater")
                 End If
             End SyncLock

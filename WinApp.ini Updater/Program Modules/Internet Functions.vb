@@ -9,7 +9,7 @@ Namespace internetFunctions
             httpHelper.SetURLPreProcessor = Function(strURLInput As String) As String
                                                 Try
                                                     If Not strURLInput.Trim.StartsWith("http", StringComparison.OrdinalIgnoreCase) Then
-                                                        Return "https://" & strURLInput
+                                                        Return $"https://{strURLInput}"
                                                     Else
                                                         Return strURLInput
                                                     End If
@@ -25,8 +25,8 @@ Namespace internetFunctions
         ''' <returns>String type.</returns>
         Private Function CreateHTTPUserAgentHeaderString() As String
             Dim versionInfo As String() = Application.ProductVersion.Split(".")
-            Dim versionString As String = String.Format("{0}.{1} Build {2}", versionInfo(0), versionInfo(1), versionInfo(2))
-            Return String.Format("{0} version {1} on {2}", "YAWA2 (Yet Another WinApp2.ini) Updater", versionString, GetFullOSVersionString())
+            Dim versionString As String = $"{versionInfo(0)}.{versionInfo(1)} Build {versionInfo(2)}"
+            Return $"{"YAWA2 (Yet Another WinApp2.ini) Updater"} version {versionString} on {GetFullOSVersionString()}"
         End Function
 
         Private Function GetFullOSVersionString() As String
@@ -34,10 +34,10 @@ Namespace internetFunctions
                 Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.CaseInsensitiveReplace("microsoft ", "", True)
 
                 Dim dotNetVersionsInfo As String() = Environment.Version.ToString.Split(".")
-                Return String.Format("{0} {3}-bit (Microsoft .NET {1}.{2})", osName, dotNetVersionsInfo(0), dotNetVersionsInfo(1), If(Environment.Is64BitOperatingSystem, "64", "32"))
+                Return $"{osName} {If(Environment.Is64BitOperatingSystem, "64", "32")}-bit (Microsoft .NET {dotNetVersionsInfo(0)}.{dotNetVersionsInfo(1)})"
             Catch ex As Exception
                 Try
-                    Return "Unknown Windows Operating System (" & Environment.OSVersion.VersionString & ")"
+                    Return $"Unknown Windows Operating System ({Environment.OSVersion.VersionString})"
                 Catch ex2 As Exception
                     Return "Unknown Windows Operating System"
                 End Try
