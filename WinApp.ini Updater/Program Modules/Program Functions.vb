@@ -5,7 +5,7 @@ Imports YAWA2_Updater
 
 Namespace programFunctions
     Friend Module functions
-        Public ReadOnly osVersionString As String = Environment.OSVersion.Version.Major & "." & Environment.OSVersion.Version.Minor
+        Public ReadOnly osVersionString As String = $"{Environment.OSVersion.Version.Major}.{Environment.OSVersion.Version.Minor}"
 
         Public Function AreWeAnAdministrator() As Boolean
             Try

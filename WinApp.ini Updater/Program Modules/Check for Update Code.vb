@@ -29,10 +29,10 @@ Module checkForUpdateModules
     End Sub
 
     Public Sub NewFileDeleter()
-        If IO.File.Exists(Application.ExecutablePath & ".new.exe") Then
+        If IO.File.Exists($"{Application.ExecutablePath}.new.exe") Then
             Threading.ThreadPool.QueueUserWorkItem(Sub()
-                                                       SearchForProcessAndKillIt(New FileInfo(Application.ExecutablePath).Name & ".new.exe", False)
-                                                       File.Delete(Application.ExecutablePath & ".new.exe")
+                                                       SearchForProcessAndKillIt($"{New FileInfo(Application.ExecutablePath).Name}.new.exe", False)
+                                                       File.Delete($"{Application.ExecutablePath}.new.exe")
                                                    End Sub)
         End If
     End Sub
