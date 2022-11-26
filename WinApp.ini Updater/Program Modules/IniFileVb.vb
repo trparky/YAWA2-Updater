@@ -99,13 +99,13 @@ Public Class IniFile
     Public Function GetRawINIText() As String
         Using stringWriter As New StringWriter
             For Each s As IniSection In Sections
-                stringWriter.WriteLine(String.Format("[{0}]", s.Name))
+                stringWriter.WriteLine($"[{s.Name}]")
 
                 For Each k As IniSection.IniKey In s.Keys
                     If k.Value <> String.Empty Then
-                        stringWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
+                        stringWriter.WriteLine($"{k.Name}={k.Value}")
                     Else
-                        stringWriter.WriteLine(String.Format("{0}", k.Name))
+                        stringWriter.WriteLine(k.Name)
                     End If
                 Next
                 stringWriter.WriteLine()
@@ -119,12 +119,12 @@ Public Class IniFile
     Public Sub Save(sFileName As String)
         Using oWriter As New StreamWriter(sFileName, False)
             For Each s As IniSection In Sections
-                oWriter.WriteLine(String.Format("[{0}]", s.Name))
+                oWriter.WriteLine($"[{s.Name }]")
                 For Each k As IniSection.IniKey In s.Keys
                     If k.Value <> String.Empty Then
-                        oWriter.WriteLine(String.Format("{0}={1}", k.Name, k.Value))
+                        oWriter.WriteLine($"{k.Name }={k.Value }")
                     Else
-                        oWriter.WriteLine(String.Format("{0}", k.Name))
+                        oWriter.WriteLine(k.Name)
                     End If
                 Next
             Next

@@ -124,7 +124,7 @@ Namespace My
             Catch ex As UnauthorizedAccessException
                 Dim strFullFilePathToConfigXMLFile As String = New IO.FileInfo(programConstants.configXMLFile).FullName
                 If strFullFilePathToConfigXMLFile.CaseInsensitiveContains("onedrive") Then
-                    MsgBox("An error occurred while attempting to access the application configuration settings file (YAWA2 Updater Config.xml)." & vbCrLf & vbCrLf & "This file exist in your Microsoft OneDrive, please right-click on the file and click on ""Always keep on this device"".", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
+                    MsgBox($"An error occurred while attempting to access the application configuration settings file (YAWA2 Updater Config.xml).{vbCrLf}{vbCrLf}This file exists in your Microsoft OneDrive, please right-click on the file and click on ""Always keep on this device"".", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
                     SelectFileInWindowsExplorer(strFullFilePathToConfigXMLFile)
                 End If
             End Try
@@ -195,9 +195,9 @@ Namespace My
 
                         If remoteINIFileVersion = programConstants.errorRetrievingRemoteINIFileVersion Then
                             Dim strExceptionMessage As String = Nothing
-                            If exceptionObject IsNot Nothing Then strExceptionMessage = DoubleCRLF & exceptionObject.Message
+                            If exceptionObject IsNot Nothing Then strExceptionMessage = $"{DoubleCRLF}{exceptionObject.Message}"
 
-                            MsgBox("Error Retrieving Remote INI File Version. Please try again." & strExceptionMessage, MsgBoxStyle.Critical, messageBoxTitle)
+                            MsgBox($"Error Retrieving Remote INI File Version. Please try again.{strExceptionMessage}", MsgBoxStyle.Critical, messageBoxTitle)
                             e.Cancel = True
                             Exit Sub
                         End If
@@ -223,9 +223,9 @@ Namespace My
                             If httpHelper.GetWebData(programConstants.WinApp2INIFileURL, remoteINIFileData, False) Then
                                 Using streamWriter As New IO.StreamWriter(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, "winapp2.ini"))
                                     If String.IsNullOrWhiteSpace(strCustomEntries) Then
-                                        streamWriter.Write(remoteINIFileData.Trim & vbCrLf)
+                                        streamWriter.Write($"{remoteINIFileData.Trim}{vbCrLf}")
                                     Else
-                                        streamWriter.Write(remoteINIFileData.Trim & DoubleCRLF & strCustomEntries & vbCrLf)
+                                        streamWriter.Write($"{remoteINIFileData.Trim}{DoubleCRLF}{strCustomEntries}{vbCrLf}")
                                     End If
                                 End Using
                             Else
@@ -239,7 +239,7 @@ Namespace My
                             programFunctions.TrimINIFile(strLocationToSaveWinAPP2INIFile, remoteINIFileVersion, True)
                         End If
 
-                        If boolNotifyAfterUpdateAtLogon AndAlso MsgBox("The CCleaner WinApp2.ini file has been updated." & DoubleCRLF & "Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
+                        If boolNotifyAfterUpdateAtLogon AndAlso MsgBox($"The CCleaner WinApp2.ini file has been updated.{DoubleCRLF}Do you want to run CCleaner now?", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "WinApp2.ini File Updated") = MsgBoxResult.Yes Then
                             Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If
