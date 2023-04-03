@@ -2,10 +2,6 @@
 
 Namespace NativeMethod
     Friend Class NativeMethods
-        <DllImport("User32.dll", EntryPoint:="SetForegroundWindow")>
-        Public Shared Function SetForegroundWindow(hWnd As Integer) As Integer
-        End Function
-
         <DllImport("kernel32.dll")>
         Friend Shared Function OpenProcess(dwDesiredAccess As ProcessAccessFlags, bInheritHandle As Boolean, dwProcessId As Integer) As IntPtr
         End Function
