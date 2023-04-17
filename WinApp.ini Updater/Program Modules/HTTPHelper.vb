@@ -202,7 +202,7 @@ End Class
 
 ''' <summary>Allows you to easily POST and upload files to a remote HTTP server without you, the programmer, knowing anything about how it all works. This class does it all for you. It handles adding a User Agent String, additional HTTP Request Headers, string data to your HTTP POST data, and files to be uploaded in the HTTP POST data.</summary>
 Public Class HttpHelper
-    Private Const classVersion As String = "1.331"
+    Private Const classVersion As String = "1.332"
 
     Private strUserAgentString As String = Nothing
     Private boolUseProxy As Boolean = False
@@ -1516,8 +1516,7 @@ Module DictionaryExtensions
             Throw New ArgumentNullException(NameOf(haystack))
         End If
 
-        Dim KeyValuePair As KeyValuePair(Of String, String) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, String)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
-        Return KeyValuePair.Value IsNot Nothing
+        Return haystack.Keys.Any(Function(key As String) key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
     End Function
 
     ''' <summary>This function operates a lot like ContainsKey() but is case-InSeNsItIvE.</summary>
@@ -1533,8 +1532,7 @@ Module DictionaryExtensions
             Throw New ArgumentNullException(NameOf(haystack))
         End If
 
-        Dim KeyValuePair As KeyValuePair(Of String, Object) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, Object)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
-        Return KeyValuePair.Value IsNot Nothing
+        Return haystack.Keys.Any(Function(key As String) key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
     End Function
 
     ''' <summary>This function operates a lot like ContainsKey() but is case-InSeNsItIvE.</summary>
@@ -1550,7 +1548,6 @@ Module DictionaryExtensions
             Throw New ArgumentNullException(NameOf(haystack))
         End If
 
-        Dim KeyValuePair As KeyValuePair(Of String, CookieDetails) = haystack.FirstOrDefault(Function(item As KeyValuePair(Of String, CookieDetails)) item.Key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
-        Return KeyValuePair.Value IsNot Nothing
+        Return haystack.Keys.Any(Function(key As String) key.Trim.Equals(needle, StringComparison.OrdinalIgnoreCase))
     End Function
 End Module
