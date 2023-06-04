@@ -33,16 +33,16 @@ Module StringExtensions
         End Try
     End Function
 
-    '''<summary>Returns a New String In which all occurrences Of a specified String In the current instance are replaced With another specified string according the type of search to use for the specified string.</summary>
-    ''' <param name="source">The string performing the replace method.</param>
-    ''' <param name="strReplace">The string to be replaced.</param>
-    ''' <param name="strReplaceWith">The string replace all occurrences of <paramref name="strReplaceWith"/>. 
+    '''<summary>Works similar to the original String Replacement function but with a potential case-insensitive match capability.</summary>
+    ''' <param name="source">The source String.</param>
+    ''' <param name="strReplace">The String to be replaced.</param>
+    ''' <param name="strReplaceWith">The String that will replace all occurrences of <paramref name="strReplaceWith"/>. 
     ''' If value Is equal to <c>null</c>, than all occurrences of <paramref name="strReplace"/> will be removed from the <paramref name="source"/>.</param>
     ''' <param name="comparisonType">One of the enumeration values that specifies the rules for the search.</param>
     ''' <returns>A string that Is equivalent to the current string except that all instances of <paramref name="strReplace"/> are replaced with <paramref name="strReplaceWith"/>. 
     ''' If <paramref name="strReplace"/> Is Not found in the current instance, the method returns the current instance unchanged.</returns>
     <Extension()>
-    Public Function CaseInsensitiveReplace(source As String, strReplace As String, strReplaceWith As String, comparisonType As StringComparison) As String
+    Public Function Replace(source As String, strReplace As String, strReplaceWith As String, comparisonType As StringComparison) As String
         If String.IsNullOrWhiteSpace(source) Then Throw New ArgumentNullException(NameOf(source))
         If source.Length = 0 Then Return source
         If String.IsNullOrWhiteSpace(strReplace) Then Throw New ArgumentNullException(NameOf(strReplace))
