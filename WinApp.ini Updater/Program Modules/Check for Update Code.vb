@@ -14,7 +14,7 @@ Module checkForUpdateModules
         Dim currentProcessFileName As String = New FileInfo(Application.ExecutablePath).Name
 
         If currentProcessFileName.CaseInsensitiveContains(".new.exe") Then
-            Dim mainEXEName As String = currentProcessFileName.CaseInsensitiveReplace(".new.exe", "")
+            Dim mainEXEName As String = currentProcessFileName.Replace(".new.exe", "", StringComparison.OrdinalIgnoreCase)
             SearchForProcessAndKillIt(mainEXEName, False)
 
             File.Delete(mainEXEName)
@@ -340,7 +340,7 @@ Class CheckForUpdatesClass
                     Dim response As ProcessUpdateXMLResponse = ProcessUpdateXMLData(xmlData, remoteVersion, remoteBuild)
 
                     If response = ProcessUpdateXMLResponse.newVersion Then
-                        If BackgroundThreadMessageBox($"An update to Hasher (version {remoteVersion} Build {remoteBuild}) is available to be downloaded, do you want to download and update to this new version?", strMessageBoxTitleText) = MsgBoxResult.Yes Then
+                        If BackgroundThreadMessageBox($"An update to {strProgramName} (version {remoteVersion} Build {remoteBuild}) is available to be downloaded, do you want to download and update to this new version?", strMessageBoxTitleText) = MsgBoxResult.Yes Then
                             DownloadAndPerformUpdate()
                         Else
                             windowObject.Invoke(Sub() MsgBox("The update will not be downloaded.", MsgBoxStyle.Information, strMessageBoxTitleText))

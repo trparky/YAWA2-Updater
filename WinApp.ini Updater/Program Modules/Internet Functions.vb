@@ -31,7 +31,7 @@ Namespace internetFunctions
 
         Private Function GetFullOSVersionString() As String
             Try
-                Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.CaseInsensitiveReplace("microsoft ", "", True)
+                Dim osName As String = New Devices.ComputerInfo().OSFullName.Trim.Replace("microsoft ", "", True)
 
                 Dim dotNetVersionsInfo As String() = Environment.Version.ToString.Split(".")
                 Return $"{osName} {If(Environment.Is64BitOperatingSystem, "64", "32")}-bit (Microsoft .NET {dotNetVersionsInfo(0)}.{dotNetVersionsInfo(1)})"
