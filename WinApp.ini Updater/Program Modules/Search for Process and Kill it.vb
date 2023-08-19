@@ -33,15 +33,13 @@
 
     Public Sub SearchForProcessAndKillIt(strFileName As String, boolFullFilePathPassed As Boolean)
         Dim processExecutablePath As String
-        Dim processExecutablePathFileInfo As IO.FileInfo
 
         For Each process As Process In Process.GetProcesses()
             processExecutablePath = GetProcessExecutablePath(process.Id)
 
             If Not String.IsNullOrWhiteSpace(processExecutablePath) Then
                 Try
-                    processExecutablePathFileInfo = New IO.FileInfo(processExecutablePath)
-                    processExecutablePath = If(boolFullFilePathPassed, processExecutablePathFileInfo.FullName, processExecutablePathFileInfo.Name)
+                    processExecutablePath = If(boolFullFilePathPassed, New IO.FileInfo(processExecutablePath).FullName, New IO.FileInfo(processExecutablePath).Name)
                     If strFileName.Equals(processExecutablePath, StringComparison.OrdinalIgnoreCase) Then KillProcess(process.Id)
                 Catch ex As ArgumentException
                 End Try
