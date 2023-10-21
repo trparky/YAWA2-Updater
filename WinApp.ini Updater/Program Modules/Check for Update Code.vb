@@ -7,7 +7,6 @@ Imports System.Security.Principal
 Module checkForUpdateModules
     Public Const strMessageBoxTitleText As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
     Public Const strProgramName As String = "YAWA2 (Yet Another WinApp2.ini) Updater"
-    Private Const strZipFileName As String = "YAWA2 Updater.zip"
 
     Public Sub NewFileDeleter()
         If IO.File.Exists($"{Application.ExecutablePath}.new.exe") Then
@@ -30,6 +29,7 @@ Class CheckForUpdatesClass
     Private ReadOnly shortBuild As Short = Short.Parse(versionInfo(VersionPieces.build).Trim)
     Public Shared versionString As String = $"{versionInfo(0)}.{versionInfo(1)} Build {versionInfo(2)}"
     Private ReadOnly versionStringWithoutBuild As Double = Double.Parse($"{versionInfo(VersionPieces.major)}.{versionInfo(VersionPieces.minor)}")
+    Private ReadOnly longInternalVersion As Long = Long.Parse(versionInfo(VersionPieces.revision))
 
     Public Sub New(inputWindowObject As Form1)
         windowObject = inputWindowObject
@@ -60,53 +60,30 @@ Class CheckForUpdatesClass
     ''' <summary>This parses the XML updata data and determines if an update is needed.</summary>
     ''' <param name="xmlData">The XML data from the web site.</param>
     ''' <returns>A Boolean value indicating if the program has been updated or not.</returns>
-    Private Function ProcessUpdateXMLData(xmlData As String, ByRef remoteVersion As Double, ByRef remoteBuild As Short) As ProcessUpdateXMLResponse
+    Private Function ProcessUpdateXMLData(xmlData As String, ByRef remoteVersion As String, ByRef remoteBuild As String) As ProcessUpdateXMLResponse
         Try
             Dim xmlDocument As New XmlDocument() ' First we create an XML Document Object.
             xmlDocument.Load(New StringReader(xmlData)) ' Now we try and parse the XML data.
             Dim xmlNode As XmlNode = xmlDocument.SelectSingleNode("/xmlroot")
 
-            If Double.TryParse(xmlNode.SelectSingleNode("version").InnerText.Trim, remoteVersion) And Short.TryParse(xmlNode.SelectSingleNode("build").InnerText.Trim, remoteBuild) Then
-                Dim shortRemoteBuild As Short
+            remoteVersion = xmlNode.SelectSingleNode("version").InnerText.Trim
+            remoteBuild = xmlNode.SelectSingleNode("build").InnerText.Trim
 
-                ' This checks to see if current version and the current build matches that of the remote values in the XML document.
-                If remoteVersion.Equals(versionStringWithoutBuild) And remoteBuild.Equals(shortBuild.ToString) Then
-                    ' Both the remoteVersion and the remoteBuild equals that of the current version,
-                    ' therefore we return a noUpdateNeeded value indicating no update is required.
-                    Return ProcessUpdateXMLResponse.noUpdateNeeded
-                Else
-                    ' First we do a check of the version, if it's not equal we simply return a newVersion value.
-                    If Not remoteVersion.ToString.Equals(versionStringWithoutBuild) Then
-                        ' Checks to see if the remote version is less than the current version.
-                        If remoteVersion < Double.Parse(versionStringWithoutBuild) Then
-                            ' This is weird, the remote build is less than the current build so we return a newerVersionThanWebSite value.
-                            Return ProcessUpdateXMLResponse.newerVersionThanWebSite
-                        End If
-                    Else
-                        ' Now let's do some sanity checks here. 
-                        If Short.TryParse(remoteBuild, shortRemoteBuild) Then
-                            If shortRemoteBuild < shortBuild Then
-                                ' This is weird, the remote build is less than the current build so we return a newerVersionThanWebSite value.
-                                Return ProcessUpdateXMLResponse.newerVersionThanWebSite
-                            ElseIf shortRemoteBuild > shortBuild Then
-                                ' We return a newVersion value indicating that there is a new version to download and install.
-                                Return ProcessUpdateXMLResponse.newVersion
-                            ElseIf shortRemoteBuild.Equals(shortBuild) Then
-                                ' The build numbers match, therefore therefore we return a noUpdateNeeded value.
-                                Return ProcessUpdateXMLResponse.noUpdateNeeded
-                            End If
-                        Else
-                            ' Something went wrong, we couldn't parse the value of the remoteBuild number so we return a parseError value.
-                            Return ProcessUpdateXMLResponse.parseError
-                        End If
-
-                        ' We return a noUpdateNeeded flag.
+            Dim longInternalVersionFromXML As Long = 0
+            If xmlNode.SelectSingleNode("internalversion") IsNot Nothing Then
+                If Long.TryParse(xmlNode.SelectSingleNode("internalversion").InnerText.Trim, longInternalVersionFromXML) Then
+                    If longInternalVersionFromXML = longInternalVersion Then ' If the internal version from the XML file matches the internal version from the program itself, we return a noUpdateNeeded value.
                         Return ProcessUpdateXMLResponse.noUpdateNeeded
+                    ElseIf longInternalVersionFromXML > longInternalVersion Then ' If the internal version from the XML file is greater than the internal version from the program itself, we return a newVersion value.
+                        Return ProcessUpdateXMLResponse.newVersion
+                    ElseIf longInternalVersionFromXML < longInternalVersion Then
+                        Return ProcessUpdateXMLResponse.newerVersionThanWebSite ' If the internal version from the XML file is less than the internal version from the program itself, we return a newerVersionThanWebSite value.
                     End If
+                Else
+                    Return ProcessUpdateXMLResponse.parseError ' Something went wrong, so we return a parseError value.
                 End If
             Else
-                ' Something went wrong so we return an exceptionError value.
-                Return ProcessUpdateXMLResponse.exceptionError
+                Return ProcessUpdateXMLResponse.exceptionError ' Something really went wrong, so we return a exceptionError value.
             End If
         Catch ex As Exception
             ' Something went wrong so we return an exceptionError value.
