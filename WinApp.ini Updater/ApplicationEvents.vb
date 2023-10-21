@@ -145,6 +145,11 @@ Namespace My
         End Sub
 
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
+            If IO.File.Exists("updater.exe") Then
+                SearchForProcessAndKillIt("updater.exe", False)
+                IO.File.Delete("updater.exe")
+            End If
+
             If Environment.OSVersion.Version.Major = 5 And (Environment.OSVersion.Version.Minor = 1 Or Environment.OSVersion.Version.Minor = 2) Then
                 MsgBox("Windows XP support has been pulled from this program, this program will no longer function on Windows XP.", MsgBoxStyle.Critical, "YAWA2 (Yet Another WinApp2.ini) Updater")
                 e.Cancel = True
@@ -243,8 +248,6 @@ Namespace My
                             Process.Start(IO.Path.Combine(strLocationToSaveWinAPP2INIFile, If(Environment.Is64BitOperatingSystem, "CCleaner64.exe", "CCleaner.exe")))
                         End If
                     End If
-                ElseIf commandLineArgument.Equals("-update", StringComparison.OrdinalIgnoreCase) Then
-                    DoUpdateAtStartup()
                 End If
 
                 e.Cancel = True
