@@ -8,3 +8,6 @@ This program has been discontinued and is no longer going to be updated or distr
 ## License Change Notice
 As of October 24th, 2024, this project is now licensed under the GPL License. 
 Please refer to the LICENSE file for the updated terms. Previous versions were licensed under the MIT License.
+
+# Support
+YAWA 2 Updater is no longer supported or being actively developed.
