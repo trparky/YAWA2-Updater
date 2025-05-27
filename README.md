@@ -1,3 +1,5 @@
+<img src="https://img.shields.io/badge/license-GPL-green">
+
 # YAWA2-Updater
 The open source repository for YAWA2 Updater.
 
